@@ -1,0 +1,146 @@
+#!/bin/sh
+# chkconfig: 345 20 80
+# description: TME broker 
+
+pidfile="/var/run/tme/brokerd.pid"
+errfile="/var/run/tme/brokerd.err"
+lockfile="/var/lock/subsys/brokerd"
+
+javacmd="/usr/java/latest/bin/java"
+if [ ! -x "$javacmd" ]; then
+    echo "Sun Java Runtime Environment: $javacmd not found"
+    exit 1
+fi
+
+prog="/usr/share/tme-broker/mq/bin/imqbrokerd"
+jvm_mem="-XX:+UseParallelOldGC -Xmx4096m -Xms4096m"
+jmx_auth="-Dcom.sun.management.jmxremote.password.file=/usr/share/tme-broker/etc/jmxremote.password -Dcom.sun.management.jmxremote.access.file=/usr/share/tme-broker/etc/jmxremote.access"
+jvm_jmx="-Dcom.sun.management.jmxremote.port=5566 -Dcom.sun.management.jmxremote.authenticate=true -Dcom.sun.management.jmxremote.ssl=false $jmx_auth"
+export _jvm_args="-server $jvm_mem $jvm_jmx"
+classname=com.sun.messaging.jmq.jmsserver.Broker
+ret_code=0
+
+SU="su TME"
+if [ "`whoami`" == "TME" ]; then
+    SU="/bin/bash"
+fi
+
+check_process() {
+    pattern=$1
+    try_count=$2 
+    exist=$3        # 1: check exist
+                    # 0: check not exist
+    counter=0
+    ready=0
+    while [ $counter -lt $try_count ] ; do
+        pid=`ps -C java -o pid,args | grep $pattern | sed -e 's/^ *//' | cut -d ' ' -f 1`
+        if [ $exist -eq 1 ] && [ ! -z "$pid" ]; then
+            ready=1
+            break
+        elif [ $exist -eq 0 ] && [ -z "$pid" ]; then
+            ready=1
+            break
+        else
+            usleep 50000
+            let counter=counter+1
+        fi
+    done
+
+    if [ $ready -eq 1 ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+check_pid() {
+    my_pid=$1
+    if [ -e $my_pid ]; then
+        ps -p `cat $my_pid` > /dev/null
+        return $?
+    else
+        return 1
+    fi
+}
+
+start_daemon() {
+    echo -n "Starting $prog ... "
+    check_pid $pidfile
+    running=$?
+    if [ $running -eq 0 ]; then
+        echo "already started"
+    else
+        $SU -c "nohup $prog >> $errfile 2>&1 &"
+        check_process $classname 100 1
+        ready=$?
+        if [ $ready -eq 0 ]; then
+            pid=`ps -C java -o pid,args | grep $classname | sed -e 's/^ *//' | cut -d ' ' -f 1`
+            echo $pid > $pidfile
+            chown TME:TME $pidfile
+            echo "success"
+            touch $lockfile
+        else
+            echo "failed"
+            cat $errfile
+	        ret_code=1;
+        fi
+    fi
+}
+
+stop_daemon() {
+    echo -n "Stoping $prog ... "
+    check_pid $pidfile
+    running=$?
+    if [ $running -eq 0 ]; then
+        kill `cat $pidfile`
+        check_process $classname 100 0
+        ready=$?
+        if [ $ready -eq 0 ]; then
+            echo "success"
+        else
+            echo "failed, force kill"
+            kill -9 `cat $pidfile`
+        fi
+        rm -f $pidfile
+        rm -f $lockfile
+    else
+        echo "not started"
+    fi
+}
+
+case "$1" in
+start_broker)
+    start_daemon
+    ;;
+stop_broker)
+    stop_daemon
+    ;;
+start)
+    start_daemon
+    if [ $ret_code -eq 0 ]; then /usr/share/mist/bin/install_spyd.sh; fi
+    ;;
+stop)
+    /usr/share/mist/bin/remove_spyd.sh
+    stop_daemon
+    ;;
+restart)
+    /usr/share/mist/bin/remove_spyd.sh
+    stop_daemon
+    start_daemon
+    if [ $ret_code -eq 0 ]; then /usr/share/mist/bin/install_spyd.sh; fi
+    ;;
+status)
+    check_process $classname 5 1
+    ret_code=$?
+    if [ $ret_code -eq 0 ]; then
+       echo "Deamon is running"
+    else
+       echo "Deamon is stopped"
+    fi
+    ;;
+*)
+    echo "Usage: $0 {start|stop|restart|status}"
+    ;;
+esac
+
+exit $ret_code

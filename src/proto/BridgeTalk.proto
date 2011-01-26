@@ -1,0 +1,51 @@
+package com.trendmicro.mist.proto;
+
+option java_package = "com.trendmicro.mist.proto";
+option java_outer_classname = "BridgeTalk";
+
+message BrokerInfo
+{
+    required int32 id = 1;
+    required string type = 2;
+    required string host = 3;
+    required string port = 4;
+    required string username = 5;
+    required string password = 6;
+}
+
+message ForwarderInfo
+{
+    message Target {
+        required int32 broker_id = 1;
+        required string exchange = 2;
+    }
+    required int32 id = 1;
+    required Target src = 2;
+    repeated Target dest = 3;
+    optional string comment = 4;
+    required bool online = 5;
+}
+
+message BridgeConfig 
+{
+    repeated BrokerInfo brokers = 1;
+    repeated ForwarderInfo forwarders = 2;
+}
+
+message Request
+{
+    required string command = 1;
+}
+
+message Response 
+{
+    required bool success = 1;
+    optional string context = 2 [ default = "" ];
+    optional string exception = 3 [ default = "" ];
+}
+
+message Command
+{
+    repeated Request request = 1;
+    repeated Response response = 2;
+}

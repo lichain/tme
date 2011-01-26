@@ -1,0 +1,18 @@
+#!/bin/sh
+
+if [ $# -lt 2 ]; then
+    echo "usage: $0 exchange_name message_count"
+    exit 0
+fi
+
+EXCHANGE_NAME=pair.$1
+MSG_CNT=$2
+
+echo launch forwarder
+java -cp "/usr/share/mist/lib/*:../lib/*" com.trendmicro.mist.cmd.MistForwarder -f internal.$EXCHANGE_NAME.in -t internal.$EXCHANGE_NAME.out > /dev/null 2>&1 &
+fwd=$!
+
+./t_simple $EXCHANGE_NAME $MSG_CNT
+
+echo kill forwarder
+kill $fwd

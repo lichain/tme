@@ -1,0 +1,50 @@
+#!/bin/sh
+
+if [ $# -lt 2 ]; then
+    echo "usage: $0 exchange_name message_count [queue|topic]"
+    exit 0
+fi
+
+EXCHANGE_NAME=$1
+MSG_CNT=$2
+EX_TYPE='queue'
+
+if [ $# -eq 3 ]; then
+    if [ $3 == 'topic' ]; then
+        EX_TYPE=$3
+    else
+        echo un-recognized exchange type: $3, default to $EX_TYPE
+    fi
+fi
+
+echo create source
+SOURCE_ID=`mist-session`
+mist-source $SOURCE_ID -m $EXCHANGE_NAME --$EX_TYPE
+
+echo create sink
+SINK_ID=`mist-session`
+mist-sink $SINK_ID -m $EXCHANGE_NAME --$EX_TYPE
+
+echo sending in background
+mist-line-gen -c $MSG_CNT | mist-encode -l -w $EX_TYPE:$EXCHANGE_NAME | mist-sink $SINK_ID -a -c > $0.send 2> $0.sendErr&
+
+echo receiving $MSG_CNT messages
+mist-source $SOURCE_ID -a --limit-count=$MSG_CNT | mist-decode -c > $0.recv 2> $0.recvErr
+
+echo -n verify result ... 
+diff $0.recv $0.send
+if [ $? -eq 0 ]; then
+    echo success
+    ret_code=0
+    rm $0.recv $0.send
+else
+    echo failed
+    ret_code=1
+    cat $0.recv
+    cat $0.send
+fi
+
+mist-session -d $SOURCE_ID
+mist-session -d $SINK_ID
+
+exit $ret_code 

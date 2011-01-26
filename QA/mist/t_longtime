@@ -1,0 +1,28 @@
+#!/bin/bash
+
+if [ $# -lt 1 ]; then
+    echo "usage: $0 max_message"
+    exit 0
+fi
+
+max_msg=$1
+
+i=1
+
+while [[ 1 == 1 ]]
+do
+    msg_count=$((RANDOM % $1 + 1))
+    tag=`hostname -i | sed -e 's/\.//g'` 
+    ex_name="EX$tag.$i"
+    tm_start=`date +%s`
+    echo -n [`date`] "Case #$i: send to $ex_name, $msg_count messages ... "
+    ./t_simple $ex_name $msg_count > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        tm_end=`date +%s`
+        rate=`echo "scale=2;$msg_count/($tm_end-$tm_start)" | bc`
+        echo success "($rate mps)"
+    else
+        echo fail
+    fi 
+    i=$((i+1))
+done

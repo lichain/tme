@@ -1,0 +1,42 @@
+#!/bin/sh
+
+get_broker_pid(){
+    BROKER_PID=`ps -C java -O start_time|grep com.sun.messaging.jmq.jmsserver.Broker | sed -e 's/^ *//' | cut -d ' ' -f 1`
+}
+
+get_broker_pid
+
+if [ "$BROKER_PID" == "" ]; then
+    echo "broker is not started!"
+    exit -1
+fi
+
+OLD_PID=$BROKER_PID
+kill $BROKER_PID
+
+RETRY=0
+while [ "$BROKER_PID" == "$OLD_PID" ]
+do
+    if [ $RETRY == 20 ]; then
+        echo "cannot kill broker!"
+        exit -1
+    fi
+    sleep 1
+    get_broker_pid
+    RETRY=$(($RETRY+1))
+done
+
+RETRY=0
+while [ "$BROKER_PID" == "" ]
+do
+    if [ $RETRY == 20 ]; then
+        echo "spy does not restart broker!"
+        exit -1
+    fi
+    sleep 1
+    get_broker_pid
+    RETRY=$(($RETRY+1))
+done
+
+echo $BROKER_PID
+exit 0

@@ -1,0 +1,41 @@
+#!/bin/sh
+
+EX_FROM=A
+EX_TO=B
+
+MSG_CNT=10
+
+echo launch forwarder
+java -cp "/usr/share/mist/lib/*:../lib/*" com.trendmicro.mist.cmd.MistForwarder -f $EX_FROM -t $EX_TO > /dev/null 2>&1 &
+fwd=$!
+
+echo create source
+SOURCE_ID=`mist-session`
+mist-source $SOURCE_ID -m $EX_TO
+
+echo create sink
+SINK_ID=`mist-session`
+mist-sink $SINK_ID -m $EX_FROM
+
+echo sending in background
+mist-line-gen -c $MSG_CNT | mist-encode -l -w $EX_FROM | mist-sink $SINK_ID -a -c > $0.send &
+
+echo receiving $MSG_CNT messages
+mist-source $SOURCE_ID -a --limit-count=$MSG_CNT | mist-decode -c > $0.recv
+
+echo -n verify result ... 
+diff $0.recv $0.send
+if [ $? -eq 0 ]; then
+    echo success
+    rm $0.recv $0.send
+else
+    echo failed
+    cat $0.recv
+    cat $0.send
+fi
+
+echo kill forwarder
+kill $fwd
+
+mist-session -d $SOURCE_ID
+mist-session -d $SINK_ID

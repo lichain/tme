@@ -1,0 +1,10 @@
+log4j.rootLogger=INFO, R
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=[%d{yyy-MM-dd HH:mm:ss}] %5p [%t] %c{1}: %m%n
+log4j.appender.R=org.apache.log4j.RollingFileAppender
+log4j.appender.R.File=mistd.log
+log4j.appender.R.MaxFileSize=100MB
+log4j.appender.R.MaxBackupIndex=7
+log4j.appender.R.layout=org.apache.log4j.PatternLayout
+log4j.appender.R.layout.ConversionPattern=[%d{yyy-MM-dd HH:mm:ss}] %5p [%t] %c{1}: %m%n

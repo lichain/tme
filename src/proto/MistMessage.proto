@@ -1,0 +1,17 @@
+package com.trendmicro.mist.proto;
+
+option java_package = "com.trendmicro.mist.proto";
+option java_outer_classname = "MistMessage";
+
+message KeyValuePair {
+    required string key = 1;
+    required string value = 2;
+}
+
+message MessageBlock
+{
+    required string id = 1;
+    required bytes message = 2;
+    optional int64 ttl = 3;
+    repeated KeyValuePair properties = 4;
+}

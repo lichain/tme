@@ -1,0 +1,51 @@
+#!/bin/sh
+
+FILES="msg.orig msg-000000.data msg.decode"
+
+mist-line-gen -c 10 > msg.orig
+
+echo -n "packing as a file (no wrap) ... "
+mist-encode -f msg.orig | mist-decode -f
+diff msg.orig msg-000000.data > /dev/null
+if [ $? -eq 0 ]; then
+    echo success
+else
+    echo failed
+    diff msg.orig msg-000000.data 
+    exit 1
+fi
+
+echo -n "packing as a file ... "
+mist-encode -f msg.orig -w NAME | mist-decode -f 
+diff msg.orig msg-000000.data > /dev/null
+if [ $? -eq 0 ]; then
+    echo success
+else
+    echo failed
+    diff msg.orig msg-000000.data 
+    exit 1
+fi
+
+echo -n "packing as lines (no wrap) ... "
+cat msg.orig | mist-encode -l | mist-decode -l > msg.decode
+diff msg.orig msg.decode > /dev/null
+if [ $? -eq 0 ]; then
+    echo success
+else
+    echo failed
+    diff msg.orig msg.decode 
+    exit 1
+fi
+
+echo -n "packing as lines ... "
+cat msg.orig | mist-encode -l -w NAME | mist-decode -l > msg.decode
+diff msg.orig msg.decode > /dev/null
+if [ $? -eq 0 ]; then
+    echo success
+else
+    echo failed
+    diff msg.orig msg.decode 
+    exit 1
+fi
+
+rm -f $FILES

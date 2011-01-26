@@ -1,0 +1,130 @@
+#!/bin/sh
+
+MSG_CNT=5000
+ACTIVEMQ_SETTING='--create=10.1.112.131:61616 --auth=activemq:activemq --broker=activemq'
+EXC_FROM='AAA'
+EXC_TO='BBB'
+SRC_TYPE='queue'
+DST_TYPE='queue'
+FOR_SRC=$SRC_TYPE:$EXC_FROM
+FOR_DST=$DST_TYPE:$EXC_TO
+
+SRC_SESSION=''
+DST_SESSION=''
+
+function usage() {
+    echo "Usage: $0 [[activemq] queue|topic [activemq] queue|topic]"
+    echo "Before using activemq, please modify ACTIVEMQ_SETTING in script"
+}
+
+if [ $# -eq 1 ]; then
+    if [ $1 == 'help' ]; then
+    	usage; 
+	exit 1
+    fi
+elif [ $# -eq 2 ]; then
+    if [ $1 == 'topic' ]; then
+        SRC_TYPE=$1
+        FOR_SRC=$SRC_TYPE:$EXC_FROM
+    fi
+    if [ $2 == 'topic' ]; then
+        DST_TYPE=$2
+        FOR_DST=$DST_TYPE:$EXC_TO
+    fi
+elif [ $# -eq 3 ]; then
+    if [ $1 == 'topic' ]; then
+        SRC_TYPE=$1
+    elif [ $2 == 'topic' ]; then
+        SRC_TYPE=$2
+    fi
+    if [ $3 == 'topic' ]; then
+       DST_TYPE=$3
+    fi
+
+    if [ $1 == 'activemq' ]; then
+        FOR_SRC=0,$SRC_TYPE:$EXC_FROM
+	SRC_SESSION=$ACTIVEMQ_SETTING
+    else
+	FOR_SRC=$SRC_TYPE:$EXC_FROM
+    fi
+    if [ $2 == 'activemq' ]; then
+        FOR_DST=0,$DST_TYPE:$EXC_TO
+	DST_SESSION=$ACTIVEMQ_SETTING
+    else
+	FOR_DST=$DST_TYPE:$EXC_TO
+    fi        
+elif [ $# -eq 4 ]; then
+    if [ $2 == 'topic' ]; then
+        SRC_TYPE=$2
+    fi
+    if [ $4 == 'topic' ]; then
+        DST_TYPE=$4
+    fi
+    if [ $1 == 'activemq' ]; then
+        FOR_SRC=0,$SRC_TYPE:$EXC_FROM
+	SRC_SESSION=$ACTIVEMQ_SETTING
+    else
+	FOR_SRC=$SRC_TYPE:$EXC_FROM
+    fi
+    if [ $3 == 'activemq' ]; then
+	FOR_DST=0,$DST_TYPE:$EXC_TO
+	DST_SESSION=$ACTIVEMQ_SETTING
+    else
+	FOR_DST=$DST_TYPE:$EXC_TO
+    fi
+elif [ $# -gt 4 ]; then
+    usage;
+    exit 1
+fi
+
+echo "################################################################################"
+echo "  TME Bridge Testing Script"
+echo "  - >$0 help to get more detail usage"
+echo "  - Transmit $MSG_CNT messages from exchange $SRC_TYPE:$EXC_FROM to $DST_TYPE:$EXC_TO"
+echo "################################################################################"
+
+echo create forwarder with from $FOR_SRC to $FOR_DST
+echo "forwarder --add -f $FOR_SRC -t $FOR_DST" | bridge-console >/dev/null 2>/dev/null
+echo "forwarder -e 0" | bridge-console >/dev/null 2>/dev/null
+if [ $? -ne 0 ]; then
+    echo "Forwarder enable failed, exit"
+    exit 1
+fi
+
+SEND_DATA="/tmp/$0.send"
+RECV_DATA="/tmp/$0.recv"
+
+echo create source
+SOURCE_ID=`mist-session $DST_SESSION`
+mist-source $SOURCE_ID -m $EXC_TO --$DST_TYPE
+
+echo create sink
+SINK_ID=`mist-session $SRC_SESSION`
+mist-sink $SINK_ID -m $EXC_FROM --$SRC_TYPE
+
+echo sending in background
+mist-line-gen -c $MSG_CNT > $SEND_DATA
+cat $SEND_DATA | mist-encode -l -w $SRC_TYPE:$EXC_FROM | mist-sink $SINK_ID -a -c >/dev/null &
+
+echo receiving $MSG_CNT messages
+mist-source $SOURCE_ID -a --limit-count=$MSG_CNT | mist-decode -l > $RECV_DATA
+
+echo -n "verify result ... "
+sort $RECV_DATA > $RECV_DATA.sort
+sort $SEND_DATA > $SEND_DATA.sort
+diff $RECV_DATA.sort $SEND_DATA.sort
+if [ $? -eq 0 ]; then
+    echo SUCCESS
+    ret_code=0
+    rm $RECV_DATA $SEND_DATA $RECV_DATA.sort $SEND_DATA.sort
+else
+    echo FAILED
+    ret_code=1
+fi
+
+echo "forwarder -r 0" | bridge-console >/dev/null 2>/dev/null
+
+mist-session -d $SOURCE_ID
+mist-session -d $SINK_ID
+echo Done
+exit $ret_code 

@@ -1,0 +1,53 @@
+#!/bin/sh
+
+EXCHANGE_NAME='TEST'
+MSG_CNT=100
+
+echo "################################################################################"
+echo "  MIST TLS Test "
+echo "  - Transmit $MSG_CNT messages through exchange $EXCHANGE_NAME"
+echo "################################################################################"
+
+echo "exchange -t TESTlog:TEST:abc:1 $EXCHANGE_NAME" | tme-console >/dev/null 2>/dev/null
+
+SEND_DATA='/tmp/test_mistd.send'
+RECV_DATA='/tmp/test_mistd.recv'
+
+echo create source
+SOURCE_ID=`mist-session`
+mist-source $SOURCE_ID -m $EXCHANGE_NAME 
+
+echo create sink
+SINK_ID=`mist-session`
+mist-sink $SINK_ID -m $EXCHANGE_NAME 
+
+echo sending in background
+mist-line-gen -c $MSG_CNT | mist-encode -l -w $EXCHANGE_NAME | mist-sink $SINK_ID -a -c > $SEND_DATA &
+
+echo receiving $MSG_CNT messages
+mist-source $SOURCE_ID -a --limit-count=$MSG_CNT | mist-decode -c > $RECV_DATA
+
+echo -n "verify result ... "
+diff $RECV_DATA $SEND_DATA
+if [ $? -eq 0 ]; then
+    echo SUCCESS
+    ret_code=0
+    rm $RECV_DATA $SEND_DATA
+else
+    echo FAILED
+    ret_code=1
+    cat $RECV_DATA
+    cat $SEND_DATA
+fi
+
+mist-session -d $SOURCE_ID > /dev/null
+mist-session -d $SINK_ID > /dev/null
+
+echo "exchange -T TEST" | tme-console >/dev/null 2>/dev/null
+
+echo "pulling TLS log messages"
+SID=`mist-session` ; mist-source $SID -m TESTlog ; mist-source $SID --limit-count=`expr $MSG_CNT \* 2` -a | mist-decode -l -c >/dev/null; mist-session -d $SID
+echo "log message count correct!"
+echo "TLS test SUCCESS"
+
+exit $ret_code 

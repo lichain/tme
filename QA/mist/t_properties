@@ -1,0 +1,21 @@
+#!/bin/sh
+
+EXCHANGE_NAME=TEST_PROP
+MSG_CNT=3
+
+echo create source
+SOURCE_ID=`mist-session`
+mist-source $SOURCE_ID -m $EXCHANGE_NAME
+
+echo create sink
+SINK_ID=`mist-session`
+mist-sink $SINK_ID -m $EXCHANGE_NAME
+
+echo sending in background
+mist-line-gen -c $MSG_CNT | mist-encode -l -p KEY1:VALUE1 -p KEY2:VALUE2 -w $EXCHANGE_NAME | mist-sink $SINK_ID -a &
+
+echo receiving $MSG_CNT messages
+mist-source $SOURCE_ID -a --limit-count=$MSG_CNT | mist-decode -d 
+
+mist-session -d $SOURCE_ID
+mist-session -d $SINK_ID

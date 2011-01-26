@@ -1,0 +1,97 @@
+package com.trendmicro.spn.proto;
+
+option java_package = "com.trendmicro.spn.proto";
+option java_outer_classname = "SpnMessage";
+ 
+message Timestamp {
+    required int64            time                       = 1;                    // absolute time, in seconds
+}
+ 
+message OutOfBandObject
+{
+    required string           url                        = 1;
+    required Timestamp        expire                     = 2;
+    optional string           sha1                       = 3;
+    optional string           mime_type                  = 4;
+    optional int64            size                       = 5; // in bytes
+}
+ 
+// "URL:http://blahblah/" ==> "URL" + "http://blahblah/"
+message Link {
+    // Format: [0-9A-Za-z-]*  (in English: alphanumerical characters, and hyphen)
+    // Example: "URL", "SHA1", "EMAIL" and so on. (note no colon)
+    // When omitted, the type of linked subject is the same with the subject
+    // type in MessageBase
+    optional string           type                       = 1;
+ 
+    // "http://blahblah/"
+    required bytes            subject                    = 2;
+}
+ 
+message MessageBase
+{
+    // Notice: No type prefix
+    required bytes            subject                    = 1;
+ 
+    repeated Link             prev_link                  = 2;
+    repeated Link             next_link                  = 3;
+    repeated OutOfBandObject  attachments                = 4;
+}
+ 
+message Message
+{
+    // base is a reserved keyword in protobuf, must rename
+    required MessageBase      msg_base                   = 1;
+    // When needed, application could use a application specific
+    // message-leve protobuf schema to serialize application specific
+    // data. 
+    optional bytes            derived                    = 2;
+}
+ 
+message MessageList
+{
+    repeated Message          messages                   = 1;
+}
+ 
+message ContainerBase
+{
+    // "key" has the following semantics:
+    // 1. Correlates one or more containers from one hop to another hop.
+    // 2. Potentially useful in the future for container level tracing.
+    // For example, application could use "key" to correlate answer containers
+    // to their question containers in question/answer process flow.
+    optional string           key                        = 1;
+ 
+    // "reply_to" is an instruction from producer to consumer regarding where
+    // to deliver the "answer" in question/answer process flow.
+    optional string           reply_to                   = 2;
+ 
+    // The fields "message_list" and "message_list_ref" have "C" union semantics.
+    // 1. One of them must be filled or referenced.
+    // 2. If "message_list" exists, "message_list_ref" must be ignored, i.e. no
+    //    processing, no referencing.
+    optional MessageList      message_list               = 3;
+    optional OutOfBandObject  message_list_ref           = 4;
+}
+ 
+message LogInfo
+{
+    required string  type              = 1;
+    required int32   version           = 2;
+    required int64   timestamp         = 3;
+    required string  original_exchange = 4;
+    required string  event             = 5;
+    required string  prefix            = 6;
+}
+
+message Container
+{
+    // base is a reserved keyword in protobuf, must rename
+    required ContainerBase    container_base             = 1;
+ 
+    // When needed, application could use a application specific
+    // message-leve protobuf schema to serialize application specific
+    // data.
+    optional bytes            derived                    = 2;
+    optional LogInfo          log_info                   = 3;
+}

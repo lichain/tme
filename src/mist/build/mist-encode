@@ -1,0 +1,8 @@
+#!/bin/sh
+javacmd="/usr/java/latest/bin/java"
+if [ ! -x "$javacmd" ]; then
+    echo "Sun Java Runtime Environment: $javacmd not found"
+    exit 1
+fi
+$javacmd -cp "/usr/share/mist/lib/*:/usr/share/spn-infra-common/lib/*" com.trendmicro.mist.cmd.MistEncode $*
+exit $?

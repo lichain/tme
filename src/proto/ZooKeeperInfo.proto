@@ -1,0 +1,82 @@
+package com.trendmicro.mist.proto;
+
+option java_package = "com.trendmicro.mist.proto";
+option java_outer_classname = "ZooKeeperInfo";
+
+// /tme2/global/goc_exchange/exchange_name
+message GOCReference {
+}
+
+// /tme2/global/tls_exchange/exchange_name
+message TLSConfig {
+    required string log_channel = 1;
+    required string prefix = 2;
+    required string type = 3;
+    required int32 version = 4;
+}
+
+// /tme2/global/portal_db
+message PortalDB {
+    required string host = 1;
+    required string port = 2;
+    optional string name = 3;
+    optional string user = 4;
+    optional string password = 5;
+}
+
+// /tme2/broker/ip 
+message Broker {
+    enum Status {
+        ONLINE = 0;
+        OFFLINE = 1;
+    }
+    message Account {
+        required string user = 1;
+        required string password = 2;
+    }
+    required string host = 1;
+    required string port = 2;
+    required Status status = 3;
+    repeated Account account = 4;
+    required string broker_type = 5;   // "activemq" or "openmq"
+    required string version = 6;
+    required bool reserved = 7;
+}
+
+// /tme2/broker/ip/loading 
+message Loading {
+    required int32 loading = 1;
+    required int64 last_update = 2;
+    required int64 free_memory = 3; 
+    required int64 max_memory = 4;
+}
+
+// /tme2/forwarder/ip/forwarder_name 
+message Forwarder {
+    required string from = 1;
+    required string to = 2;
+    optional string comment = 3;
+}
+
+// /tme2/exchange/exchange_name
+// /tme2/global/fixed_exchange/exchange_name 
+message Exchange {
+    required string host = 1;
+}
+
+// /tme2/global/reserved_broker/ip 
+message ReservedBroker {
+    required string host = 1;
+}
+
+message Reference {
+    required string host = 1;
+}
+
+message Command {
+    enum Type {
+        MIGRATE_EXCHANGE = 0;
+    }
+    required Type type = 1;
+    repeated string argument = 2;
+}

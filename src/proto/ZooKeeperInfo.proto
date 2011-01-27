@@ -80,3 +80,11 @@ message Command {
     required Type type = 1;
     repeated string argument = 2;
 }
+
+message DropConfig {
+    enum Policy {
+        NEWEST = 0;
+        OLDEST = 1;
+    }
+    required Policy policy = 1;
+}

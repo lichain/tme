@@ -3991,6 +3991,337 @@ public final class ZooKeeperInfo {
     }
   }
   
+  public static final class DropConfig extends
+      com.google.protobuf.GeneratedMessage {
+    // Use DropConfig.newBuilder() to construct.
+    private DropConfig() {}
+    
+    private static final DropConfig defaultInstance = new DropConfig();
+    public static DropConfig getDefaultInstance() {
+      return defaultInstance;
+    }
+    
+    public DropConfig getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+    
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.trendmicro.mist.proto.ZooKeeperInfo.internal_static_com_trendmicro_mist_proto_DropConfig_descriptor;
+    }
+    
+    @Override
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.trendmicro.mist.proto.ZooKeeperInfo.internal_static_com_trendmicro_mist_proto_DropConfig_fieldAccessorTable;
+    }
+    
+    public static enum Policy
+        implements com.google.protobuf.ProtocolMessageEnum {
+      NEWEST(0, 0),
+      OLDEST(1, 1),
+      ;
+      
+      
+      public final int getNumber() { return value; }
+      
+      public static Policy valueOf(int value) {
+        switch (value) {
+          case 0: return NEWEST;
+          case 1: return OLDEST;
+          default: return null;
+        }
+      }
+      
+      public final com.google.protobuf.Descriptors.EnumValueDescriptor
+          getValueDescriptor() {
+        return getDescriptor().getValues().get(index);
+      }
+      public final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptorForType() {
+        return getDescriptor();
+      }
+      public static final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptor() {
+        return com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.getDescriptor().getEnumTypes().get(0);
+      }
+      
+      private static final Policy[] VALUES = {
+        NEWEST, OLDEST, 
+      };
+      public static Policy valueOf(
+          com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+        if (desc.getType() != getDescriptor()) {
+          throw new java.lang.IllegalArgumentException(
+            "EnumValueDescriptor is not for this type.");
+        }
+        return VALUES[desc.getIndex()];
+      }
+      private final int index;
+      private final int value;
+      private Policy(int index, int value) {
+        this.index = index;
+        this.value = value;
+      }
+      
+      static {
+        com.trendmicro.mist.proto.ZooKeeperInfo.getDescriptor();
+      }
+    }
+    
+    // required .com.trendmicro.mist.proto.DropConfig.Policy policy = 1;
+    public static final int POLICY_FIELD_NUMBER = 1;
+    private boolean hasPolicy;
+    private com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.Policy policy_ = com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.Policy.NEWEST;
+    public boolean hasPolicy() { return hasPolicy; }
+    public com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.Policy getPolicy() { return policy_; }
+    
+    @Override
+    public final boolean isInitialized() {
+      if (!hasPolicy) return false;
+      return true;
+    }
+    
+    @Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (hasPolicy()) {
+        output.writeEnum(1, getPolicy().getNumber());
+      }
+      getUnknownFields().writeTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    @Override
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+    
+      size = 0;
+      if (hasPolicy()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(1, getPolicy().getNumber());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+    
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistry extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistry extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistry extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeDelimitedFrom(input).buildParsed();
+    }
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistry extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeDelimitedFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistry extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    
+    public static Builder newBuilder() { return new Builder(); }
+    public Builder newBuilderForType() { return new Builder(); }
+    public static Builder newBuilder(com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig prototype) {
+      return new Builder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+    
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> {
+      // Construct using com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.newBuilder()
+      private Builder() {}
+      
+      com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig result = new com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig();
+      
+      @Override
+      protected com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig internalGetResult() {
+        return result;
+      }
+      
+      @Override
+      public Builder clear() {
+        result = new com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig();
+        return this;
+      }
+      
+      @Override
+      public Builder clone() {
+        return new Builder().mergeFrom(result);
+      }
+      
+      @Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.getDescriptor();
+      }
+      
+      public com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig getDefaultInstanceForType() {
+        return com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.getDefaultInstance();
+      }
+      
+      public com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig build() {
+        if (result != null && !isInitialized()) {
+          throw new com.google.protobuf.UninitializedMessageException(
+            result);
+        }
+        return buildPartial();
+      }
+      
+      private com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig buildParsed()
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        if (!isInitialized()) {
+          throw new com.google.protobuf.UninitializedMessageException(
+            result).asInvalidProtocolBufferException();
+        }
+        return buildPartial();
+      }
+      
+      public com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig buildPartial() {
+        if (result == null) {
+          throw new IllegalStateException(
+            "build() has already been called on this Builder.");  }
+        com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig returnMe = result;
+        result = null;
+        return returnMe;
+      }
+      
+      @Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig) {
+          return mergeFrom((com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+      
+      public Builder mergeFrom(com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig other) {
+        if (other == com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.getDefaultInstance()) return this;
+        if (other.hasPolicy()) {
+          setPolicy(other.getPolicy());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+      
+      @Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return mergeFrom(input,
+          com.google.protobuf.ExtensionRegistry.getEmptyRegistry());
+      }
+      
+      @Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistry extensionRegistry)
+          throws java.io.IOException {
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder(
+            this.getUnknownFields());
+        while (true) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              this.setUnknownFields(unknownFields.build());
+              return this;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                this.setUnknownFields(unknownFields.build());
+                return this;
+              }
+              break;
+            }
+            case 8: {
+              int rawValue = input.readEnum();
+              com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.Policy value = com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.Policy.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(1, rawValue);
+              } else {
+                setPolicy(value);
+              }
+              break;
+            }
+          }
+        }
+      }
+      
+      
+      // required .com.trendmicro.mist.proto.DropConfig.Policy policy = 1;
+      public boolean hasPolicy() {
+        return result.hasPolicy();
+      }
+      public com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.Policy getPolicy() {
+        return result.getPolicy();
+      }
+      public Builder setPolicy(com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.Policy value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        result.hasPolicy = true;
+        result.policy_ = value;
+        return this;
+      }
+      public Builder clearPolicy() {
+        result.hasPolicy = false;
+        result.policy_ = com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.Policy.NEWEST;
+        return this;
+      }
+    }
+    
+    static {
+      com.trendmicro.mist.proto.ZooKeeperInfo.getDescriptor();
+    }
+  }
+  
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_com_trendmicro_mist_proto_GOCReference_descriptor;
   private static
@@ -4046,6 +4377,11 @@ public final class ZooKeeperInfo {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_com_trendmicro_mist_proto_Command_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_com_trendmicro_mist_proto_DropConfig_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_com_trendmicro_mist_proto_DropConfig_fieldAccessorTable;
   
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -4076,8 +4412,11 @@ public final class ZooKeeperInfo {
       "\030\001 \002(\t\"\031\n\tReference\022\014\n\004host\030\001 \002(\t\"p\n\007Com" +
       "mand\0225\n\004type\030\001 \002(\0162\'.com.trendmicro.mist" +
       ".proto.Command.Type\022\020\n\010argument\030\002 \003(\t\"\034\n" +
-      "\004Type\022\024\n\020MIGRATE_EXCHANGE\020\000B*\n\031com.trend" +
-      "micro.mist.protoB\rZooKeeperInfo";
+      "\004Type\022\024\n\020MIGRATE_EXCHANGE\020\000\"l\n\nDropConfi" +
+      "g\022<\n\006policy\030\001 \002(\0162,.com.trendmicro.mist." +
+      "proto.DropConfig.Policy\" \n\006Policy\022\n\n\006NEW" +
+      "EST\020\000\022\n\n\006OLDEST\020\001B*\n\031com.trendmicro.mist" +
+      ".protoB\rZooKeeperInfo";
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
         public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -4171,6 +4510,14 @@ public final class ZooKeeperInfo {
               new java.lang.String[] { "Type", "Argument", },
               com.trendmicro.mist.proto.ZooKeeperInfo.Command.class,
               com.trendmicro.mist.proto.ZooKeeperInfo.Command.Builder.class);
+          internal_static_com_trendmicro_mist_proto_DropConfig_descriptor =
+            getDescriptor().getMessageTypes().get(10);
+          internal_static_com_trendmicro_mist_proto_DropConfig_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_com_trendmicro_mist_proto_DropConfig_descriptor,
+              new java.lang.String[] { "Policy", },
+              com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.class,
+              com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.Builder.class);
           return null;
         }
       };

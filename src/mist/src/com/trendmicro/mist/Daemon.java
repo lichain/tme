@@ -169,30 +169,19 @@ public class Daemon {
             System.err.println(e.getMessage());
         }
     }
-    
+
     public void removeSession(int sess_id) throws MistException {
+        Session sess = getSessionById(sess_id);
+        if(sess.isAttached()) {
+            sess.detach(sess.asConsumer() ? GateTalk.Request.Role.SOURCE: GateTalk.Request.Role.SINK);
+            if(sess.asConsumer())
+                Daemon.joinSession(sess.getThread());
+        }
+        else
+            sess.removeAllClient();
+
         synchronized(sessionPool) {
-            try {
-                int i;
-                for(i = 0; i < sessionPool.size(); i++) {
-                    Session sess = sessionPool.get(i);
-                    if(sess.getId() == sess_id) {
-                        if(sess.isAttached()) {
-                            sess.detach(sess.asConsumer() ? GateTalk.Request.Role.SOURCE: GateTalk.Request.Role.SINK);
-                            if(sess.asConsumer())
-                                Daemon.joinSession(sess.getThread());
-                        }
-                        else
-                            sess.removeAllClient();
-                        sessionPool.remove(i);
-                        return;
-                    }
-                }
-                throw new MistException(String.format("session_id `%d' not found", sess_id));
-            }
-            catch(MistException e) {
-                throw e;
-            }
+            sessionPool.remove(sess);
         }
     }
 

@@ -544,6 +544,24 @@ public class ExchangeFarm extends Thread implements DataListener {
         }
         return list;
     }
+    
+    public static String getCurrentExchangeHost(Exchange exchange) {
+        String host = null;
+        String exchangeFullName = exchange.toString();
+        String exchangeNodePath = "/tme2/exchange/" + exchangeFullName;
+
+        ZNode exchangeNode = new ZNode(exchangeNodePath);
+        ZooKeeperInfo.Exchange.Builder exBuilder = ZooKeeperInfo.Exchange.newBuilder();
+        try {
+            TextFormat.merge(new String(exchangeNode.getContent()), exBuilder);
+            ZooKeeperInfo.Exchange ex = exBuilder.build();
+            host = ex.getHost();
+        }
+        catch(Exception e) {
+            logger.error(Utils.convertStackTrace(e));
+        }
+        return host;
+    }
 
     @Override
     public void onDataChanged(String parentPath, Map<String, byte[]> changeMap) {

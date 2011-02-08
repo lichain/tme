@@ -171,6 +171,7 @@ public class Client {
                     logger.info("exchangeRefPath added: " + exchangeRefPath);
                 }
             }
+            BrokerAdmin.setExchangeFlowControl(exchange, ExchangeFarm.getDropPolicy(exchange));
             opened = true;
         }
         catch(JMSException e) {

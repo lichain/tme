@@ -20,6 +20,7 @@ import com.trendmicro.codi.DataObserver;
 import com.trendmicro.codi.Node;
 import com.trendmicro.codi.NodeListener;
 import com.trendmicro.codi.ZNode;
+import com.trendmicro.mist.BrokerAdmin;
 import com.trendmicro.mist.BrokerSpy;
 import com.trendmicro.mist.Client;
 import com.trendmicro.mist.Daemon;
@@ -561,6 +562,28 @@ public class ExchangeFarm extends Thread implements DataListener {
             logger.error(Utils.convertStackTrace(e));
         }
         return host;
+    }
+
+    public static BrokerAdmin.FlowControlBehavior getDropPolicy(Exchange exchange) {
+        String path = "/tme2/global/drop_exchange" + "/" + exchange.getName();
+        ZNode dropNode = new ZNode(path);
+        try {
+            if(dropNode.exists()) {
+                ZooKeeperInfo.DropConfig.Builder dropBuilder = ZooKeeperInfo.DropConfig.newBuilder();
+                TextFormat.merge(dropNode.getContentString(), dropBuilder);
+                ZooKeeperInfo.DropConfig dropConf = dropBuilder.build();
+                if(dropConf.getPolicy().equals(ZooKeeperInfo.DropConfig.Policy.NEWEST))
+                    return BrokerAdmin.FlowControlBehavior.DROP_NEWEST;
+                else
+                    return BrokerAdmin.FlowControlBehavior.DROP_OLDEST;
+            }
+            else
+                return BrokerAdmin.FlowControlBehavior.BLOCK;
+        }
+        catch(Exception e) {
+            logger.error(Utils.convertStackTrace(e));
+            return BrokerAdmin.FlowControlBehavior.BLOCK;
+        }
     }
 
     @Override

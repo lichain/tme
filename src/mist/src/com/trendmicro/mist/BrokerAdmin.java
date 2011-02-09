@@ -9,12 +9,18 @@ import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.sun.messaging.AdminConnectionConfiguration;
 import com.sun.messaging.AdminConnectionFactory;
 import com.trendmicro.mist.mfr.ExchangeFarm;
 import com.trendmicro.mist.util.Exchange;
+import com.trendmicro.spn.common.util.Utils;
 
 public class BrokerAdmin {
+    private static Log logger = LogFactory.getLog(BrokerAdmin.class);
+
     public static enum FlowControlBehavior {
         BLOCK, DROP_NEWEST, DROP_OLDEST,
     }
@@ -52,7 +58,7 @@ public class BrokerAdmin {
             conn.setAttribute(name, attr);
         }
         catch(Exception e) {
-
+            logger.error(Utils.convertStackTrace(e));
         }
         finally {
             try {
@@ -60,7 +66,31 @@ public class BrokerAdmin {
             }
             catch(Exception e) {
             }
+        }
+    }
 
+    public static void setExchangeTotalLimit(Exchange exchange, long sizeBytes, long count) {
+        JMXConnector jmxconn = null;
+        try {
+            jmxconn = createJMXConnector(ExchangeFarm.getCurrentExchangeHost(exchange));
+            MBeanServerConnection conn = jmxconn.getMBeanServerConnection();
+            String pattern = String.format("com.sun.messaging.jms.server:type=Destination,subtype=Config,desttype=q,name=\"%s\"", exchange.getName());
+            ObjectName name = conn.queryNames(new ObjectName(pattern), null).iterator().next();
+
+            Attribute attr = new Attribute("MaxTotalMsgBytes", sizeBytes);
+            conn.setAttribute(name, attr);
+            attr = new Attribute("MaxNumMsgs", count);
+            conn.setAttribute(name, attr);
+        }
+        catch(Exception e) {
+            logger.error(Utils.convertStackTrace(e));
+        }
+        finally {
+            try {
+                jmxconn.close();
+            }
+            catch(Exception e) {
+            }
         }
     }
 }

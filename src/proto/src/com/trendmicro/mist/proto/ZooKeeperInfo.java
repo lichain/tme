@@ -4322,6 +4322,315 @@ public final class ZooKeeperInfo {
     }
   }
   
+  public static final class TotalLimit extends
+      com.google.protobuf.GeneratedMessage {
+    // Use TotalLimit.newBuilder() to construct.
+    private TotalLimit() {}
+    
+    private static final TotalLimit defaultInstance = new TotalLimit();
+    public static TotalLimit getDefaultInstance() {
+      return defaultInstance;
+    }
+    
+    public TotalLimit getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+    
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return com.trendmicro.mist.proto.ZooKeeperInfo.internal_static_com_trendmicro_mist_proto_TotalLimit_descriptor;
+    }
+    
+    @Override
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return com.trendmicro.mist.proto.ZooKeeperInfo.internal_static_com_trendmicro_mist_proto_TotalLimit_fieldAccessorTable;
+    }
+    
+    // required int64 sizeBytes = 1;
+    public static final int SIZEBYTES_FIELD_NUMBER = 1;
+    private boolean hasSizeBytes;
+    private long sizeBytes_ = 0L;
+    public boolean hasSizeBytes() { return hasSizeBytes; }
+    public long getSizeBytes() { return sizeBytes_; }
+    
+    // required int64 count = 2;
+    public static final int COUNT_FIELD_NUMBER = 2;
+    private boolean hasCount;
+    private long count_ = 0L;
+    public boolean hasCount() { return hasCount; }
+    public long getCount() { return count_; }
+    
+    @Override
+    public final boolean isInitialized() {
+      if (!hasSizeBytes) return false;
+      if (!hasCount) return false;
+      return true;
+    }
+    
+    @Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (hasSizeBytes()) {
+        output.writeInt64(1, getSizeBytes());
+      }
+      if (hasCount()) {
+        output.writeInt64(2, getCount());
+      }
+      getUnknownFields().writeTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    @Override
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+    
+      size = 0;
+      if (hasSizeBytes()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(1, getSizeBytes());
+      }
+      if (hasCount()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(2, getCount());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+    
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistry extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data).buildParsed();
+    }
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistry extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return newBuilder().mergeFrom(data, extensionRegistry)
+               .buildParsed();
+    }
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistry extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeDelimitedFrom(input).buildParsed();
+    }
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistry extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeDelimitedFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input).buildParsed();
+    }
+    public static com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistry extensionRegistry)
+        throws java.io.IOException {
+      return newBuilder().mergeFrom(input, extensionRegistry)
+               .buildParsed();
+    }
+    
+    public static Builder newBuilder() { return new Builder(); }
+    public Builder newBuilderForType() { return new Builder(); }
+    public static Builder newBuilder(com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit prototype) {
+      return new Builder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+    
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> {
+      // Construct using com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit.newBuilder()
+      private Builder() {}
+      
+      com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit result = new com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit();
+      
+      @Override
+      protected com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit internalGetResult() {
+        return result;
+      }
+      
+      @Override
+      public Builder clear() {
+        result = new com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit();
+        return this;
+      }
+      
+      @Override
+      public Builder clone() {
+        return new Builder().mergeFrom(result);
+      }
+      
+      @Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit.getDescriptor();
+      }
+      
+      public com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit getDefaultInstanceForType() {
+        return com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit.getDefaultInstance();
+      }
+      
+      public com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit build() {
+        if (result != null && !isInitialized()) {
+          throw new com.google.protobuf.UninitializedMessageException(
+            result);
+        }
+        return buildPartial();
+      }
+      
+      private com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit buildParsed()
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        if (!isInitialized()) {
+          throw new com.google.protobuf.UninitializedMessageException(
+            result).asInvalidProtocolBufferException();
+        }
+        return buildPartial();
+      }
+      
+      public com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit buildPartial() {
+        if (result == null) {
+          throw new IllegalStateException(
+            "build() has already been called on this Builder.");  }
+        com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit returnMe = result;
+        result = null;
+        return returnMe;
+      }
+      
+      @Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit) {
+          return mergeFrom((com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+      
+      public Builder mergeFrom(com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit other) {
+        if (other == com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit.getDefaultInstance()) return this;
+        if (other.hasSizeBytes()) {
+          setSizeBytes(other.getSizeBytes());
+        }
+        if (other.hasCount()) {
+          setCount(other.getCount());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+      
+      @Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return mergeFrom(input,
+          com.google.protobuf.ExtensionRegistry.getEmptyRegistry());
+      }
+      
+      @Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistry extensionRegistry)
+          throws java.io.IOException {
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder(
+            this.getUnknownFields());
+        while (true) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              this.setUnknownFields(unknownFields.build());
+              return this;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                this.setUnknownFields(unknownFields.build());
+                return this;
+              }
+              break;
+            }
+            case 8: {
+              setSizeBytes(input.readInt64());
+              break;
+            }
+            case 16: {
+              setCount(input.readInt64());
+              break;
+            }
+          }
+        }
+      }
+      
+      
+      // required int64 sizeBytes = 1;
+      public boolean hasSizeBytes() {
+        return result.hasSizeBytes();
+      }
+      public long getSizeBytes() {
+        return result.getSizeBytes();
+      }
+      public Builder setSizeBytes(long value) {
+        result.hasSizeBytes = true;
+        result.sizeBytes_ = value;
+        return this;
+      }
+      public Builder clearSizeBytes() {
+        result.hasSizeBytes = false;
+        result.sizeBytes_ = 0L;
+        return this;
+      }
+      
+      // required int64 count = 2;
+      public boolean hasCount() {
+        return result.hasCount();
+      }
+      public long getCount() {
+        return result.getCount();
+      }
+      public Builder setCount(long value) {
+        result.hasCount = true;
+        result.count_ = value;
+        return this;
+      }
+      public Builder clearCount() {
+        result.hasCount = false;
+        result.count_ = 0L;
+        return this;
+      }
+    }
+    
+    static {
+      com.trendmicro.mist.proto.ZooKeeperInfo.getDescriptor();
+    }
+  }
+  
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_com_trendmicro_mist_proto_GOCReference_descriptor;
   private static
@@ -4382,6 +4691,11 @@ public final class ZooKeeperInfo {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_com_trendmicro_mist_proto_DropConfig_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_com_trendmicro_mist_proto_TotalLimit_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_com_trendmicro_mist_proto_TotalLimit_fieldAccessorTable;
   
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -4415,8 +4729,9 @@ public final class ZooKeeperInfo {
       "\004Type\022\024\n\020MIGRATE_EXCHANGE\020\000\"l\n\nDropConfi" +
       "g\022<\n\006policy\030\001 \002(\0162,.com.trendmicro.mist." +
       "proto.DropConfig.Policy\" \n\006Policy\022\n\n\006NEW" +
-      "EST\020\000\022\n\n\006OLDEST\020\001B*\n\031com.trendmicro.mist" +
-      ".protoB\rZooKeeperInfo";
+      "EST\020\000\022\n\n\006OLDEST\020\001\".\n\nTotalLimit\022\021\n\tsizeB" +
+      "ytes\030\001 \002(\003\022\r\n\005count\030\002 \002(\003B*\n\031com.trendmi" +
+      "cro.mist.protoB\rZooKeeperInfo";
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
         public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -4518,6 +4833,14 @@ public final class ZooKeeperInfo {
               new java.lang.String[] { "Policy", },
               com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.class,
               com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.Builder.class);
+          internal_static_com_trendmicro_mist_proto_TotalLimit_descriptor =
+            getDescriptor().getMessageTypes().get(11);
+          internal_static_com_trendmicro_mist_proto_TotalLimit_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_com_trendmicro_mist_proto_TotalLimit_descriptor,
+              new java.lang.String[] { "SizeBytes", "Count", },
+              com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit.class,
+              com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit.Builder.class);
           return null;
         }
       };

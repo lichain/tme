@@ -585,6 +585,19 @@ public class ExchangeFarm extends Thread implements DataListener {
             return BrokerAdmin.FlowControlBehavior.BLOCK;
         }
     }
+    
+    public static ZooKeeperInfo.TotalLimit getTotalLimit(Exchange exchange) {
+        String path = "/tme2/global/limit_exchange" + "/" + exchange.getName();
+        ZNode limitNode = new ZNode(path);
+        try {
+            ZooKeeperInfo.TotalLimit.Builder limitBuilder = ZooKeeperInfo.TotalLimit.newBuilder();
+            TextFormat.merge(limitNode.getContentString(), limitBuilder);
+            return limitBuilder.build();
+        }
+        catch(Exception e) {
+            return ZooKeeperInfo.TotalLimit.newBuilder().setCount(100000).setSizeBytes(10485760).build();
+        }
+    }
 
     @Override
     public void onDataChanged(String parentPath, Map<String, byte[]> changeMap) {

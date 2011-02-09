@@ -172,6 +172,8 @@ public class Client {
                 }
             }
             BrokerAdmin.setExchangeFlowControl(exchange, ExchangeFarm.getDropPolicy(exchange));
+            ZooKeeperInfo.TotalLimit limit = ExchangeFarm.getTotalLimit(exchange);
+            BrokerAdmin.setExchangeTotalLimit(exchange, limit.getSizeBytes(), limit.getCount());
             opened = true;
         }
         catch(JMSException e) {

@@ -41,6 +41,7 @@ import com.trendmicro.spn.common.util.Utils;
 import com.trendmicro.spn.proto.SpnMessage.Container;
 import com.trendmicro.spn.proto.SpnMessage.LogInfo;
 
+@Deprecated
 public class Session implements Runnable, MessageListener {
     private GateTalk.Session sessionConfig;
     private static Object sessionIdCntLock = new Object();

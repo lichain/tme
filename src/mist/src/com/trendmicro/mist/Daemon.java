@@ -1,24 +1,29 @@
 package com.trendmicro.mist;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.FileReader;
-import java.io.FileInputStream;
-import java.io.BufferedWriter;
-import java.io.BufferedReader;
+import java.net.ServerSocket;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Collection;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.Collections;
-import java.util.Properties;
 import java.util.Map.Entry;
-import java.net.ServerSocket;
+import java.util.Properties;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.PropertyConfigurator;
+import org.nocrala.tools.texttablefmt.CellStyle;
+import org.nocrala.tools.texttablefmt.CellStyle.HorizontalAlign;
+import org.nocrala.tools.texttablefmt.Table;
 
 import com.trendmicro.codi.ZKSessionManager;
 import com.trendmicro.mist.mfr.BrokerFarm;
@@ -28,22 +33,13 @@ import com.trendmicro.mist.mfr.RouteFarm;
 import com.trendmicro.mist.proto.GateTalk;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
 import com.trendmicro.mist.util.Exchange;
-import com.trendmicro.mist.MistException;
 import com.trendmicro.spn.common.util.Utils;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.PropertyConfigurator;
-import org.nocrala.tools.texttablefmt.CellStyle;
-import org.nocrala.tools.texttablefmt.Table;
-import org.nocrala.tools.texttablefmt.CellStyle.HorizontalAlign;
 
 public class Daemon {
     private static boolean shutdownRequested = false;
     private static Log logger = LogFactory.getLog(Daemon.class);
     private ServerSocket server;
     private ArrayList<ServiceProvider> services = new ArrayList<ServiceProvider>();
-    private static HashSet<Thread> deadSessionList = new HashSet<Thread>();
     private CellStyle numberStyle = new CellStyle(HorizontalAlign.right);
 
     private void addDaemonShutdownHook() {
@@ -92,7 +88,7 @@ public class Daemon {
             return cnt;
         }
     }
-    
+
     private boolean bindServicePort(int tryCount) {
         for(int i = 0; i < tryCount; i++) {
             try {
@@ -107,7 +103,7 @@ public class Daemon {
         return false;
     }
 
-    ////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////
 
     public static String nameTempDir;
     public static String nameConfigDir;
@@ -127,7 +123,6 @@ public class Daemon {
     public static final int MAX_MESSAGE_SIZE = 20 * 1024 * 1024;
 
     public static List<Connection> connectionPool = Collections.synchronizedList(new ArrayList<Connection>());
-    public static List<Session> sessionPool = Collections.synchronizedList(new ArrayList<Session>());
     public static Map<String, ExchangeMetric> exchangeStat = Collections.synchronizedMap(new HashMap<String, ExchangeMetric>());
     public static ArrayList<Thread> deadServiceList = new ArrayList<Thread>();
 
@@ -138,7 +133,7 @@ public class Daemon {
         nameLogfile = nameTempDir + "/mistd.log";
         nameMISTConfig = nameConfigDir + "/mistd.properties";
         nameLog4jConfig = nameConfigDir + "/mistd.log4j";
-        
+
         clientID = Utils.getHostIP() + "," + Utils.getCurrentPid();
 
         String cfg_name = System.getProperty("mistd.config", nameMISTConfig);
@@ -156,7 +151,7 @@ public class Daemon {
             Properties prop = new Properties();
             prop.load(new FileInputStream(System.getProperty("mistd.log.log4j", nameLog4jConfig)));
             String logStdout = System.getProperty("mistd.log.stdout");
-            if(logStdout == null) 
+            if(logStdout == null)
                 logStdout = propMIST.getProperty("mistd.log.stdout", "false");
             if(logStdout.equals("true"))
                 prop.setProperty("log4j.rootLogger", prop.getProperty("log4j.rootLogger") + ", stdout");
@@ -170,26 +165,10 @@ public class Daemon {
         }
     }
 
-    public void removeSession(int sess_id) throws MistException {
-        Session sess = getSessionById(sess_id);
-        if(sess.isAttached()) {
-            sess.detach(sess.asConsumer() ? GateTalk.Request.Role.SOURCE: GateTalk.Request.Role.SINK);
-            if(sess.asConsumer())
-                Daemon.joinSession(sess.getThread());
-        }
-        else
-            sess.removeAllClient();
-
-        synchronized(sessionPool) {
-            sessionPool.remove(sess);
-        }
-    }
-
     public static Connection getConnection(GateTalk.Connection conn_config) {
         synchronized(connectionPool) {
-            for(Connection conn : connectionPool) {                
-                if(conn.getHostName().equals(conn_config.getHostName()) &&
-                        conn.getType().equals(conn_config.getBrokerType())) {
+            for(Connection conn : connectionPool) {
+                if(conn.getHostName().equals(conn_config.getHostName()) && conn.getType().equals(conn_config.getBrokerType())) {
                     conn.increaseReference();
                     return conn;
                 }
@@ -209,7 +188,7 @@ public class Daemon {
         }
         return null;
     }
-    
+
     public static Connection getConnection(String host) {
         ZooKeeperInfo.Broker broker = BrokerFarm.getInstance().getBrokerByHost(host);
         GateTalk.Connection.Builder conn_builder = GateTalk.Connection.newBuilder();
@@ -224,72 +203,8 @@ public class Daemon {
             conn_builder.setUsername("");
             conn_builder.setPassword("");
         }
-        
+
         return getConnection(conn_builder.build());
-    }
-
-    public String getSessionList() {
-        StringWriter strOut = new StringWriter();
-        
-        strOut.write(String.format("%d sessions%n", sessionPool.size()));
-        if(sessionPool.size() > 0) {
-            Table tab = new Table(5);
-            tab.addCell("ID");
-            tab.addCell("Status");
-            tab.addCell("Type");
-            tab.addCell("Exchange");
-            tab.addCell("Conn. IDs");
-            for(Session sess: sessionPool) {
-                Collection<Client> clients = sess.getClientList();
-                tab.addCell(String.valueOf(sess.getId()));
-                tab.addCell(sess.isAttached() ? "BUSY": "idle");
-                tab.addCell(clients.size() == 0 ? "": sess.asConsumer() ? "consumer": "producer");
-                String exchanges = "";
-                String conn_ids = "";
-                for(Client c: clients) {
-                    exchanges += (c.getExchange().toString() + " ");
-                    conn_ids += (c.getConnection().getId() + " ");
-                }
-                tab.addCell(exchanges);
-                tab.addCell(conn_ids);
-            }
-            strOut.write(tab.render() + "\n");
-        }
-        
-        strOut.write(String.format("%d connections%n", connectionPool.size()));
-        if(connectionPool.size() > 0) {
-            Table tab = new Table(6);
-            tab.addCell("ID");
-            tab.addCell("Connected");
-            tab.addCell("Type");
-            tab.addCell("Auth");
-            tab.addCell("Host");
-            tab.addCell("Ref. Count");
-            for(Connection conn: connectionPool) {
-                tab.addCell(String.valueOf(conn.getId()));
-                tab.addCell(String.valueOf(conn.isConnected()), new CellStyle(HorizontalAlign.center));
-                tab.addCell(conn.getType());
-                tab.addCell(conn.getConfig().getUsername() + ":*");
-                tab.addCell(conn.getConnectionString());
-                tab.addCell(String.valueOf(conn.getReferenceCount()), numberStyle);
-            }
-            strOut.write(tab.render() + "\n");
-        }
-
-        return strOut.toString();
-    }
-
-    public ArrayList<Integer> getSessionIdFree() {
-        synchronized(sessionPool) {
-            ArrayList<Integer> sessFree = new ArrayList<Integer>();
-            int i;
-            for(i = 0; i < sessionPool.size(); i++) {
-                Session sess = sessionPool.get(i);
-                if(!sess.isAttached())
-                    sessFree.add(sess.getId());
-            }
-            return sessFree;
-        }
     }
 
     public String getDaemonStatus(String input) {
@@ -300,7 +215,7 @@ public class Daemon {
             Table tab = new Table(2);
             tab.addCell("ID");
             tab.addCell("Status");
-            for(ServiceProvider s: services) {
+            for(ServiceProvider s : services) {
                 tab.addCell(String.valueOf(s.getId()));
                 tab.addCell(s.isReady() ? "idle": "busy");
             }
@@ -311,7 +226,7 @@ public class Daemon {
             Table tab = new Table(2);
             tab.addCell("Host");
             tab.addCell("Status");
-            for(Entry<String, ZooKeeperInfo.Broker> ent:BrokerFarm.getInstance().getAllBrokers().entrySet()){
+            for(Entry<String, ZooKeeperInfo.Broker> ent : BrokerFarm.getInstance().getAllBrokers().entrySet()) {
                 tab.addCell(ent.getValue().getHost() + ":" + ent.getValue().getPort());
                 tab.addCell(ent.getValue().getStatus().toString());
             }
@@ -327,7 +242,7 @@ public class Daemon {
             tab.addCell("Out-Bytes");
             tab.addCell("Ref-Count");
             tab.addCell("De-Ref-Count");
-            for(Map.Entry<String, ExchangeMetric> e: exchangeStat.entrySet()) {
+            for(Map.Entry<String, ExchangeMetric> e : exchangeStat.entrySet()) {
                 ExchangeMetric info = e.getValue();
                 tab.addCell(e.getKey());
                 tab.addCell(String.valueOf(info.getMessageInCount()), numberStyle);
@@ -342,18 +257,6 @@ public class Daemon {
         return strOut.toString();
     }
 
-    public Session getSessionById(int sess_id) throws MistException {
-        synchronized(sessionPool) {
-            int i;
-            for(i = 0; i < sessionPool.size(); i++) {
-                Session sess = sessionPool.get(i);
-                if(sess.getId() == sess_id)
-                    return sess;
-            }
-            throw new MistException(String.format("invalid session_id `%d'", sess_id));
-        }
-    }
-    
     public static synchronized ExchangeMetric getExchangeMetric(Exchange exchange) {
         if(exchangeStat.containsKey(exchange.toString()))
             return exchangeStat.get(exchange.toString());
@@ -386,12 +289,6 @@ public class Daemon {
         return false;
     }
 
-    public static void joinSession(Thread t) {
-        synchronized(deadSessionList) {
-            deadSessionList.add(t);
-        }
-    }
-
     public void run() {
         if(isRunning()) {
             System.err.println("Another daemon running, exit");
@@ -408,7 +305,7 @@ public class Daemon {
             ExchangeFarm.getInstance();
             BrokerFarm.getInstance();
             RouteFarm.getInstance();
-            
+
             if(!bindServicePort(10)) {
                 logger.error("unable to bind daemon service port, exit");
                 System.exit(-1);
@@ -439,21 +336,6 @@ public class Daemon {
                     }
                 }
 
-                if(deadSessionList.size() > 0) {
-                    Thread t = null;
-                    synchronized(deadSessionList) {
-                        Iterator<Thread> iter = deadSessionList.iterator();
-                        if(iter.hasNext())
-                            t = iter.next();
-                    }
-                    if(t != null) {
-                        t.join();
-                        logger.info(t.getName() + " joined");
-                        synchronized(deadSessionList) {
-                            deadSessionList.remove(t);
-                        }
-                    }
-                }
                 if(deadServiceList.size() > 0) {
                     synchronized(deadServiceList) {
                         Iterator<Thread> iter = deadServiceList.iterator();

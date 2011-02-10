@@ -42,12 +42,12 @@ import com.trendmicro.spn.proto.SpnMessage.Container;
 import com.trendmicro.spn.proto.SpnMessage.LogInfo;
 
 @Deprecated
-public class Session implements Runnable, MessageListener {
+public class OldSession implements Runnable, MessageListener {
     private GateTalk.Session sessionConfig;
     private static Object sessionIdCntLock = new Object();
     private static Integer sessionIdCnt = Math.abs(new Long(UUID.randomUUID().getLeastSignificantBits()).intValue());
     private int session_id;
-    private static Log logger = LogFactory.getLog(Session.class);
+    private static Log logger = LogFactory.getLog(OldSession.class);
     private Thread hostThread;
     private boolean detachNow = false;
     private boolean attached = false;
@@ -425,7 +425,7 @@ public class Session implements Runnable, MessageListener {
 
     public UUID bigLock = UUID.randomUUID();
 
-    public Session(GateTalk.Session sess_config) throws MistException {
+    public OldSession(GateTalk.Session sess_config) throws MistException {
         sessionConfig = sess_config;
         synchronized(sessionIdCntLock) {
             if(sessionIdCnt == Integer.MAX_VALUE)

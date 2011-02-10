@@ -223,10 +223,9 @@ public class ProducerSession extends Session {
         cl_builder.setAction(GateTalk.Client.Action.MOUNT);
         GateTalk.Client client_config = cl_builder.build();
 
-        if((!sessionConfig.getConnection().getBrokerType().equals("activemq"))
-            && (!Exchange.isValidExchange(client_config.getChannel().getName())))
-                throw new MistException(String.format("exchange `%s' not valid", client_config.getChannel().getName()));            
-        
+        if(!Exchange.isValidExchange(client_config.getChannel().getName()))
+            throw new MistException(String.format("exchange `%s' not valid", client_config.getChannel().getName()));
+
         Client client = null;
         try {
             client = addClient(client_config);
@@ -267,8 +266,7 @@ public class ProducerSession extends Session {
         }
     }
 
-    @Override
-    public void run() {
+    private void sendLoop() {
         Thread.currentThread().setName("Session-" + sessionId);
         lastRouteUpdate = -1;
         // Accept the incoming connection and setup socket IO streams
@@ -355,6 +353,12 @@ public class ProducerSession extends Session {
     }
 
     @Override
+    public void run() {
+        sendLoop();
+        close(false);
+    }
+
+    @Override
     public void addClientIfAttached(Client c) {
         // TODO Auto-generated method stub
 
@@ -377,5 +381,10 @@ public class ProducerSession extends Session {
         }
         if(isAlive())
             logger.error("force closing the producer, the message might not have been delivered!");
+    }
+
+    @Override
+    public boolean isAttached() {
+        return isAlive();
     }
 }

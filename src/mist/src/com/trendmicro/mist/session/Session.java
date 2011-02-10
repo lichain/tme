@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.Collection;
 import java.util.HashMap;
 
 import org.apache.commons.logging.Log;
@@ -30,7 +31,6 @@ public abstract class Session extends Thread {
 
     protected HashMap<Exchange, Client> allClients = new HashMap<Exchange, Client>();
 
-    private boolean attached = false;
     private GOCUtils gocClient = null;
     protected boolean determinedConnection = false;
 
@@ -176,7 +176,7 @@ public abstract class Session extends Thread {
     public synchronized void attach(GateTalk.Request.Role role) throws MistException {
         checkRole(role);
 
-        if(attached)
+        if(isAttached())
             throw new MistException(MistException.ALREADY_ATTACHED);
 
         try {
@@ -194,7 +194,6 @@ public abstract class Session extends Thread {
             }
             throw new MistException(e.getMessage());
         }
-        attached = true;
         detachNow = false;
         gocClient = null;
         isReady = false;
@@ -207,7 +206,7 @@ public abstract class Session extends Thread {
     public synchronized void detach(GateTalk.Request.Role role) throws MistException {
         checkRole(role);
 
-        if(!attached)
+        if(!isAttached())
             return;
 
         detachNow = true;
@@ -239,7 +238,7 @@ public abstract class Session extends Thread {
             throw new MistException(MistException.ALREADY_MOUNTED);
         allClients.put(c.getExchange(), c);
 
-        if(attached)
+        if(isAttached())
             addClientIfAttached(c);
 
         return c;
@@ -282,5 +281,11 @@ public abstract class Session extends Thread {
 
     public boolean isReady() {
         return isReady;
+    }
+
+    public abstract boolean isAttached();
+    
+    public Collection<Client> getClientList() {
+        return allClients.values();
     }
 }

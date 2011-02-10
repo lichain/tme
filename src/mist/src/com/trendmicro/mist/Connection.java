@@ -1,23 +1,20 @@
 
 package com.trendmicro.mist;
 
-import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.trendmicro.mist.mfr.BrokerFarm;
 import com.trendmicro.mist.proto.GateTalk;
 import com.trendmicro.mist.util.ConnectionList;
-import com.trendmicro.mist.MistException;
 import com.trendmicro.spn.common.FixedReconnect;
-import com.trendmicro.spn.common.InfiniteReconnect;
 import com.trendmicro.spn.common.ReconnectCounter;
 import com.trendmicro.spn.common.util.Utils;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 public class Connection implements ExceptionListener 
 {
@@ -89,7 +86,8 @@ public class Connection implements ExceptionListener
     }
 
     private synchronized void reconnect() {
-        ArrayList<Session> pausedSessions=new ArrayList<Session>();
+        //TODO: fix this
+        /*ArrayList<Session> pausedSessions=new ArrayList<Session>();
         try {
             if(connected) {
                 synchronized(Daemon.sessionPool) {
@@ -116,7 +114,7 @@ public class Connection implements ExceptionListener
         catch(MistException e) {
             logger.fatal(e.getMessage());
             logger.fatal("connection %d: fail to reconnect");
-        }
+        }*/
     }
 
     ////////////////////////////////////////////////////////////////////////////////

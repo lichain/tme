@@ -332,14 +332,15 @@ public class Client {
         }
 
         try {
-            Session sess = Daemon.instance.getSessionById(getSessionId());
+            //TODO: fix this
+            /*Session sess = Daemon.instance.getSessionById(getSessionId());
             closeClient(false, true);
             openClient(sess.isDetermined(), false, true);
             if(sess.isAttached()) {
                 if(isConsumer())
                     consumer.setMessageListener(sess);
                 sess.setPause(false);
-            }
+            }*/
         }
         catch(Exception e) {
             logger.error(e.getMessage());

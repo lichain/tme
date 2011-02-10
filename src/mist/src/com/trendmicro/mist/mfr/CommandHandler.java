@@ -4,18 +4,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import org.apache.commons.logging.LogFactory;
-
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import com.google.protobuf.TextFormat;
 import com.trendmicro.codi.CODIException;
 import com.trendmicro.codi.DataListener;
 import com.trendmicro.codi.DataObserver;
 import com.trendmicro.codi.ZNode;
-import com.trendmicro.mist.Client;
-import com.trendmicro.mist.Daemon;
-import com.trendmicro.mist.Session;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
 import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.spn.common.util.Utils;
@@ -35,7 +31,8 @@ public class CommandHandler extends Thread implements DataListener {
     }
 
     private void migrateExchange(Exchange exchange) {
-        synchronized(Daemon.sessionPool) {
+        //TODO: fix this
+/*        synchronized(Daemon.sessionPool) {
             for(Session sess : Daemon.sessionPool) {
                 for(Client c : sess.getClientList()) {
                     if(c.tlsClient != null) {
@@ -63,7 +60,7 @@ public class CommandHandler extends Thread implements DataListener {
                     }
                 }
             }
-        }
+        }*/
     }
 
     private CommandHandler() {

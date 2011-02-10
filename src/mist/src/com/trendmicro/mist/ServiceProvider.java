@@ -1,21 +1,25 @@
 package com.trendmicro.mist;
 
-import java.io.IOException;
-import java.io.BufferedOutputStream;
 import java.io.BufferedInputStream;
-import java.util.ArrayList;
-import java.net.Socket;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
 import java.net.ServerSocket;
-
-import com.trendmicro.mist.util.Exchange;
-import com.trendmicro.mist.util.Packet;
-import com.trendmicro.spn.common.util.Utils;
-
-import com.trendmicro.mist.proto.GateTalk;
-import com.trendmicro.mist.MistException;
+import java.net.Socket;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import com.trendmicro.mist.proto.GateTalk;
+import com.trendmicro.mist.session.ConsumerSession;
+import com.trendmicro.mist.session.ProducerSession;
+import com.trendmicro.mist.session.Session;
+import com.trendmicro.mist.session.SessionPool;
+import com.trendmicro.mist.session.UniqueSessionId;
+import com.trendmicro.mist.util.Exchange;
+import com.trendmicro.mist.util.Packet;
+import com.trendmicro.spn.common.util.Utils;
 
 public class ServiceProvider implements Runnable {
     private static Log logger = LogFactory.getLog(ServiceProvider.class);
@@ -29,26 +33,22 @@ public class ServiceProvider implements Runnable {
     private void handleClient(GateTalk.Client client_config, GateTalk.Command.Builder reply_builder) {
         GateTalk.Response.Builder res_builder = GateTalk.Response.newBuilder();
         try {
-            Session sess = Daemon.instance.getSessionById(client_config.getSessionId());
-            if(!sess.getConfig().getConnection().getBrokerType().equals("activemq") 
-                && !Exchange.isValidExchange(client_config.getChannel().getName())) 
-                    res_builder.setSuccess(false).setException(String.format("exchange `%s' not valid", client_config.getChannel().getName()));            
+            int sessId = client_config.getSessionId();
+            if(!Exchange.isValidExchange(client_config.getChannel().getName()))
+                res_builder.setSuccess(false).setException(String.format("exchange `%s' not valid", client_config.getChannel().getName()));
+            else if(!SessionPool.pool.containsKey(sessId))
+                res_builder.setSuccess(false).setException(String.format("invalid session id %d", sessId));
             else {
-                synchronized(sess.bigLock) {
-                    if(client_config.getAction() == GateTalk.Client.Action.MOUNT) {
-                        for(Client c : sess.getClientList()) {
-                            if(c.getConfig().equals(client_config))
-                                throw new MistException("exchange already mounted");
-                        }
-                        Client client = new Client(client_config, sess.getConfig());
-                        client.openClient(sess.isDetermined(), false, false);
-                        sess.addClient(client);
-                        res_builder.setSuccess(true).setContext(String.format("mount %s:%s (%s)", client.isQueue() ? "queue": "topic", client.getChannelName(), client.getBrokerHost()));
-                    }
-                    else if(client_config.getAction() == GateTalk.Client.Action.UNMOUNT) {
-                        sess.removeClient(client_config);
-                        res_builder.setSuccess(true).setContext(String.format("unmount %s", client_config.getChannel().getName()));
-                    }
+                Exchange exchange = new Exchange(client_config.getChannel().getName());
+
+                Session sess = SessionPool.getOrCreateConcreteSession(sessId, client_config.getType() == GateTalk.Client.Type.CONSUMER ? GateTalk.Request.Role.SOURCE: GateTalk.Request.Role.SINK);
+                if(client_config.getAction() == GateTalk.Client.Action.MOUNT) {
+                    Client client = sess.addClient(client_config);
+                    res_builder.setSuccess(true).setContext(String.format("exchange %s mounted (%s)", exchange.toString(), client.getBrokerHost()));
+                }
+                else if(client_config.getAction() == GateTalk.Client.Action.UNMOUNT) {
+                    sess.removeClient(client_config);
+                    res_builder.setSuccess(true).setContext(String.format("exchange %s unmounted", exchange.getName()));
                 }
             }
         }
@@ -60,29 +60,30 @@ public class ServiceProvider implements Runnable {
 
     private void handleSession(GateTalk.Session sess_config, GateTalk.Command.Builder reply_builder) {
         GateTalk.Response.Builder res_builder = GateTalk.Response.newBuilder();
-        try {
-            Session sess = new Session(sess_config);
-            int sess_id = sess.getId();
-            synchronized(Daemon.sessionPool) {
-                Daemon.sessionPool.add(sess);
-            }
-            res_builder.setSuccess(true).setContext(String.valueOf(sess_id));
+        int sess_id = UniqueSessionId.getInstance().getNewSessionId();
+        synchronized(SessionPool.pool) {
+            SessionPool.pool.put(sess_id, null);
         }
-        catch(MistException e) {
-            res_builder.setSuccess(false).setException(e.getMessage());
-        }
+        res_builder.setSuccess(true).setContext(String.valueOf(sess_id));
         reply_builder.addResponse(res_builder.build());
     }
 
     private void requestSessionList(GateTalk.Request greq, GateTalk.Response.Builder res_builder) {
-        res_builder.setSuccess(true).setContext(Daemon.instance.getSessionList());
+        res_builder.setSuccess(true).setContext(SessionPool.getSessionListString());
     }
 
     private void requestSessionDestroy(GateTalk.Request greq, GateTalk.Response.Builder res_builder) {
         int sess_id = Integer.parseInt(greq.getArgument());
         try {
-            synchronized(Daemon.instance.getSessionById(sess_id).bigLock) {
-                Daemon.instance.removeSession(sess_id);
+            Session sess = SessionPool.getOrCreateConcreteSession(sess_id, null);
+            if(sess != null) {
+                if(sess instanceof ConsumerSession)
+                    sess.detach(GateTalk.Request.Role.SOURCE);
+                else if(sess instanceof ProducerSession)
+                    sess.detach(GateTalk.Request.Role.SINK);
+            }
+            synchronized(SessionPool.pool) {
+                SessionPool.pool.remove(sess_id);
             }
             res_builder.setSuccess(true).setContext(String.format("destroyed %d", sess_id));
         }
@@ -92,16 +93,22 @@ public class ServiceProvider implements Runnable {
     }
 
     private void requestSessionCleanFree(GateTalk.Request greq, GateTalk.Response.Builder res_builder) {
-        ArrayList<Integer> sessFree = Daemon.instance.getSessionIdFree();
-        int i;
+        Iterator<Entry<Integer, Session>> iter = SessionPool.pool.entrySet().iterator();
         int ok_cnt = 0;
-        for(i = 0; i < sessFree.size(); i++) {
-            try {
-                Daemon.instance.removeSession(sessFree.get(i));
-                ok_cnt++;
+        try {
+            while(iter.hasNext()) {
+                Session sess = iter.next().getValue();
+                if(sess == null) {
+                    iter.remove();
+                    ok_cnt++;
+                }
+                else if(!sess.isAttached()) {
+                    iter.remove();
+                    ok_cnt++;
+                }
             }
-            catch(MistException e) {
-            }
+        }
+        catch(Exception e) {
         }
         res_builder.setSuccess(true).setContext(String.format("clean %d sessions", ok_cnt));
     }
@@ -109,16 +116,17 @@ public class ServiceProvider implements Runnable {
     private void requestPing(GateTalk.Request greq, GateTalk.Response.Builder res_builder) {
         res_builder.setSuccess(true).setContext(new StringBuffer(greq.getArgument()).reverse().toString());
     }
-    
+
     private void requestSessionInfo(GateTalk.Request greq, GateTalk.Response.Builder res_builder) {
         int sess_id = Integer.parseInt(greq.getArgument());
         try {
-            Session sess = Daemon.instance.getSessionById(sess_id);
+            Session sess = SessionPool.getOrCreateConcreteSession(sess_id, null);
+            if(sess == null)
+                throw new MistException("session " + sess_id + " has not been initialized yet!");
             String info = "";
-            for(Client c: sess.getClientList())
+            for(Client c : sess.getClientList())
                 info += (c.getConnection().getActiveBroker() + " ");
             res_builder.setSuccess(true).setContext(info);
-            Daemon.joinSession(sess.getThread());
         }
         catch(MistException e) {
             res_builder.setSuccess(false).setException(e.getMessage());
@@ -128,16 +136,9 @@ public class ServiceProvider implements Runnable {
     private void requestClientDetach(GateTalk.Request greq, GateTalk.Response.Builder res_builder) {
         int sess_id = Integer.parseInt(greq.getArgument());
         try {
-            Session sess = Daemon.instance.getSessionById(sess_id);
-            if(greq.getRole() == GateTalk.Request.Role.SINK || greq.getRole() == GateTalk.Request.Role.SOURCE) {
-                synchronized(sess.bigLock) {
-                    sess.detach(greq.getRole());
-                }
-            }
-            else
-                sess.detach(greq.getRole());
+            Session sess = SessionPool.getOrCreateConcreteSession(sess_id, greq.getRole());
+            sess.detach(greq.getRole());
             res_builder.setSuccess(true).setContext(String.format("detached %d", sess_id));
-            Daemon.joinSession(sess.getThread());
         }
         catch(MistException e) {
             res_builder.setSuccess(false).setException(e.getMessage());
@@ -146,18 +147,20 @@ public class ServiceProvider implements Runnable {
 
     private void requestClientAttach(GateTalk.Request greq, GateTalk.Response.Builder res_builder) {
         int sess_id = Integer.parseInt(greq.getArgument());
-        try {
-            Session sess = Daemon.instance.getSessionById(sess_id);
-            synchronized(sess.bigLock) {
-                sess.attach(greq.getRole(), false);
+        if(!SessionPool.pool.containsKey(sess_id))
+            res_builder.setSuccess(false).setException("invalid session id " + sess_id);
+        else {
+            try {
+                Session sess = SessionPool.getOrCreateConcreteSession(sess_id, greq.getRole());
+                sess.attach(greq.getRole());
+                res_builder.setSuccess(true).setContext(new Integer(sess.getCommPort()).toString());
             }
-            res_builder.setSuccess(true).setContext(sess.getCommPort());
-        }
-        catch(MistException e) {
-            res_builder.setSuccess(false).setException(e.getMessage());
+            catch(MistException e) {
+                res_builder.setSuccess(false).setException(e.getMessage());
+            }
         }
     }
-    
+
     private void requestDaemonStatus(GateTalk.Request greq, GateTalk.Response.Builder res_builder) {
         String input = greq.getArgument();
         res_builder.setSuccess(true).setContext(Daemon.instance.getDaemonStatus(input));
@@ -218,7 +221,7 @@ public class ServiceProvider implements Runnable {
         ready = flag;
     }
 
-    ////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////
 
     public ServiceProvider(ServerSocket _server) {
         synchronized(serviceIdCnt) {
@@ -260,11 +263,11 @@ public class ServiceProvider implements Runnable {
     public void startThread() {
         hostThread.start();
     }
-    
+
     public void stopThread() {
         die = true;
     }
-    
+
     public void run() {
         while(true) {
             Socket clientSocket = null;

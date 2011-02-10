@@ -118,9 +118,12 @@ public class ConsumerSession extends Session implements MessageListener {
     }
 
     private Packet pack = new Packet();
+    private String prefixThreadName = "";
+    private boolean attached = false;
 
     public ConsumerSession(int sessId, GateTalk.Session sessConfig) throws MistException {
         super(sessId, sessConfig);
+        prefixThreadName = "Session-" + sessId + "-";
     }
 
     @Override
@@ -128,6 +131,7 @@ public class ConsumerSession extends Session implements MessageListener {
         if(!acceptConnection())
             return;
         isReady = true;
+        attached = true;
 
         for(Client c : allClients.values()) {
             try {
@@ -151,12 +155,10 @@ public class ConsumerSession extends Session implements MessageListener {
 
     @Override
     protected void detach() {
-        // TODO Auto-generated method stub
-
+        attached = false;
     }
 
-    @Override
-    public synchronized void onMessage(Message msg) {
+    private void onMessageProcess(Message msg) throws IOException {
         if(detachNow)
             return;
         MessagePrepared mp = null;
@@ -184,22 +186,10 @@ public class ConsumerSession extends Session implements MessageListener {
         }
 
         pack.setPayload(mp.msgBlock.toByteArray());
-        try {
-            pack.write(socketOutput);
-        }
-        catch(IOException e) {
-            logger.error(Utils.convertStackTrace(e));
-            return;
-        }
+        pack.write(socketOutput);
 
-        try {
-            if(pack.read(socketInput) <= 0)
-                return;
-        }
-        catch(IOException e) {
-            logger.error(Utils.convertStackTrace(e));
+        if(pack.read(socketInput) <= 0)
             return;
-        }
 
         try {
             if(GateTalk.Response.newBuilder().mergeFrom(pack.getPayload()).build().getSuccess())
@@ -208,5 +198,24 @@ public class ConsumerSession extends Session implements MessageListener {
         catch(Exception e) {
             logger.error(Utils.convertStackTrace(e));
         }
+    }
+
+    @Override
+    public synchronized void onMessage(Message msg) {
+        String imqThreadName = Thread.currentThread().getName();
+        Thread.currentThread().setName(prefixThreadName + imqThreadName);
+        try {
+            onMessageProcess(msg);
+        }
+        catch(IOException e) {
+            logger.error(Utils.convertStackTrace(e));
+            detach();
+        }
+        Thread.currentThread().setName(imqThreadName);
+    }
+
+    @Override
+    public boolean isAttached() {
+        return attached;
     }
 }

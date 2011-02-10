@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 import java.util.Map.Entry;
+import java.util.Vector;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.commons.logging.Log;
@@ -22,9 +22,7 @@ import com.trendmicro.codi.NodeListener;
 import com.trendmicro.codi.ZNode;
 import com.trendmicro.mist.BrokerAdmin;
 import com.trendmicro.mist.BrokerSpy;
-import com.trendmicro.mist.Client;
 import com.trendmicro.mist.Daemon;
-import com.trendmicro.mist.Session;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
 import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.spn.common.util.Utils;
@@ -347,7 +345,8 @@ public class ExchangeFarm extends Thread implements DataListener {
                 ExchangeEvent ev = exchangeEventQueue.take();
                 if(ev instanceof RefListener)
                     ((RefListener) ev).renewRef();
-                else if(ev instanceof TlsConfigEvent) {
+                //TODO: check if this is not needed
+/*                else if(ev instanceof TlsConfigEvent) {
                     TlsConfigEvent tlsEv = (TlsConfigEvent) ev;
                     if(tlsExchanges.remove(tlsEv.exchange.toString()) != null) {
                         synchronized(Daemon.sessionPool) {
@@ -365,7 +364,7 @@ public class ExchangeFarm extends Thread implements DataListener {
                             }
                         }
                     }
-                }
+                }*/
             }
             catch(InterruptedException e) {
                 continue;

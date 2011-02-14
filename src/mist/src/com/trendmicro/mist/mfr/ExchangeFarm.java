@@ -282,7 +282,7 @@ public class ExchangeFarm extends Thread implements DataListener {
             return(Integer.parseInt(map.get("NumMsgs")) > 0);
         }
         catch(Exception e) {
-            logger.error(e.toString());
+            logger.error(Utils.convertStackTrace(e));
             return true;
         }
     }

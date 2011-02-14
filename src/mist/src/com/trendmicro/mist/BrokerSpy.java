@@ -17,9 +17,8 @@ import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.QueryExp;
 import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
-
+import com.sun.messaging.AdminConnectionConfiguration;
+import com.sun.messaging.AdminConnectionFactory;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
 import com.trendmicro.mist.util.Address;
 import com.trendmicro.mist.util.Credential;
@@ -148,16 +147,24 @@ public class BrokerSpy {
 	}
 	
     public void jmxConnectServer() throws Exception {
-        try {
-            JMXServiceURL url = new JMXServiceURL(String.format("service:jmx:rmi:///jndi/rmi://%s/jmxrmi", jmxAddress.toString()));
-            HashMap<String, String[]> env = new HashMap<String, String[]>();
-            env.put(JMXConnector.CREDENTIALS, new String[] { jmxAuth.getUser(), jmxAuth.getPassword() });
-            connector = JMXConnectorFactory.connect(url, env);
-            connection = connector.getMBeanServerConnection();
+        Exception e = null;
+        for(int i = 0; i <= 60; i++) {
+            try {
+                AdminConnectionFactory acf;
+                acf = new AdminConnectionFactory();
+                acf.setProperty(AdminConnectionConfiguration.imqAddress, jmxAddress.getHost());
+                connector = acf.createConnection();
+                connection = connector.getMBeanServerConnection();
+                return;
+            }
+            catch(Exception e2) {
+                logger.warn("jmx connect error: retry #" + i);
+                e = e2;
+                Utils.justSleep(1000);
+            }
         }
-        catch(Exception e) {
-            throw e;
-        }
+        logger.error("jmxConnectServer gave up retrying");
+        throw e;
     }
 
     public void jmxCloseServer() {

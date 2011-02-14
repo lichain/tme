@@ -1,10 +1,6 @@
 package com.trendmicro.mist;
 
-import java.io.IOException;
-
-import javax.jms.JMSException;
 import javax.management.Attribute;
-import javax.management.JMException;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
@@ -25,14 +21,25 @@ public class BrokerAdmin {
         BLOCK, DROP_NEWEST, DROP_OLDEST,
     }
 
-    private static JMXConnector createJMXConnector(String host) throws JMSException, IOException, JMException {
-        AdminConnectionFactory acf;
+    public static JMXConnector createJMXConnector(String host) throws Exception {
+        Exception e = null;
+        for(int i = 0; i <= 60; i++) {
+            try {
+                AdminConnectionFactory acf;
 
-        acf = new AdminConnectionFactory();
-        acf.setProperty(AdminConnectionConfiguration.imqAddress, host);
+                acf = new AdminConnectionFactory();
+                acf.setProperty(AdminConnectionConfiguration.imqAddress, host);
 
-        JMXConnector jmxc = acf.createConnection();
-        return jmxc;
+                JMXConnector jmxc = acf.createConnection();
+                return jmxc;
+            }
+            catch(Exception e2) {
+                e = e2;
+                Utils.justSleep(1000);
+            }
+        }
+        logger.error("jmxConnectServer gave up retrying");
+        throw e;
     }
 
     public static void setExchangeFlowControl(Exchange exchange, FlowControlBehavior policy) {

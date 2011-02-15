@@ -1,6 +1,6 @@
 
 NAME        = tme-broker
-VERSION     = 2.0u1_4.4
+VERSION     = 2.5_4.4
 PKGNAME     = ${NAME}-${VERSION}
 
 OUTPATH     = ../../output

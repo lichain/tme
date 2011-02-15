@@ -1,6 +1,6 @@
 
 NAME        = tme-mist
-VERSION     = 2.0u1
+VERSION     = 2.5
 PKGNAME     = ${NAME}-${VERSION}
 
 OUTPATH     = build

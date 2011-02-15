@@ -1,6 +1,6 @@
 
 NAME        = tme-zookeeper
-VERSION     = 2.0u1_3.3.1
+VERSION     = 2.5_3.3.1
 PKGNAME     = ${NAME}-${VERSION}
 
 CFGPATH     = etc

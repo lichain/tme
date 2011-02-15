@@ -1,10 +1,10 @@
 
 package com.trendmicro.mist.console;
 
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,9 +59,9 @@ public class Console {
     private String commandPrompt;
     private HashMap<String, CommandExecutable> commandTable = new HashMap<String, CommandExecutable>();
     private Completor completor = null;
-    private boolean enableLog = false;
-    private String curUser = null;
-    private String pathLog = null;
+    private String currentUser;
+    private String pathLog;
+    private BufferedWriter logStream = null;
 
     public interface CommandListener {
         public void processCommand(String command);
@@ -74,8 +74,8 @@ public class Console {
             System.exit(0);
         }
         public void help() {
-            System.out.printf("usage: exit%n");
-            System.out.printf("    exit from the program%n");
+            logResponse("usage: exit%n");
+            logResponse("    exit from the program%n");
         }
         public String explain() {
             return "exit program";
@@ -88,19 +88,19 @@ public class Console {
     private class HelpCommand implements CommandExecutable {
         public void execute(String [] argv) {
             if(argv.length == 1) {
-                System.out.printf("commands:%n");
+                logResponse("commands:%n");
                 for(Map.Entry<String, CommandExecutable> e: commandTable.entrySet())
-                    System.out.printf(" %-20s %s%n", e.getKey(), e.getValue().explain());
+                    logResponse(" %-20s %s%n", e.getKey(), e.getValue().explain());
                 return;
             }
             if(commandTable.containsKey(argv[1]))
                 commandTable.get(argv[1]).help();
             else
-                System.out.printf("Don't know how to help on `%s'.%n", argv[1]);
+                logResponse("Don't know how to help on `%s'.%n", argv[1]);
         }
         public void help() {
-            System.out.printf("usage: help <command>%n");
-            System.out.printf("    list all commands or get help message for specific command%n");
+            logResponse("usage: help <command>%n");
+            logResponse("    list all commands or get help message for specific command%n");
         }
         public String explain() {
             return "getting help";
@@ -125,20 +125,25 @@ public class Console {
         commandPrompt = prompt;
         commandTable.put("help", new HelpCommand());
         commandTable.put("exit", new ExitCommand());
+        
+        Map<String, String> env = System.getenv();
+        currentUser = env.containsKey("USER") ? env.get("USER"): "Unknown";
+        pathLog = String.format("%s/.%s.log", env.containsKey("HOME") ? env.get("HOME"): "/tmp", commandPrompt);
+        try {
+            logStream = new BufferedWriter(new FileWriter(pathLog, true));
+        }
+        catch(IOException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
-    public void enableLog(boolean enable) {
-    	enableLog = enable;
-    	if (enableLog) {
-    		Map<String, String> env = System.getenv();
-    		pathLog = String.format("%s/.%s.log", env.containsKey("HOME") ? env.get("HOME"): "/tmp", commandPrompt);
-    	} else {
-    		pathLog = null;
-    	}
+    protected void finalize () throws Throwable {
+        if(logStream != null)
+            logStream.close();
     }
-
+    
     public void setLogUser(String user) {
-    	curUser = user;
+    	currentUser = user;
     }
 
     public void setCommandListener(CommandListener listener) {
@@ -176,44 +181,67 @@ public class Console {
         SimpleCompletor argCompletor = new SimpleCompletor(getAllArguments(cmdTable));
         return new ArgumentCompletor(new Completor [] { cmdCompletor, argCompletor, new NullCompletor() });
     }
+    
+    public void logCommand(String commandLine) {
+        try {
+            String str = String.format("[%s] %s: %s\n", Calendar.getInstance().getTime(), currentUser, commandLine);
+            logStream.write(str);
+            logStream.flush();
+        }
+        catch(IOException e) {
+            System.err.println(e.getMessage());
+        }
+    }
+
+    public void logResponse(String formatter, Object... objects) {
+        try {
+            System.out.printf(formatter, objects);
+            logStream.write(String.format(formatter, objects));
+            logStream.flush();
+        }
+        catch(IOException e) {
+            System.err.println(e.getMessage());
+        }
+    }
+
+    public void logResponseNL(String formatter, Object... objects) {
+        try {
+            System.out.printf(formatter + "\n", objects);
+            logStream.write(String.format(formatter + "\n", objects));
+            logStream.flush();
+        }
+        catch(IOException e) {
+            System.err.println(e.getMessage());
+        }
+    }
 
     public void receiveCommand() {
-    	DataOutputStream fout = null;
-
-    	IdleMonitor idleMonitor = new IdleMonitor();
-    	idleMonitor.start();
+        IdleMonitor idleMonitor = new IdleMonitor();
+        idleMonitor.start();
         try {
-        	if (enableLog && pathLog != null) {
-            	fout = new DataOutputStream(new FileOutputStream(pathLog, true));
-            }
-
             ConsoleReader reader = prepareReader();
+            // allows caller to customize completor
             if(completor != null)
                 reader.addCompletor(completor);
             do {
                 idleMonitor.setIdle();
                 String line = reader.readLine(commandPrompt + "> ").trim();
+                // does not dispatch commands for caller, notify caller for processing commands
                 if(cmdListener != null) {
                     idleMonitor.setBusy();
                     cmdListener.processCommand(line);
-                }
-
-                if (fout != null) {
-                	String log = String.format("[%s] %s: %s\n", Calendar.getInstance().getTime(), curUser, line);
-                	fout.writeBytes(log);
+                    logCommand(line);
                 }
             } while(true);
         }
         catch(NullPointerException e) {
-            System.err.println("exit");
+            logResponseNL("exit");
         }
         catch(Exception e) {
-            System.err.println(e.getMessage());
-        } finally {
-        	if (fout != null) {
-        		try { fout.close(); } catch (Exception e) {}
-        	}
-        	idleMonitor.kill();
+            logResponseNL(e.getMessage());
+        }
+        finally {
+            idleMonitor.kill();
             try {
                 idleMonitor.join();
             }
@@ -223,51 +251,42 @@ public class Console {
     }
 
     public void launch() {
-    	DataOutputStream fout = null;
-
-    	IdleMonitor idleMonitor = new IdleMonitor();
+        IdleMonitor idleMonitor = new IdleMonitor();
         try {
             ConsoleReader reader = prepareReader();
+            // automatically extract completor from commandTable
             completor = extractCompletor(commandTable);
             reader.addCompletor(completor);
 
-            if (enableLog && pathLog != null) {
-            	fout = new DataOutputStream(new FileOutputStream(pathLog, true));
-            }
-
             idleMonitor.start();
-
             do {
                 idleMonitor.setIdle();
                 String line = reader.readLine(commandPrompt + "> ").trim();
                 StringTokenizer tok = new StringTokenizer(line);
                 if(tok.hasMoreElements()) {
                     String cmd = tok.nextToken();
+                    // dispatches commands based on commandTable
                     if(commandTable.containsKey(cmd)) {
                         idleMonitor.setBusy();
+                        logCommand(line);
                         commandTable.get(cmd).execute(line.split("\\s+"));
                     }
-                    else
-                        System.out.printf("Unknown command `%s'.%n", cmd);
-                }
-
-                if (fout != null) {
-                	String log = String.format("[%s] %s: %s\n", Calendar.getInstance().getTime(), curUser, line);
-                	fout.writeBytes(log);
+                    else {
+                        logCommand(line);
+                        logResponse("Unknown command `%s'.%n", cmd);
+                    }
                 }
             } while(true);
         }
         catch(NullPointerException e) {
-            System.err.println("exit");
+            logResponseNL("exit");
         }
         catch(Exception e) {
-            System.err.println(e.getMessage());
-        } finally {
-        	if (fout != null) {
-        		try { fout.close(); } catch (Exception e) {}
-        	}
-        	idleMonitor.kill();
-        	try {
+            logResponseNL(e.getMessage());
+        }
+        finally {
+            idleMonitor.kill();
+            try {
                 idleMonitor.join();
             }
             catch(InterruptedException e) {

@@ -56,7 +56,7 @@ import com.trendmicro.mist.MistException;
 import com.trendmicro.mist.ThreadInvoker;
 
 public class TmeBridge implements Runnable {
-    private StringWriter responseWriter;
+    private StringWriter responseWriter = new StringWriter();
     private static TmeBridge myApp;
     private static Log logger = LogFactory.getLog(TmeBridge.class);
     private ServerSocket server;
@@ -147,6 +147,7 @@ public class TmeBridge implements Runnable {
     }
 
     private void outputResponse(String message) {
+        logger.info("stdout:\n" + message);
         responseWriter.write(message + "\n");
     }
 
@@ -249,7 +250,7 @@ public class TmeBridge implements Runnable {
             logger.info(String.format("load %d broker(s), %d forwarder(s)", config.getBrokersCount(), config.getForwardersCount()));
         }
         catch(Exception e) {
-            logger.error(e.getMessage());
+            logger.error(Utils.convertStackTrace(e));
         }
     }
 
@@ -289,10 +290,10 @@ public class TmeBridge implements Runnable {
         }
 
         public String getStatus() {
-        	if(mistForwarder.getThread().isAlive() && mistForwarder.exitValue() == MistForwarder.RetVal.OK.ordinal())
-        		return(mistForwarder.isEnabled() ? "ONLINE": "OFFLINE");
-        	else
-        		return "TERMINATED";
+            if(mistForwarder.getThread().isAlive() && mistForwarder.exitValue() == MistForwarder.RetVal.OK.ordinal())
+                return(mistForwarder.isEnabled() ? "ONLINE": "OFFLINE");
+            else
+                return "TERMINATED";
         }
 
         public MistForwarder getForwarder() {
@@ -444,8 +445,8 @@ public class TmeBridge implements Runnable {
                     BridgeTalk.ForwarderInfo finfo = f.getForwarderInfo();
                     String src = getTargetInfo(finfo.getSrc());
                                        
-                    for(int i = 0; i < finfo.getDestCount(); i++) {                    	                   	
-                    	tab.addCell(String.valueOf(finfo.getId()));
+                    for(int i = 0; i < finfo.getDestCount(); i++) {                                         
+                        tab.addCell(String.valueOf(finfo.getId()));
                         tab.addCell(src);
                         tab.addCell(getTargetInfo(finfo.getDest(i)));
                         tab.addCell(String.valueOf(fwd.getMessageCnt(finfo.getDest(i).getExchange())), new CellStyle(HorizontalAlign.right));
@@ -453,15 +454,27 @@ public class TmeBridge implements Runnable {
                         tab.addCell(f.getStatus());
                         
                         if(!f.getStatus().equals("TERMINATED")) {
-                        	tab.addCell(getSessionInfo(fwd.getSourceSessionID()));
+                            tab.addCell(getSessionInfo(fwd.getSourceSessionID()));
                             if(finfo.getDest(0).getBrokerId() != -1) 
                                 tab.addCell(getSessionInfo(fwd.getDestinationSessionID()[0]));
                             else {
                                 tab.addCell(getSessionInfo(fwd.getDestinationSessionID()[i]));
                             }                        
                         } else {
-                        	tab.addCell("N/A");
-                        	tab.addCell("N/A");
+                            int idx;
+                            if((idx = finfo.getSrc().getBrokerId()) != -1) {
+                                BridgeTalk.BrokerInfo b = brokerPool.get(findBrokerIndex(idx));
+                                tab.addCell("id: " + b.getId() + ", " + b.getHost() + ":" + b.getPort());
+                            }
+                            else
+                                tab.addCell("N/A");
+
+                            if((idx = finfo.getDest(0).getBrokerId()) != -1) {
+                                BridgeTalk.BrokerInfo b = brokerPool.get(findBrokerIndex(idx));
+                                tab.addCell("id: " + b.getId() + ", " + b.getHost() + ":" + b.getPort());
+                            }
+                            else
+                                tab.addCell("N/A");
                         }
                     }                   
                     
@@ -481,10 +494,11 @@ public class TmeBridge implements Runnable {
                 }
                 if(brk_ids.size() > 0) {
                     outputResponse("referenced brokers: ");
-                    tab = new Table(3);
+                    tab = new Table(4);
                     tab.addCell("ID");
                     tab.addCell("Type");
                     tab.addCell("Host");
+                    tab.addCell("Status");
                     for(Integer id: brk_ids.values()) {
                         int idx = findBrokerIndex(id);
                         BridgeTalk.BrokerInfo b = brokerPool.get(idx);
@@ -493,6 +507,7 @@ public class TmeBridge implements Runnable {
                         tab.addCell(id.toString());
                         tab.addCell(b.getType());
                         tab.addCell(connList.toString().replace(",", ";"));
+                        tab.addCell(BrokerFarm.authenticateBroker(b.getType(), connList, b.getUsername(), b.getPassword()) ? "ONLINE": "BROKEN");
                     }
                     outputResponse(tab.render());
                 }
@@ -513,14 +528,14 @@ public class TmeBridge implements Runnable {
                 ret.add(String.valueOf(broker_id));
                 
                 if(brokerPool.get(broker_id).getType().equals("openmq") && 
-                		!Exchange.isValidExchange(new Exchange(v[1]).getName())) {
-                	throw new MistException(String.format("exchange name %s not valid", v[1]));
+                        !Exchange.isValidExchange(new Exchange(v[1]).getName())) {
+                    throw new MistException(String.format("exchange name %s not valid", v[1]));
                 }
                 
                 if(v[1].contains(":"))
-                	ret.add(v[1]);
+                    ret.add(v[1]);
                 else
-                	ret.add(String.format("queue:%s", v[1]));
+                    ret.add(String.format("queue:%s", v[1]));
             }
             else {
                 ret.add("-1");
@@ -528,9 +543,9 @@ public class TmeBridge implements Runnable {
                     if(target.contains(":"))
                         ret.add(target);
                     else
-                        ret.add(String.format("queue:%s", target));                	
+                        ret.add(String.format("queue:%s", target));                 
                 } else {
-                	throw new MistException(String.format("exchange name %s not valid", target));
+                    throw new MistException(String.format("exchange name %s not valid", target));
                 }
             }
             return ret;
@@ -556,6 +571,7 @@ public class TmeBridge implements Runnable {
                 BridgeTalk.ForwarderInfo finfo = builder.build();
                 if(addForwarder(finfo))
                     outputResponse(String.format("forwarder added with id = %d", finfo.getId()));
+                saveConfig();
             }
             catch(Exception e) {
                 outputResponse(e.getMessage());
@@ -585,6 +601,7 @@ public class TmeBridge implements Runnable {
                 return;
             }
             removeForwarder(idx);
+            saveConfig();
         }
 
         private void enable(int id) {
@@ -758,7 +775,7 @@ public class TmeBridge implements Runnable {
                 outputResponse(String.format("%s, invalid number format", e.getMessage()));
             }
             catch(Exception e) {
-                outputResponse(e.getMessage());
+                outputResponse(Utils.convertStackTrace(e));
             }
         }
 
@@ -787,11 +804,12 @@ public class TmeBridge implements Runnable {
             if(brokerPool.size() == 0)
                 outputResponse("no broker(s)");
             else {
-                Table tab = new Table(4);
+                Table tab = new Table(5);
                 tab.addCell("ID");
                 tab.addCell("Type");
                 tab.addCell("Auth");
                 tab.addCell("Host");
+                tab.addCell("Status");
                 for(BridgeTalk.BrokerInfo b: brokerPool) {
                     ConnectionList connList = new ConnectionList();
                     connList.set(b.getHost(), b.getPort());
@@ -799,6 +817,7 @@ public class TmeBridge implements Runnable {
                     tab.addCell(String.valueOf(b.getType()));
                     tab.addCell(String.valueOf(b.getUsername() + ":" + b.getPassword()));
                     tab.addCell(String.valueOf(connList.toString().replace(",", ";")));
+                    tab.addCell(BrokerFarm.authenticateBroker(b.getType(), connList, b.getUsername(), b.getPassword()) ? "ONLINE": "BROKEN");
                 }
                 outputResponse(tab.render());
             }
@@ -819,8 +838,15 @@ public class TmeBridge implements Runnable {
                 builder.setUsername(auth.getUser()).setPassword(auth.getPassword());
                 builder.setId(generateBrokerID());
                 BridgeTalk.BrokerInfo binfo = builder.build();
+                
+                if(!BrokerFarm.authenticateBroker(binfo.getType(), connList, binfo.getUsername(), binfo.getPassword())) {
+                    outputResponse(String.format("can not connect `%s' with account `%s'", connList.toString(), binfo.getUsername()));
+                    return;
+                }
+                
                 if(addBroker(binfo))
                     outputResponse(String.format("broker added with id = %d", binfo.getId()));
+                saveConfig();
             }
             catch(MistException e) {
                 outputResponse(e.getMessage());
@@ -854,6 +880,7 @@ public class TmeBridge implements Runnable {
                 else {
                     removeBroker(idx);
                     outputResponse(String.format("broker_id %d removed", id));
+                    saveConfig();
                 }
             }
         }
@@ -1015,13 +1042,6 @@ public class TmeBridge implements Runnable {
     }
 
     public boolean addBroker(BridgeTalk.BrokerInfo broker) {
-        ConnectionList connList = new ConnectionList();
-        connList.set(broker.getHost(), broker.getPort());
-        if(!BrokerFarm.authenticateBroker(broker.getType(), connList, broker.getUsername(), broker.getPassword())) {
-            outputResponse(String.format("can not connect `%s' with account `%s'", connList.toString(), broker.getUsername()));
-            return false;
-        }
-
         for(BridgeTalk.BrokerInfo b: brokerPool) {
             if(equalBroker(b, broker)) {
                 outputResponse(String.format("duplicate with broker_id %d", b.getId()));
@@ -1029,28 +1049,26 @@ public class TmeBridge implements Runnable {
             }
         }
         brokerPool.add(broker);
-        saveConfig();
         return true;
     }
 
     public void removeBroker(int idx) {
         if(idx >= 0 && idx < brokerPool.size()) {
             brokerPool.remove(idx);
-            saveConfig();
         }
     }
 
     private JNode<String> getExchangeNode(String node) {
-    	JNode<String> exNode = null;
+        JNode<String> exNode = null;
 
-    	if(nodePool.containsKey(node))
-    		exNode = nodePool.get(node);
+        if(nodePool.containsKey(node))
+            exNode = nodePool.get(node);
         else {
-        	exNode = new JNode<String>(node);
-        	nodePool.put(node, exNode);
+            exNode = new JNode<String>(node);
+            nodePool.put(node, exNode);
         }
 
-    	return exNode;
+        return exNode;
     }
 
     private boolean addExchangeNode(BridgeTalk.ForwarderInfo fwdInfo) {
@@ -1082,8 +1100,8 @@ public class TmeBridge implements Runnable {
                 JNode<String> node = iter.next();
                 StronglyConnectedGraph<String> ssg = new StronglyConnectedGraph<String>(node);
                 if(ssg.isStronglyConnected()) {
-                	outputResponse(String.format("create forwarder failed since it causes a loop!"));
-                	isFailure = true;
+                    outputResponse(String.format("create forwarder failed since it causes a loop!"));
+                    isFailure = true;
                     break;
                 }
             }
@@ -1092,14 +1110,14 @@ public class TmeBridge implements Runnable {
 
         // If it's failed, remove all
         if(isFailure) {
-        	dstNode = null;
-        	for(BridgeTalk.ForwarderInfo.Target t: fwdInfo.getDestList()) {
+            dstNode = null;
+            for(BridgeTalk.ForwarderInfo.Target t: fwdInfo.getDestList()) {
                 String dst = String.format("%d:%s", t.getBrokerId(), t.getExchange());
                 dstNode = nodePool.get(dst);
                 if(dstNode != null)
-                	srcNode.removeChild(dstNode);
-        	}
-        	return false;
+                    srcNode.removeChild(dstNode);
+            }
+            return false;
         }
 
         return true;
@@ -1128,7 +1146,6 @@ public class TmeBridge implements Runnable {
         if(addExchangeNode(fwdInfo)) {
             ForwarderEntity fwdEntity = new ForwarderEntity(fwdInfo);
             forwarderPool.add(fwdEntity);
-            saveConfig();
             fwdEntity.start();
             if(fwdInfo.getOnline())
                 fwdEntity.mistForwarder.enable();
@@ -1145,7 +1162,6 @@ public class TmeBridge implements Runnable {
             if(removeExchangeNode(fwdEntity.getForwarderInfo())) {
                 fwdEntity.stop();
                 forwarderPool.remove(idx);
-                saveConfig();
                 outputResponse(String.format("forwarder_id %d removed", fwdEntity.getForwarderInfo().getId()));
             }
         }

@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.Iterator;
+import java.util.Set;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -29,6 +31,10 @@ import org.apache.log4j.PropertyConfigurator;
 import org.nocrala.tools.texttablefmt.Table;
 import org.nocrala.tools.texttablefmt.CellStyle;
 import org.nocrala.tools.texttablefmt.CellStyle.HorizontalAlign;
+
+import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.alg.CycleDetector;
 
 import com.google.protobuf.TextFormat;
 import com.trendmicro.codi.CODIException;
@@ -48,8 +54,6 @@ import com.trendmicro.spn.common.util.Utils;
 import com.trendmicro.mist.mfr.BrokerFarm;
 import com.trendmicro.mist.console.CommandExecutable;
 import com.trendmicro.mist.console.Console;
-import com.trendmicro.mist.console.JNode;
-import com.trendmicro.mist.console.StronglyConnectedGraph;
 import com.trendmicro.mist.Daemon;
 import com.trendmicro.mist.MistException;
 import com.trendmicro.mist.ThreadInvoker;
@@ -70,7 +74,6 @@ public class TmeBridge implements Runnable {
 
     private ArrayList<ForwarderEntity> forwarderPool = new ArrayList<ForwarderEntity>();
     private ArrayList<BridgeTalk.BrokerInfo> brokerPool = new ArrayList<BridgeTalk.BrokerInfo>();
-    private HashMap<String, JNode<String>> nodePool = new HashMap<String, JNode<String>>();
 
     private ThreadInvoker.OutputListener outputListener = new ThreadInvoker.OutputListener() {
         public void receiveOutput(String name, String msg) {
@@ -274,6 +277,16 @@ public class TmeBridge implements Runnable {
     private class ExchangeIdentity {
         public int brokerId;
         public Exchange exchange;
+
+        public ExchangeIdentity() {
+            brokerId = -1;
+            exchange = new Exchange();
+        }
+        
+        public ExchangeIdentity(BridgeTalk.ForwarderInfo.Target t) {
+            brokerId = t.getBrokerId();
+            exchange = new Exchange(t.getExchange());
+        }
         
         public String toString() {
             return String.format("%d,%s", brokerId, exchange.toString());
@@ -566,9 +579,11 @@ public class TmeBridge implements Runnable {
                 builder.setId(generateForwarderID());
                 builder.setOnline(false);
                 BridgeTalk.ForwarderInfo finfo = builder.build();
-                if(addForwarder(finfo))
+                if(validateForwarderGraph(finfo)) {
+                    addForwarder(finfo);
                     outputResponse(String.format("forwarder added with id = %d", finfo.getId()));
-                saveConfig();
+                    saveConfig();
+                }
             }
             catch(Exception e) {
                 outputResponse(e.getMessage());
@@ -1051,112 +1066,66 @@ public class TmeBridge implements Runnable {
         }
     }
 
-    private JNode<String> getExchangeNode(String node) {
-    	JNode<String> exNode = null;
+    private boolean validateForwarderGraph(BridgeTalk.ForwarderInfo fwdInfo) throws MistException {
+        DefaultDirectedGraph<String, DefaultEdge> g = new DefaultDirectedGraph<String, DefaultEdge>(DefaultEdge.class);
 
-    	if(nodePool.containsKey(node))
-    		exNode = nodePool.get(node);
-        else {
-        	exNode = new JNode<String>(node);
-        	nodePool.put(node, exNode);
-        }
-
-    	return exNode;
-    }
-
-    private boolean addExchangeNode(BridgeTalk.ForwarderInfo fwdInfo) {
-        JNode<String> srcNode, dstNode;
-        boolean isFailure = false;
-
-        BridgeTalk.ForwarderInfo.Target src_target = fwdInfo.getSrc();
-        String src = String.format("%d:%s", src_target.getBrokerId(), src_target.getExchange());
-        srcNode = getExchangeNode(src);
-
-        // First check whether any forwarder already exists.
-        for(BridgeTalk.ForwarderInfo.Target t: fwdInfo.getDestList()) {
-            String dst = String.format("%d:%s", t.getBrokerId(), t.getExchange());
-            dstNode = getExchangeNode(dst);
-            if(srcNode.search(dstNode) != null) {
-                outputResponse(String.format("forwarder from %s to %s already exists!", src, dst));
-                return false;
+        // construct existing graph
+        for(ForwarderEntity e: forwarderPool) {
+            BridgeTalk.ForwarderInfo info = e.fwdInfo;
+            String src = new ExchangeIdentity(info.getSrc()).toString();
+            g.addVertex(src);
+            for(BridgeTalk.ForwarderInfo.Target t: info.getDestList()) {
+                String dest = new ExchangeIdentity(t).toString(); 
+                g.addVertex(dest);
+                g.addEdge(src, dest);
             }
         }
-
-        // Second check whether loop is existed
+        
+        // load newly added rule
+        String src = new ExchangeIdentity(fwdInfo.getSrc()).toString(); 
+        g.addVertex(src);
         for(BridgeTalk.ForwarderInfo.Target t: fwdInfo.getDestList()) {
-            String dst = String.format("%d:%s", t.getBrokerId(), t.getExchange());
-            dstNode = nodePool.get(dst);
-            srcNode.addChild(dstNode);
-            // Check whether there is an infinite loop
-            java.util.Iterator<JNode<String>> iter = nodePool.values().iterator();
-            while(iter.hasNext()) {
-                JNode<String> node = iter.next();
-                StronglyConnectedGraph<String> ssg = new StronglyConnectedGraph<String>(node);
-                if(ssg.isStronglyConnected()) {
-                	outputResponse(String.format("create forwarder failed since it causes a loop!"));
-                	isFailure = true;
-                    break;
+            String dest = new ExchangeIdentity(t).toString(); 
+            if(g.containsEdge(src, dest))
+                throw new MistException(String.format("forwarder rule (%s => %s) already exist", src, dest));
+            g.addVertex(dest);
+            g.addEdge(src, dest);
+        }
+        
+        CycleDetector<String, DefaultEdge> cycleDetector = new CycleDetector<String, DefaultEdge>(g);
+        if(cycleDetector.detectCycles()) {
+            Iterator<String> iterator;
+            String cycles = "";
+
+            Set<String> cycleVertices = cycleDetector.findCycles();
+            while(!cycleVertices.isEmpty()) {
+                iterator = cycleVertices.iterator();
+                String cycle = iterator.next();
+                Set<String> subCycle = cycleDetector.findCyclesContainingVertex(cycle);
+                for(String sub : subCycle) {
+                    cycles += ("\n    " + sub);
+                    cycleVertices.remove(sub);
                 }
             }
-            if(isFailure) break;
-        }
-
-        // If it's failed, remove all
-        if(isFailure) {
-        	dstNode = null;
-        	for(BridgeTalk.ForwarderInfo.Target t: fwdInfo.getDestList()) {
-                String dst = String.format("%d:%s", t.getBrokerId(), t.getExchange());
-                dstNode = nodePool.get(dst);
-                if(dstNode != null)
-                	srcNode.removeChild(dstNode);
-        	}
-        	return false;
-        }
-
-        return true;
-    }
-
-    private boolean removeExchangeNode(BridgeTalk.ForwarderInfo fwdInfo) {
-        BridgeTalk.ForwarderInfo.Target src_target = fwdInfo.getSrc();
-        String src = String.format("%d:%s", src_target.getBrokerId(), src_target.getExchange());
-        JNode<String> srcNode = nodePool.get(src);
-
-        if(srcNode == null)
-            return false;
-
-        for(BridgeTalk.ForwarderInfo.Target t: fwdInfo.getDestList()) {
-            String dst = String.format("%d:%s", t.getBrokerId(), t.getExchange());
-            JNode<String> dstNode = nodePool.get(dst);
-            if(dstNode == null)
-                continue;
-            else
-                srcNode.removeChild(dstNode);
+            throw new MistException(String.format("can not add forwarder, loop detected:%s", cycles));
         }
         return true;
     }
 
-    public boolean addForwarder(BridgeTalk.ForwarderInfo fwdInfo) throws Exception {
-        if(addExchangeNode(fwdInfo)) {
-            ForwarderEntity fwdEntity = new ForwarderEntity(fwdInfo);
-            forwarderPool.add(fwdEntity);
-            fwdEntity.start();
-            if(fwdInfo.getOnline())
-                fwdEntity.mistForwarder.enable();
-
-            return true;
-        }
-        else
-            return false;
+    public void addForwarder(BridgeTalk.ForwarderInfo fwdInfo) throws Exception {
+        ForwarderEntity fwdEntity = new ForwarderEntity(fwdInfo);
+        forwarderPool.add(fwdEntity);
+        fwdEntity.start();
+        if(fwdInfo.getOnline())
+            fwdEntity.mistForwarder.enable();
     }
 
     public void removeForwarder(int idx) {
         if(idx >= 0 && idx < forwarderPool.size()) {
             ForwarderEntity fwdEntity = forwarderPool.get(idx);
-            if(removeExchangeNode(fwdEntity.getForwarderInfo())) {
-                fwdEntity.stop();
-                forwarderPool.remove(idx);
-                outputResponse(String.format("forwarder_id %d removed", fwdEntity.getForwarderInfo().getId()));
-            }
+            fwdEntity.stop();
+            forwarderPool.remove(idx);
+            outputResponse(String.format("forwarder_id %d removed", fwdEntity.getForwarderInfo().getId()));
         }
     }
 

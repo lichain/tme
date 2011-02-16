@@ -229,8 +229,8 @@ public class Console {
                 // does not dispatch commands for caller, notify caller for processing commands
                 if(cmdListener != null) {
                     idleMonitor.setBusy();
-                    cmdListener.processCommand(line);
                     logCommand(line);
+                    cmdListener.processCommand(line);
                 }
             } while(true);
         }

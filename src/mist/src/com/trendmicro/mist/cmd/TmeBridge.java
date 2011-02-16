@@ -10,7 +10,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -271,6 +270,15 @@ public class TmeBridge implements Runnable {
             logger.warn(String.format("fail to save: %s", e.getMessage()));
         }
     }
+    
+    private class ExchangeIdentity {
+        public int brokerId;
+        public Exchange exchange;
+        
+        public String toString() {
+            return String.format("%d,%s", brokerId, exchange.toString());
+        }
+    }
 
     public class ForwarderEntity {
         private BridgeTalk.ForwarderInfo fwdInfo;
@@ -290,10 +298,10 @@ public class TmeBridge implements Runnable {
         }
 
         public String getStatus() {
-            if(mistForwarder.getThread().isAlive() && mistForwarder.exitValue() == MistForwarder.RetVal.OK.ordinal())
-                return(mistForwarder.isEnabled() ? "ONLINE": "OFFLINE");
-            else
-                return "TERMINATED";
+        	if(mistForwarder.getThread().isAlive() && mistForwarder.exitValue() == MistForwarder.RetVal.OK.ordinal())
+        		return(mistForwarder.isEnabled() ? "ONLINE": "OFFLINE");
+        	else
+        		return "TERMINATED";
         }
 
         public MistForwarder getForwarder() {
@@ -336,18 +344,18 @@ public class TmeBridge implements Runnable {
             mistForwarder.waitForComplete();
         }
 
-        public void addForwarderDest(int broker_id, String exchange) {
+        public void addForwarderDest(ExchangeIdentity eid) {
             BridgeTalk.ForwarderInfo.Builder builder = BridgeTalk.ForwarderInfo.newBuilder();
             builder.mergeFrom(fwdInfo);
-            builder.addDest((BridgeTalk.ForwarderInfo.Target.newBuilder().setBrokerId(broker_id).setExchange(exchange).build()));
+            builder.addDest((BridgeTalk.ForwarderInfo.Target.newBuilder().setBrokerId(eid.brokerId).setExchange(eid.exchange.toString()).build()));
             fwdInfo = builder.build();
         }
 
-        public void removeForwarderDest(int broker_id, String exchange) {
+        public void removeForwarderDest(ExchangeIdentity eid) {
             BridgeTalk.ForwarderInfo.Builder builder = BridgeTalk.ForwarderInfo.newBuilder();
             builder.mergeFrom(fwdInfo);
             builder.clearDest();
-            BridgeTalk.ForwarderInfo.Target find = BridgeTalk.ForwarderInfo.Target.newBuilder().setBrokerId(broker_id).setExchange(exchange).build();
+            BridgeTalk.ForwarderInfo.Target find = BridgeTalk.ForwarderInfo.Target.newBuilder().setBrokerId(eid.brokerId).setExchange(eid.exchange.toString()).build();
             for(int i = 0; i < fwdInfo.getDestCount(); i++) {
                 if(!fwdInfo.getDest(i).equals(find))
                     builder.addDest(fwdInfo.getDest(i));
@@ -445,8 +453,8 @@ public class TmeBridge implements Runnable {
                     BridgeTalk.ForwarderInfo finfo = f.getForwarderInfo();
                     String src = getTargetInfo(finfo.getSrc());
                                        
-                    for(int i = 0; i < finfo.getDestCount(); i++) {                                         
-                        tab.addCell(String.valueOf(finfo.getId()));
+                    for(int i = 0; i < finfo.getDestCount(); i++) {                    	                   	
+                    	tab.addCell(String.valueOf(finfo.getId()));
                         tab.addCell(src);
                         tab.addCell(getTargetInfo(finfo.getDest(i)));
                         tab.addCell(String.valueOf(fwd.getMessageCnt(finfo.getDest(i).getExchange())), new CellStyle(HorizontalAlign.right));
@@ -454,7 +462,7 @@ public class TmeBridge implements Runnable {
                         tab.addCell(f.getStatus());
                         
                         if(!f.getStatus().equals("TERMINATED")) {
-                            tab.addCell(getSessionInfo(fwd.getSourceSessionID()));
+                        	tab.addCell(getSessionInfo(fwd.getSourceSessionID()));
                             if(finfo.getDest(0).getBrokerId() != -1) 
                                 tab.addCell(getSessionInfo(fwd.getDestinationSessionID()[0]));
                             else {
@@ -516,55 +524,44 @@ public class TmeBridge implements Runnable {
             }
         }
 
-        private List<String> parseTarget(String target) throws MistException {
-            ArrayList<String> ret = new ArrayList<String>();
+        private ExchangeIdentity parseTarget(String target) throws MistException {
+            ExchangeIdentity eid = new ExchangeIdentity();
+            
             if(target.contains(",")) {
                 String [] v = target.split(",");
                 if(v.length < 2)
                     throw new MistException(String.format("`%s' not valid", target));
-                int broker_id = Integer.parseInt(v[0]);
-                if(findBrokerIndex(broker_id) == -1)
-                    throw new MistException(String.format("broker_id %d not valid", broker_id));
-                ret.add(String.valueOf(broker_id));
                 
-                if(brokerPool.get(broker_id).getType().equals("openmq") && 
-                        !Exchange.isValidExchange(new Exchange(v[1]).getName())) {
-                    throw new MistException(String.format("exchange name %s not valid", v[1]));
-                }
+                eid.brokerId = Integer.parseInt(v[0]);
+                eid.exchange = new Exchange(v[1]);
                 
-                if(v[1].contains(":"))
-                    ret.add(v[1]);
-                else
-                    ret.add(String.format("queue:%s", v[1]));
+                if(findBrokerIndex(eid.brokerId) == -1)
+                    throw new MistException(String.format("broker_id %d not valid", eid.brokerId));
+                if(brokerPool.get(eid.brokerId).getType().equals("openmq") && !Exchange.isValidExchange(eid.exchange.getName()))
+                	throw new MistException(String.format("exchange name %s not valid", eid.exchange.getName()));
             }
             else {
-                ret.add("-1");
-                if (Exchange.isValidExchange(new Exchange(target).getName())) {
-                    if(target.contains(":"))
-                        ret.add(target);
-                    else
-                        ret.add(String.format("queue:%s", target));                 
-                } else {
-                    throw new MistException(String.format("exchange name %s not valid", target));
-                }
+                eid.brokerId = -1;
+                eid.exchange = new Exchange(target);
+                if(!Exchange.isValidExchange(eid.exchange.getName()))
+                	throw new MistException(String.format("exchange name %s not valid", eid.exchange.getName()));
             }
-            return ret;
+            return eid;
         }
 
         private void add(String from, String to) {
             BridgeTalk.ForwarderInfo.Builder builder = BridgeTalk.ForwarderInfo.newBuilder();
-            List<String> ret;
             try {
-                ret = parseTarget(from);
-                builder.setSrc(BridgeTalk.ForwarderInfo.Target.newBuilder().setBrokerId(Integer.parseInt(ret.get(0))).setExchange(ret.get(1)));
+                ExchangeIdentity eid = parseTarget(from); 
+                builder.setSrc(BridgeTalk.ForwarderInfo.Target.newBuilder().setBrokerId(eid.brokerId).setExchange(eid.exchange.toString()).build());
                 String [] v = to.split(";");
                 if(!checkSameBrokerRegion(v)) {
                     outputResponse("not all targets in the same broker region");
                     return;
                 }
                 for(String t: v) {
-                    ret = parseTarget(t);
-                    builder.addDest((BridgeTalk.ForwarderInfo.Target.newBuilder().setBrokerId(Integer.parseInt(ret.get(0))).setExchange(ret.get(1)).build()));
+                    eid = parseTarget(t);
+                    builder.addDest((BridgeTalk.ForwarderInfo.Target.newBuilder().setBrokerId(eid.brokerId).setExchange(eid.exchange.toString()).build()));
                 }
                 builder.setId(generateForwarderID());
                 builder.setOnline(false);
@@ -580,10 +577,10 @@ public class TmeBridge implements Runnable {
 
         private boolean checkSameBrokerRegion(String [] target) {
             try {
-                List<String> first = parseTarget(target[0]);
+                ExchangeIdentity first = parseTarget(target[0]);
                 for(String t: target) {
-                    List<String> iter = parseTarget(t);
-                    if(!iter.get(0).equals(first.get(0)))
+                    ExchangeIdentity iter = parseTarget(t);
+                    if(iter.brokerId != first.brokerId)
                         return false;
                 }
                 return true;
@@ -638,16 +635,15 @@ public class TmeBridge implements Runnable {
 
         private String expandTarget(String target) throws MistException {
             try {
-                List<String> ret = parseTarget(target);
-                int broker_id = Integer.parseInt(ret.get(0));
-                String flatTarget = ret.get(1);
-                if(broker_id != -1) {
-                    BridgeTalk.BrokerInfo b = brokerPool.get(findBrokerIndex(broker_id));
+                ExchangeIdentity eid = parseTarget(target);
+                if(eid.brokerId == -1)
+                    return eid.exchange.toString();
+                else {
+                    BridgeTalk.BrokerInfo b = brokerPool.get(findBrokerIndex(eid.brokerId));
                     ConnectionList connList = new ConnectionList();
                     connList.set(b.getHost(), b.getPort());
-                    flatTarget = String.format("%s,%s,%s:%s,%s", b.getType(), connList.toString().replace(",", ";"), b.getUsername(), b.getPassword(), ret.get(1));
+                    return String.format("%s,%s,%s:%s,%s", b.getType(), connList.toString().replace(",", ";"), b.getUsername(), b.getPassword(), eid.exchange.toString());
                 }
-                return flatTarget;
             }
             catch(MistException e) {
                 throw e;
@@ -666,16 +662,14 @@ public class TmeBridge implements Runnable {
                 if(idx == -1)
                     throw new MistException(String.format("forwarder id `%d' not found", id));
                 ForwarderEntity fwd = forwarderPool.get(idx);
-                List<String> ret = parseTarget(target);
-                int broker_id = Integer.parseInt(ret.get(0));
-                String ex_name = ret.get(1);
-                if(broker_id != fwd.getForwarderInfo().getDest(0).getBrokerId()) {
+                ExchangeIdentity eid = parseTarget(target);
+                if(eid.brokerId != fwd.getForwarderInfo().getDest(0).getBrokerId()) {
                     outputResponse("target is not the same region with others in this forwarder");
                     return;  
                 }
                 String flatTarget = expandTarget(target);
                 if(fwd.mistForwarder.mountDestination(flatTarget)) {
-                    fwd.addForwarderDest(broker_id, ex_name);
+                    fwd.addForwarderDest(eid);
                     saveConfig();
                     outputResponse(String.format("mount `%s' to forwarder id `%d'", target, id));
                 }
@@ -699,8 +693,7 @@ public class TmeBridge implements Runnable {
                 ForwarderEntity fwd = forwarderPool.get(idx);
                 String flatTarget = expandTarget(target);
                 if(fwd.mistForwarder.unmountDestination(flatTarget)) {
-                    List<String> ret = parseTarget(target);
-                    fwd.removeForwarderDest(Integer.parseInt(ret.get(0)), ret.get(1));
+                    fwd.removeForwarderDest(parseTarget(target));
                     saveConfig();
                     outputResponse(String.format("unmount `%s' from forwarder id `%d'", target, id));
                 }
@@ -1059,16 +1052,16 @@ public class TmeBridge implements Runnable {
     }
 
     private JNode<String> getExchangeNode(String node) {
-        JNode<String> exNode = null;
+    	JNode<String> exNode = null;
 
-        if(nodePool.containsKey(node))
-            exNode = nodePool.get(node);
+    	if(nodePool.containsKey(node))
+    		exNode = nodePool.get(node);
         else {
-            exNode = new JNode<String>(node);
-            nodePool.put(node, exNode);
+        	exNode = new JNode<String>(node);
+        	nodePool.put(node, exNode);
         }
 
-        return exNode;
+    	return exNode;
     }
 
     private boolean addExchangeNode(BridgeTalk.ForwarderInfo fwdInfo) {
@@ -1100,8 +1093,8 @@ public class TmeBridge implements Runnable {
                 JNode<String> node = iter.next();
                 StronglyConnectedGraph<String> ssg = new StronglyConnectedGraph<String>(node);
                 if(ssg.isStronglyConnected()) {
-                    outputResponse(String.format("create forwarder failed since it causes a loop!"));
-                    isFailure = true;
+                	outputResponse(String.format("create forwarder failed since it causes a loop!"));
+                	isFailure = true;
                     break;
                 }
             }
@@ -1110,14 +1103,14 @@ public class TmeBridge implements Runnable {
 
         // If it's failed, remove all
         if(isFailure) {
-            dstNode = null;
-            for(BridgeTalk.ForwarderInfo.Target t: fwdInfo.getDestList()) {
+        	dstNode = null;
+        	for(BridgeTalk.ForwarderInfo.Target t: fwdInfo.getDestList()) {
                 String dst = String.format("%d:%s", t.getBrokerId(), t.getExchange());
                 dstNode = nodePool.get(dst);
                 if(dstNode != null)
-                    srcNode.removeChild(dstNode);
-            }
-            return false;
+                	srcNode.removeChild(dstNode);
+        	}
+        	return false;
         }
 
         return true;

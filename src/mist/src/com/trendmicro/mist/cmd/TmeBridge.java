@@ -764,7 +764,7 @@ public class TmeBridge implements Runnable {
                     if(!line.hasOption("to"))
                         outputResponse("missing --to <target>");
                     if(line.hasOption("from") && line.hasOption("to"))
-                        add(line.getOptionValue("from"), line.getOptionValue("to"));
+                        add(line.getOptionValue("from").replace(";", ""), line.getOptionValue("to"));
                 }
                 else if(line.hasOption("remove"))
                     remove(Integer.parseInt(line.getOptionValue("remove")));

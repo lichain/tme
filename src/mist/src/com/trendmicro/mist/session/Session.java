@@ -212,6 +212,7 @@ public abstract class Session extends Thread {
         detachNow = true;
         detach();
         close(false);
+        cleanupSockets();
         try {
             join();
         }

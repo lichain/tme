@@ -13,6 +13,10 @@ import com.trendmicro.codi.DataListener;
 import com.trendmicro.codi.DataObserver;
 import com.trendmicro.codi.ZNode;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
+import com.trendmicro.mist.session.ConsumerSession;
+import com.trendmicro.mist.session.ProducerSession;
+import com.trendmicro.mist.session.Session;
+import com.trendmicro.mist.session.SessionPool;
 import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.spn.common.util.Utils;
 
@@ -31,36 +35,16 @@ public class CommandHandler extends Thread implements DataListener {
     }
 
     private void migrateExchange(Exchange exchange) {
-        //TODO: fix this
-/*        synchronized(Daemon.sessionPool) {
-            for(Session sess : Daemon.sessionPool) {
-                for(Client c : sess.getClientList()) {
-                    if(c.tlsClient != null) {
-                        if(c.tlsClient.getConfig().getChannel().getName().compareTo(exchange.getName()) == 0)
-                            c.tlsClient.renewJMSconnection();
-                    }
-                }
+        for(Session sess : SessionPool.pool.values()) {
+            if(sess instanceof ConsumerSession) {
+                sess.migrateClient(exchange);
             }
-
-            for(Session sess : Daemon.sessionPool) {
-                if(sess.asConsumer()) {
-                    Client c = sess.findClient(exchange);
-                    if(c != null) {
-                        logger.info("migrate consumer session " + sess.getId());
-                        c.renewJMSconnection();
-                    }
-                }
+        }
+        for(Session sess : SessionPool.pool.values()) {
+            if(sess instanceof ProducerSession) {
+                sess.migrateClient(exchange);
             }
-            for(Session sess : Daemon.sessionPool) {
-                if(!sess.asConsumer()) {
-                    Client c = sess.findClient(exchange);
-                    if(c != null) {
-                        logger.info("migrate producer session " + sess.getId());
-                        c.renewJMSconnection();
-                    }
-                }
-            }
-        }*/
+        }
     }
 
     private CommandHandler() {

@@ -11,8 +11,11 @@ import org.apache.commons.logging.LogFactory;
 
 import com.trendmicro.mist.mfr.BrokerFarm;
 import com.trendmicro.mist.proto.GateTalk;
+import com.trendmicro.mist.session.Session;
+import com.trendmicro.mist.session.SessionPool;
 import com.trendmicro.mist.util.ConnectionList;
 import com.trendmicro.spn.common.FixedReconnect;
+import com.trendmicro.spn.common.InfiniteReconnect;
 import com.trendmicro.spn.common.ReconnectCounter;
 import com.trendmicro.spn.common.util.Utils;
 
@@ -86,35 +89,24 @@ public class Connection implements ExceptionListener
     }
 
     private synchronized void reconnect() {
-        //TODO: fix this
-        /*ArrayList<Session> pausedSessions=new ArrayList<Session>();
+        logger.warn(String.format("Re-connecting (%d)", myId));
         try {
-            if(connected) {
-                synchronized(Daemon.sessionPool) {
-                    for(Session sess : Daemon.sessionPool) {
-                        if(sess.isAttached()) {
-                            for(Client client : sess.getClientList()) {
-                                if(client.getConnection() == this) {
-                                    sess.setPause(true);
-                                    pausedSessions.add(sess);
-                                    break;
-                                }
-                            }
-                        }
+            tryConnect(new InfiniteReconnect());
+        }
+        catch(Exception e) {
+            logger.fatal(Utils.convertStackTrace(e));
+            logger.fatal("connection %d: fail to reconnect");
+            return;
+        }
+        for(Session sess : SessionPool.pool.values()) {
+            if(sess.isAttached()) {
+                for(Client client : sess.getClientList()) {
+                    if(client.getConnection() == this) {
+                        sess.migrateClient(client.getExchange());
                     }
                 }
             }
-
-            logger.warn(String.format("Re-connecting (%d)", myId));
-            tryConnect(new InfiniteReconnect());
-
-            for(Session sess : pausedSessions)
-                sess.setPause(false);
         }
-        catch(MistException e) {
-            logger.fatal(e.getMessage());
-            logger.fatal("connection %d: fail to reconnect");
-        }*/
     }
 
     ////////////////////////////////////////////////////////////////////////////////

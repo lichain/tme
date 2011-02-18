@@ -206,9 +206,6 @@ public abstract class Session extends Thread {
     public synchronized void detach(GateTalk.Request.Role role) throws MistException {
         checkRole(role);
 
-        if(!isAttached())
-            return;
-
         detachNow = true;
         detach();
         close(false);
@@ -260,6 +257,7 @@ public abstract class Session extends Thread {
     }
 
     public void migrateClient(Exchange exchange) {
+        logger.info("migrating " + exchange);
         try {
             GateTalk.Client clientConfig = findClient(exchange).getConfig();
             removeClient(findClient(exchange).getConfig());

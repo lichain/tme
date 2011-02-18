@@ -476,14 +476,14 @@ public class ExchangeFarm extends Thread implements DataListener {
                 TextFormat.merge(new String(exchangeNode.getContent()), exBuilder);
                 ZooKeeperInfo.Exchange ex = exBuilder.build();
                 hostname = ex.getHost();
-
-                if(hostname.compareTo("") == 0) {
+                
+                ZNode brokerNode = new ZNode("/tme2/broker/" + hostname);
+                if(hostname.compareTo("") == 0 || !brokerNode.exists()) {
                     hostname = decideExchangeHost(realname);
                     exchangeNode.setContent(ZooKeeperInfo.Exchange.newBuilder().setHost(hostname).build().toString().getBytes());
                 }
                 else {
                     ZooKeeperInfo.Broker.Builder brkBuilder = ZooKeeperInfo.Broker.newBuilder();
-                    ZNode brokerNode = new ZNode("/tme2/broker/" + hostname);
                     TextFormat.merge(new String(brokerNode.getContent()), brkBuilder);
                     if(brkBuilder.build().getStatus() != ZooKeeperInfo.Broker.Status.ONLINE) {
                         hostname = decideExchangeHost(realname);

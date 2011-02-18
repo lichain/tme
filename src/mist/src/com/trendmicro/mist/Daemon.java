@@ -32,6 +32,10 @@ import com.trendmicro.mist.mfr.ExchangeFarm;
 import com.trendmicro.mist.mfr.RouteFarm;
 import com.trendmicro.mist.proto.GateTalk;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
+import com.trendmicro.mist.session.ConsumerSession;
+import com.trendmicro.mist.session.ProducerSession;
+import com.trendmicro.mist.session.Session;
+import com.trendmicro.mist.session.SessionPool;
 import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.spn.common.util.Utils;
 
@@ -52,6 +56,19 @@ public class Daemon {
 
     private void shutdown() {
         shutdownRequested = true;
+        for(Session sess : SessionPool.pool.values()) {
+            if(sess != null) {
+                try {
+                    if(sess instanceof ConsumerSession)
+                        sess.detach(GateTalk.Request.Role.SOURCE);
+                    else if(sess instanceof ProducerSession)
+                        sess.detach(GateTalk.Request.Role.SINK);
+                }
+                catch(Exception e) {
+                    logger.error(Utils.convertStackTrace(e));
+                }
+            }
+        }
         for(Connection conn : connectionPool)
             conn.close();
         logger.info("MISTd shutdown");

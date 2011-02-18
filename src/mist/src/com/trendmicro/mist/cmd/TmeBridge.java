@@ -99,7 +99,6 @@ public class TmeBridge implements Runnable {
     private void shutdown() {
         for(ForwarderEntity fwd : forwarderPool)
             fwd.getForwarder().manualShutdown();
-        saveConfig();
 
         if(masterChild != null) {
             try {
@@ -979,27 +978,6 @@ public class TmeBridge implements Runnable {
             ZKSessionManager.instance().waitConnected();
         }
         catch(InterruptedException e1) {
-        }
-        ZNode masterNode = new ZNode(BRIDGE_PATH + "/master");
-        ZNode slaveNode = new ZNode(BRIDGE_PATH + "/master");
-        try {
-            if(!masterNode.exists()) {
-                try {
-                    masterNode.create(false, "".getBytes());
-                }
-                catch(CODIException.NodeExist e) {
-                }
-            }
-            if(!slaveNode.exists()) {
-                try {
-                    slaveNode.create(false, "".getBytes());
-                }
-                catch(CODIException.NodeExist e) {
-                }
-            }
-        }
-        catch(Exception e) {
-            logger.error(Utils.convertStackTrace(e));
         }
 
         ZNode slaveChild = new ZNode(BRIDGE_PATH + "/slave/" + Utils.getHostIP());

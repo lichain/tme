@@ -13,6 +13,7 @@ import javax.jms.Topic;
 
 import com.google.protobuf.ByteString;
 import com.trendmicro.mist.Client;
+import com.trendmicro.mist.ExchangeMetric;
 import com.trendmicro.mist.MistException;
 import com.trendmicro.mist.mfr.ExchangeFarm;
 import com.trendmicro.mist.proto.GateTalk;
@@ -34,6 +35,7 @@ public class ConsumerSession extends Session implements MessageListener {
 
         public SpnMessage.Container tlsMessage = null;
         public Exchange tlsExchange = null;
+        public boolean isGocRef = false;
 
         private byte[] convertJMSMessage(BytesMessage msg) throws JMSException, IOException {
             ByteString.Output byteOut = ByteString.newOutput();
@@ -90,6 +92,7 @@ public class ConsumerSession extends Session implements MessageListener {
                         if(gocServer == null)
                             throw new MistException(String.format("unable to download from GOC: %s", container.getContainerBase().getMessageListRef().getUrl()));
                         payload = gocServer.GOCUnPack(payload);
+                        isGocRef = true;
                     }
                 }
                 // Cannot download, throw exception
@@ -187,6 +190,11 @@ public class ConsumerSession extends Session implements MessageListener {
 
         pack.setPayload(mp.msgBlock.toByteArray());
         pack.write(socketOutput);
+        
+        ExchangeMetric metric = ExchangeMetric.getExchangeMetric(mp.from);
+        metric.increaseMessageIn(mp.msgBlock.getMessage().size());
+        if(mp.isGocRef)
+            metric.increaseGOCDeRef();
 
         if(pack.read(socketInput) <= 0)
             return;

@@ -54,7 +54,7 @@ public class TlsSender extends ProducerSession {
             try {
                 notRoutedDest.clear();
                 notRoutedDest.add(tlsMsg.exchange);
-                deliverMessage(tlsMsg.payload, Message.DEFAULT_TIME_TO_LIVE, null, notRoutedDest);
+                deliverMessage(tlsMsg.payload, false, Message.DEFAULT_TIME_TO_LIVE, null, notRoutedDest);
             }
             catch(Exception e) {
                 logger.error(Utils.convertStackTrace(e));

@@ -57,6 +57,7 @@ public class Client {
             exchange.setQueue();
         else
             exchange.setTopic();
+        ExchangeMetric.initExchangeMetric(exchange);
     }
 
     public Connection getConnection() {

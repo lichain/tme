@@ -9,6 +9,7 @@ import javax.jms.Message;
 
 import com.trendmicro.mist.Client;
 import com.trendmicro.mist.Daemon;
+import com.trendmicro.mist.ExchangeMetric;
 import com.trendmicro.mist.MistException;
 import com.trendmicro.mist.mfr.ExchangeFarm;
 import com.trendmicro.mist.mfr.RouteFarm;
@@ -51,6 +52,11 @@ public class ProducerSession extends Session {
          * The message body
          */
         public byte[] msg;
+        
+        /**
+         * If it is a GOC Reference Message
+         */
+        public boolean isGocRef = false;
 
         /**
          * The JMS property map, if not in the mist message then it will be null
@@ -130,6 +136,7 @@ public class ProducerSession extends Session {
                 msg = gocServer.GOCPack(mBlock.getMessage().toByteArray(), expire);
                 if(msg == null)
                     throw new MistException(MistException.UNABLE_TO_UPLOAD_TO_GOC);
+                isGocRef = true;
             }
 
             // Set TLS Message
@@ -238,7 +245,7 @@ public class ProducerSession extends Session {
         return client;
     }
 
-    protected void deliverMessage(byte[] msg, long ttl, HashMap<String, String> props, List<Exchange> destList) {
+    protected void deliverMessage(byte[] msg, boolean isGocRef, long ttl, HashMap<String, String> props, List<Exchange> destList) {
         for(Exchange dest : destList) {
             if(dest.getName().length() == 0)
                 continue;
@@ -256,6 +263,11 @@ public class ProducerSession extends Session {
                         c.sendMessageBytes(msg, props);
                     else
                         c.sendMessageBytes(msg);
+                    
+                    ExchangeMetric metric = ExchangeMetric.getExchangeMetric(dest);
+                    metric.increaseMessageOut(msg.length);
+                    if(isGocRef)
+                        metric.increaseGOCRef();
                     break;
                 }
                 catch(Exception e) {
@@ -330,7 +342,7 @@ public class ProducerSession extends Session {
 
             // deliver the message
             try {
-                deliverMessage(mp.msg, mp.ttl, mp.props, destList);
+                deliverMessage(mp.msg, mp.isGocRef, mp.ttl, mp.props, destList);
             }
             catch(Exception e) {
                 ackClient(packet, false, e.getMessage());

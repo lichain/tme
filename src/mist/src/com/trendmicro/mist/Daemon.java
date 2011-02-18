@@ -11,7 +11,6 @@ import java.io.StringWriter;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +35,6 @@ import com.trendmicro.mist.session.ConsumerSession;
 import com.trendmicro.mist.session.ProducerSession;
 import com.trendmicro.mist.session.Session;
 import com.trendmicro.mist.session.SessionPool;
-import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.spn.common.util.Utils;
 
 public class Daemon {
@@ -140,7 +138,6 @@ public class Daemon {
     public static final int MAX_MESSAGE_SIZE = 20 * 1024 * 1024;
 
     public static List<Connection> connectionPool = Collections.synchronizedList(new ArrayList<Connection>());
-    public static Map<String, ExchangeMetric> exchangeStat = Collections.synchronizedMap(new HashMap<String, ExchangeMetric>());
     public static ArrayList<Thread> deadServiceList = new ArrayList<Thread>();
 
     static {
@@ -249,8 +246,8 @@ public class Daemon {
             }
             strOut.write(tab.render() + "\n");
         }
-        strOut.write(String.format("%d exchanges transmitted%n", exchangeStat.size()));
-        if(exchangeStat.size() > 0) {
+        strOut.write(String.format("%d exchanges transmitted%n", ExchangeMetric.exchangeStat.size()));
+        if(ExchangeMetric.exchangeStat.size() > 0) {
             Table tab = new Table(7);
             tab.addCell("Exchange");
             tab.addCell("In-Count");
@@ -259,7 +256,7 @@ public class Daemon {
             tab.addCell("Out-Bytes");
             tab.addCell("Ref-Count");
             tab.addCell("De-Ref-Count");
-            for(Map.Entry<String, ExchangeMetric> e : exchangeStat.entrySet()) {
+            for(Map.Entry<String, ExchangeMetric> e : ExchangeMetric.exchangeStat.entrySet()) {
                 ExchangeMetric info = e.getValue();
                 tab.addCell(e.getKey());
                 tab.addCell(String.valueOf(info.getMessageInCount()), numberStyle);
@@ -272,14 +269,6 @@ public class Daemon {
             strOut.write(tab.render() + "\n");
         }
         return strOut.toString();
-    }
-
-    public static synchronized ExchangeMetric getExchangeMetric(Exchange exchange) {
-        if(exchangeStat.containsKey(exchange.toString()))
-            return exchangeStat.get(exchange.toString());
-        ExchangeMetric metric = new ExchangeMetric();
-        exchangeStat.put(exchange.toString(), metric);
-        return metric;
     }
 
     public static boolean isShutdownRequested() {

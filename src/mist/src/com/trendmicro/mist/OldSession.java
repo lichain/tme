@@ -267,7 +267,7 @@ public class OldSession implements Runnable, MessageListener {
                         HashMap<String, String> props = new HashMap<String, String>();
                         long msg_ttl = Message.DEFAULT_TIME_TO_LIVE;
                         Client c = null;
-                        long send_size = -1;
+                        //long send_size = -1;
                         boolean msg_raw = false;
                         MistMessage.MessageBlock msg_block = null;
                         boolean needGOC = false;
@@ -297,7 +297,7 @@ public class OldSession implements Runnable, MessageListener {
                                 props.put(pair.getKey(), pair.getValue());
                         }
 
-                        send_size = msg_block.toByteArray().length;
+                        //send_size = msg_block.toByteArray().length;
                         needGOC = (ExchangeFarm.getInstance().belongsGOC(msg_block.getId()) && msg_block.getMessage().toByteArray().length > Daemon.GOC_UPLOAD_SIZE);
                         packedGOC = true;
                         if(needGOC) {
@@ -342,12 +342,12 @@ public class OldSession implements Runnable, MessageListener {
                                     c.sendMessageBytes(pack.getPayload());
                                 logger.debug("message sent to broker");
 
-                                Daemon.getExchangeMetric(c.getExchange()).increaseMessageOut(send_size);
+                                //Daemon.getExchangeMetric(c.getExchange()).increaseMessageOut(send_size);
                                 if(!msg_raw) {
                                     if(c.tlsClient != null)
                                         sendTlsMessage(c.tlsClient, msg_block, "send");
-                                    if(needGOC && packedGOC)
-                                        Daemon.getExchangeMetric(c.getExchange()).increaseGOCRef();
+                                    //if(needGOC && packedGOC)
+                                  //      Daemon.getExchangeMetric(c.getExchange()).increaseGOCRef();
                                 }
 
                                 pack.setPayload(GateTalk.Response.newBuilder().setSuccess(true).build().toByteArray());
@@ -653,7 +653,7 @@ public class OldSession implements Runnable, MessageListener {
                     msg_builder.clearMessage();
                     msg_builder.setMessage(ByteString.copyFrom(msg_unpacked));
 
-                    Daemon.getExchangeMetric(exchange).increaseGOCDeRef();
+                    //Daemon.getExchangeMetric(exchange).increaseGOCDeRef();
                 }
             }
 
@@ -695,7 +695,7 @@ public class OldSession implements Runnable, MessageListener {
                     detachNow = true;
                     return;
                 }
-                Daemon.getExchangeMetric(exchange).increaseMessageIn(pack.getPayload().length);
+                //Daemon.getExchangeMetric(exchange).increaseMessageIn(pack.getPayload().length);
                 logger.debug(String.format("session %d: message delivered to client", session_id));
 
                 for(;;) {

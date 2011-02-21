@@ -228,32 +228,35 @@ public abstract class Session extends Thread {
         // A producer client cannot be added to a source session and vice versa
         checkRole(clientConfig.getType() == GateTalk.Client.Type.CONSUMER ? GateTalk.Request.Role.SOURCE: GateTalk.Request.Role.SINK);
 
-        Client c = new Client(clientConfig, sessionConfig);
-        c.openClient(determinedConnection, false, false);
+        synchronized(allClients) {
+            // Check if the client is already mounted, if not, add to the map
+            if(allClients.containsKey(new Exchange(clientConfig.getChannel().getName())))
+                throw new MistException(MistException.ALREADY_MOUNTED);
 
-        // Check if the client is already mounted, if not, add to the map
-        if(allClients.containsKey(c.getExchange()))
-            throw new MistException(MistException.ALREADY_MOUNTED);
-        allClients.put(c.getExchange(), c);
+            Client c = new Client(clientConfig, sessionConfig);
+            c.openClient(determinedConnection, false, false);
+            allClients.put(c.getExchange(), c);
+            if(isAttached())
+                addClientIfAttached(c);
 
-        if(isAttached())
-            addClientIfAttached(c);
-
-        return c;
+            return c;
+        }
     }
 
     public void removeClient(GateTalk.Client clientConfig) throws MistException {
         checkRole(clientConfig.getType() == GateTalk.Client.Type.CONSUMER ? GateTalk.Request.Role.SOURCE: GateTalk.Request.Role.SINK);
 
-        if(allClients.isEmpty())
-            throw new MistException(MistException.EMPTY_SESSION);
+        synchronized(allClients) {
+            if(allClients.isEmpty())
+                throw new MistException(MistException.EMPTY_SESSION);
 
-        Exchange exchange = new Exchange((clientConfig.getChannel().getType() == GateTalk.Channel.Type.QUEUE ? "queue": "topic") + ":" + clientConfig.getChannel().getName());
-        Client c = findClient(exchange);
-        if(c == null)
-            throw new MistException(MistException.exchangeNotFound(exchange.toString()));
-        c.closeClient(false, false);
-        allClients.remove(exchange);
+            Exchange exchange = new Exchange((clientConfig.getChannel().getType() == GateTalk.Channel.Type.QUEUE ? "queue": "topic") + ":" + clientConfig.getChannel().getName());
+            Client c = findClient(exchange);
+            if(c == null)
+                throw new MistException(MistException.exchangeNotFound(exchange.toString()));
+            c.closeClient(false, false);
+            allClients.remove(exchange);
+        }
     }
 
     public void migrateClient(Exchange exchange) {
@@ -283,7 +286,7 @@ public abstract class Session extends Thread {
     }
 
     public abstract boolean isAttached();
-    
+
     public Collection<Client> getClientList() {
         return allClients.values();
     }

@@ -52,7 +52,7 @@ public class ProducerSession extends Session {
          * The message body
          */
         public byte[] msg;
-        
+
         /**
          * If it is a GOC Reference Message
          */
@@ -155,30 +155,24 @@ public class ProducerSession extends Session {
     /**
      * Update the routing information from RouteFarm
      */
-    private void updateRoute() {
+    private void updateRoute(Exchange ex) {
         // If the current cache has not expired, skip the update
         if((System.currentTimeMillis() - lastRouteUpdate) < ROUTE_CACHE_TTL_MILLIS)
             return;
 
-        // Clear the cache
-        routeCacheMap.clear();
-        // We're only interested in the queue exchanges which the current
-        // session has
-        for(Exchange ex : allClients.keySet()) {
-            if(!ex.isQueue())
-                continue;
-
-            // Get a copied list from the RouteFarm
-            List<String> destList = RouteFarm.getInstance().getDestList(ex.getName());
-            if(destList != null) {
-                // Transform the destination list from List<String> to
-                // List<Exchange>
-                ArrayList<Exchange> destExList = new ArrayList<Exchange>();
-                for(String dest : destList)
-                    destExList.add(new Exchange("queue:" + dest));
-                routeCacheMap.put(ex, destExList);
-            }
+        // Get a copied list from the RouteFarm
+        List<String> destList = RouteFarm.getInstance().getDestList(ex.getName());
+        if(destList != null) {
+            // Transform the destination list from List<String> to
+            // List<Exchange>
+            ArrayList<Exchange> destExList = new ArrayList<Exchange>();
+            for(String dest : destList)
+                destExList.add(new Exchange("queue:" + dest));
+            routeCacheMap.put(ex, destExList);
         }
+        else
+            routeCacheMap.remove(ex);
+
         lastRouteUpdate = System.currentTimeMillis();
     }
 
@@ -236,7 +230,7 @@ public class ProducerSession extends Session {
         Client client = null;
         try {
             client = addClient(client_config);
-            logger.info(String.format("session %d: create exchange `%s:%s'", getId(), client.isQueue() ? "queue": "topic", client.getChannelName()));
+            logger.info(String.format("session %d: create exchange `%s:%s'", sessionId, client.isQueue() ? "queue": "topic", client.getChannelName()));
         }
         catch(MistException e) {
             logger.error(e.getMessage());
@@ -263,7 +257,7 @@ public class ProducerSession extends Session {
                         c.sendMessageBytes(msg, props);
                     else
                         c.sendMessageBytes(msg);
-                    
+
                     ExchangeMetric metric = ExchangeMetric.getExchangeMetric(dest);
                     metric.increaseMessageOut(msg.length);
                     if(isGocRef)
@@ -281,6 +275,7 @@ public class ProducerSession extends Session {
     private void sendLoop() {
         Thread.currentThread().setName("Session-" + sessionId);
         lastRouteUpdate = -1;
+        routeCacheMap.clear();
         // Accept the incoming connection and setup socket IO streams
         if(!acceptConnection())
             return;
@@ -314,9 +309,6 @@ public class ProducerSession extends Session {
 
             // Received a message from socket, try to deliver it
 
-            // Updates the routing cache before delivering the message
-            updateRoute();
-
             // Prepare the message to be send
             MessagePrepared mp = null;
             try {
@@ -329,6 +321,9 @@ public class ProducerSession extends Session {
                 logger.error(e.getMessage());
                 continue;
             }
+
+            // Updates the routing cache before delivering the message
+            updateRoute(mp.dest);
 
             // Get the routing destination list
             List<Exchange> destList = routeCacheMap.get(mp.dest);

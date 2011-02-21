@@ -257,7 +257,7 @@ public abstract class Session extends Thread {
     }
 
     public void migrateClient(Exchange exchange) {
-        logger.info("migrating " + exchange);
+        logger.info("migrating " + exchange + "; session " + sessionId);
         try {
             GateTalk.Client clientConfig = findClient(exchange).getConfig();
             removeClient(findClient(exchange).getConfig());

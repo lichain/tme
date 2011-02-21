@@ -317,34 +317,4 @@ public class Client {
             throw new MistException(String.format("producer (%d): %s; \nStackTrace: %s", getSessionId(), e.getMessage(), Utils.convertStackTrace(e)));
         }
     }
-    
-    public synchronized void renewJMSconnection() {
-        logger.warn("broker is not available, renewing jms connection");
-
-        if(getSessionId() == -1) {
-            closeClient(false, true);
-            try {
-                openClient(false, false, true);
-            }
-            catch(MistException e) {
-                logger.error(e.getMessage());
-            }
-            return;
-        }
-
-        try {
-            //TODO: fix this
-            /*Session sess = Daemon.instance.getSessionById(getSessionId());
-            closeClient(false, true);
-            openClient(sess.isDetermined(), false, true);
-            if(sess.isAttached()) {
-                if(isConsumer())
-                    consumer.setMessageListener(sess);
-                sess.setPause(false);
-            }*/
-        }
-        catch(Exception e) {
-            logger.error(e.getMessage());
-        }
-    }
 }

@@ -1,6 +1,6 @@
-
 package com.trendmicro.mist;
 
+import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 
 import javax.jms.ExceptionListener;
@@ -14,13 +14,13 @@ import com.trendmicro.mist.proto.GateTalk;
 import com.trendmicro.mist.session.Session;
 import com.trendmicro.mist.session.SessionPool;
 import com.trendmicro.mist.util.ConnectionList;
+import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.spn.common.FixedReconnect;
 import com.trendmicro.spn.common.InfiniteReconnect;
 import com.trendmicro.spn.common.ReconnectCounter;
 import com.trendmicro.spn.common.util.Utils;
 
-public class Connection implements ExceptionListener 
-{
+public class Connection implements ExceptionListener {
     private GateTalk.Connection connectionConfig;
     private javax.jms.Connection connection = null;
     private ConnectionList connList = new ConnectionList();
@@ -42,7 +42,7 @@ public class Connection implements ExceptionListener
 
     private void closeJMSConnection() {
         if(connected) {
-            try { 
+            try {
                 connection.close();
                 logger.info(String.format("%d: `%s' closed", getId(), getConnectionString()));
             }
@@ -54,8 +54,8 @@ public class Connection implements ExceptionListener
         }
     }
 
-    private void tryConnect(ReconnectCounter counter) throws MistException { 
-        if(connected) 
+    private void tryConnect(ReconnectCounter counter) throws MistException {
+        if(connected)
             closeJMSConnection();
 
         counter.init();
@@ -65,12 +65,12 @@ public class Connection implements ExceptionListener
                 connection = BrokerFarm.prepareJMSConnection(connectionConfig.getBrokerType(), connList, connectionConfig.getUsername(), connectionConfig.getPassword());
                 connection.setExceptionListener(this);
                 connection.start();
-                connected = true;                
+                connected = true;
                 logger.info(String.format("%d: `%s' connected. Current connected broker: %s", getId(), getConnectionString(), connection.toString()));
             }
             catch(JMSException e) {
                 logger.error(String.format("%d: %s", getId(), e.getMessage()));
-                if(Daemon.isShutdownRequested()) { 
+                if(Daemon.isShutdownRequested()) {
                     logger.warn("shutdown, abort re-connection");
                     break;
                 }
@@ -98,18 +98,28 @@ public class Connection implements ExceptionListener
             logger.fatal("connection %d: fail to reconnect");
             return;
         }
-        for(Session sess : SessionPool.pool.values()) {
-            if(sess.isAttached()) {
-                for(Client client : sess.getClientList()) {
-                    if(client.getConnection() == this) {
-                        sess.migrateClient(client.getExchange());
-                    }
-                }
+
+        class MigrateEntry {
+            public Session sess;
+            public Exchange ex;
+
+            public MigrateEntry(Session sess, Exchange ex) {
+                this.sess = sess;
+                this.ex = ex;
             }
         }
+        ArrayList<MigrateEntry> migrateList = new ArrayList<MigrateEntry>();
+
+        for(Session sess : SessionPool.pool.values())
+            if(sess.isAttached())
+                for(Client client : sess.getClientList())
+                    if(client.getConnection() == this)
+                        migrateList.add(new MigrateEntry(sess, client.getExchange()));
+        for(MigrateEntry ent : migrateList)
+            ent.sess.migrateClient(ent.ex);
     }
 
-    ////////////////////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////////////////////
 
     public Connection(GateTalk.Connection conn_config) {
         connectionConfig = conn_config;
@@ -131,7 +141,7 @@ public class Connection implements ExceptionListener
         return connection;
     }
 
-    public void open()  throws MistException {
+    public void open() throws MistException {
         try {
             createJMSConnection();
         }
@@ -143,7 +153,7 @@ public class Connection implements ExceptionListener
     public void close() {
         closeJMSConnection();
     }
-    
+
     public int getId() {
         return myId;
     }
@@ -151,30 +161,30 @@ public class Connection implements ExceptionListener
     public boolean isConnected() {
         return connected;
     }
-    
+
     public String getHostName() {
         return connectionConfig.getHostName();
     }
-    
-    public String getActiveBroker() {       
-        if (connectionConfig.getBrokerType().equals("openmq"))            
+
+    public String getActiveBroker() {
+        if(connectionConfig.getBrokerType().equals("openmq"))
             return ((com.sun.messaging.jms.Connection) connection).getBrokerAddress();
         else
             return "";
     }
 
     public String getConnectionString() {
-        if(connList.size() > 1) 
+        if(connList.size() > 1)
             return String.format("%s (active: %s)", connList.toString(), getActiveBroker());
         return connList.toString();
     }
-    
+
     public boolean isOpenMQCluster() {
         return isOpenMQCluster;
     }
 
     public void onException(JMSException e) {
-        logger.error(String.format("connection %d: received JMSException; stacktrace: %s", getId(), Utils.convertStackTrace(e)));        
+        logger.error(String.format("connection %d: received JMSException; stacktrace: %s", getId(), Utils.convertStackTrace(e)));
         reconnect();
     }
 
@@ -183,17 +193,17 @@ public class Connection implements ExceptionListener
             referenceCount++;
         }
     }
-    
+
     public void decreaseReference() {
         synchronized(Daemon.connectionPool) {
             referenceCount--;
-            if(referenceCount == 0){
+            if(referenceCount == 0) {
                 close();
                 Daemon.connectionPool.remove(this);
             }
         }
     }
-    
+
     public int getReferenceCount() {
         return referenceCount;
     }

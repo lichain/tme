@@ -27,6 +27,7 @@ doc:
 	@ant doc
 
 rpm: 
+	-if [ ! -d ../../output/RPMS ]; then mkdir ../../output/{BUILD,RPMS,SOURCES,SPECS,SRPMS}; fi
 	mkdir -p $(RPMPATH)/etc/init.d
 	mkdir -p $(RPMPATH)/usr/bin
 	mkdir -p $(RPMPATH)/usr/share/mist/bin
@@ -58,15 +59,14 @@ rpm:
 	cp -f $(CFGPATH)/mistd.log4j $(RPMPATH)/usr/share/mist/etc
 	cp -f $(CFGPATH)/mistd.properties $(RPMPATH)/usr/share/mist/etc
 	cp -rf $(LIBPATH)/* $(RPMPATH)/usr/share/mist/lib
-	cd $(OUTPATH); tar cfz /usr/src/redhat/SOURCES/$(PKGNAME).tar.gz $(PKGNAME)
+	cd $(OUTPATH); tar cfz ../../../output/SOURCES/$(PKGNAME).tar.gz $(PKGNAME)
 	rm -rf $(RPMPATH) 
 	export STAMP_VER=$(BUILD_TAG); cat $(NAME).spec | sed -e "s/#RELEASE_VER#/$$STAMP_VER/" -e "s/#MAJOR_VER#/$(VERSION)/" > $(NAME)-tmp.spec
-	rpmbuild --target noarch -bb $(NAME)-tmp.spec
+	rpmbuild --target noarch --define="_topdir `pwd`/../../output" -bb $(NAME)-tmp.spec
 	rm -f $(NAME)-tmp.spec
-	mv -f /usr/src/redhat/RPMS/noarch/$(PKGNAME)*.noarch.rpm ../../output 
 
 upload:
-	export STAMP_VER=$(BUILD_TAG); curl -T "../../output/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm" -u anonymous:anonymous ftp://wiki.spn.tw.trendnet.org/release/TME/TME-2.0/
+	export STAMP_VER=$(BUILD_TAG); curl -T "../../output/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm" -u anonymous:anonymous ftp://wiki.spn.tw.trendnet.org/release/TME/TME-2.5/
 
 clean:
 	@ant clean

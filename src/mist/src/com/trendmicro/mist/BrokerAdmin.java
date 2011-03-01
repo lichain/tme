@@ -45,7 +45,10 @@ public class BrokerAdmin {
     public static void setExchangeFlowControl(Exchange exchange, FlowControlBehavior policy) {
         JMXConnector jmxconn = null;
         try {
-            jmxconn = createJMXConnector(ExchangeFarm.getCurrentExchangeHost(exchange));
+            String broker = ExchangeFarm.getCurrentExchangeHost(exchange);
+            if(broker == null)
+                return;
+            jmxconn = createJMXConnector(broker);
             MBeanServerConnection conn = jmxconn.getMBeanServerConnection();
             String pattern = String.format("com.sun.messaging.jms.server:type=Destination,subtype=Config,desttype=q,name=\"%s\"", exchange.getName());
             ObjectName name = conn.queryNames(new ObjectName(pattern), null).iterator().next();
@@ -79,7 +82,10 @@ public class BrokerAdmin {
     public static void setExchangeTotalLimit(Exchange exchange, long sizeBytes, long count) {
         JMXConnector jmxconn = null;
         try {
-            jmxconn = createJMXConnector(ExchangeFarm.getCurrentExchangeHost(exchange));
+            String broker = ExchangeFarm.getCurrentExchangeHost(exchange);
+            if(broker == null)
+                return;
+            jmxconn = createJMXConnector(broker);
             MBeanServerConnection conn = jmxconn.getMBeanServerConnection();
             String pattern = String.format("com.sun.messaging.jms.server:type=Destination,subtype=Config,desttype=q,name=\"%s\"", exchange.getName());
             ObjectName name = conn.queryNames(new ObjectName(pattern), null).iterator().next();

@@ -263,31 +263,6 @@ public class Client {
         }
     }
 
-    public byte[] recvMessageBytes() throws MistException {
-        byte[] msg_data = null;
-        try {
-            Message msg = getConsumer().receive(10);
-            if(msg != null) {
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                if(msg instanceof BytesMessage) {
-                    byte[] buffer = new byte[256];
-                    int ret = -1;
-                    while((ret = ((BytesMessage) msg).readBytes(buffer)) > 0)
-                        bos.write(buffer, 0, ret);
-                }
-                else if(msg instanceof TextMessage) {
-                    byte[] buffer = ((TextMessage) msg).getText().getBytes("UTF-16");
-                    bos.write(buffer, 0, buffer.length);
-                }
-                msg_data = bos.toByteArray();
-            }
-        }
-        catch(Exception e) {
-            throw new MistException(String.format("consumer (%d): %s", getSessionId(), e.getMessage()));
-        }
-        return msg_data;
-    }
-
     public synchronized void sendMessageBytes(byte[] data, HashMap<String, String> props) throws MistException {
         try {
             BytesMessage message = getJMSSession().createBytesMessage();

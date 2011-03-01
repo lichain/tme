@@ -19,7 +19,7 @@ import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.mist.util.GOCUtils;
 import com.trendmicro.spn.common.util.Utils;
 
-public abstract class Session extends Thread {
+public abstract class Session implements Runnable {
     public static final String MIST_MESSAGE_TTL = "MIST_TTL";
     protected static Log logger = LogFactory.getLog(Session.class);
     private ServerSocket localServer;
@@ -37,6 +37,7 @@ public abstract class Session extends Thread {
     protected int sessionId;
     protected GateTalk.Session sessionConfig;
     protected boolean isReady = false;
+    protected Thread sessionThread = null;
 
     /**
      * Helper function to accept an incoming connection from the client. The
@@ -198,7 +199,9 @@ public abstract class Session extends Thread {
         gocClient = null;
         isReady = false;
         open(false);
-        start();
+        
+        sessionThread = new Thread(this);
+        sessionThread.start();
     }
 
     protected abstract void detach();
@@ -211,9 +214,9 @@ public abstract class Session extends Thread {
         close(false);
         cleanupSockets();
         try {
-            join();
+            sessionThread.join();
         }
-        catch(InterruptedException e) {
+        catch(Exception e) {
         }
     }
 

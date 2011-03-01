@@ -203,7 +203,7 @@ public abstract class Session extends Thread {
 
     protected abstract void detach();
 
-    public synchronized void detach(GateTalk.Request.Role role) throws MistException {
+    public void detach(GateTalk.Request.Role role) throws MistException {
         checkRole(role);
 
         detachNow = true;

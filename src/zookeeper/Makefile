@@ -1,6 +1,6 @@
 
 NAME        = tme-zookeeper
-VERSION     = 2.5_3.3.1
+VERSION     = 2.5_3.3.2
 PKGNAME     = ${NAME}-${VERSION}
 
 CFGPATH     = etc
@@ -15,7 +15,7 @@ rpm:
 	-if [ ! -d ../../output/RPMS ]; then mkdir ../../output/{BUILD,RPMS,SOURCES,SPECS,SRPMS}; fi
 	mkdir -p $(RPMPATH)/etc/init.d 
 	mkdir -p $(RPMPATH)/usr/share/tme-zookeeper/etc
-	tar xfz zookeeper-3.3.1.tar.gz -C $(RPMPATH)
+	tar xfz zookeeper-3.3.2.tar.gz -C $(RPMPATH)
 	cp -f build/tme-zookeeperd $(RPMPATH)/etc/init.d
 	cp -f build/watchdog-zookeeperd $(RPMPATH)/usr/share/tme-zookeeper
 	cp -f build/install_zookeeperd.sh $(RPMPATH)/usr/share/tme-zookeeper

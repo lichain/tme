@@ -1,4 +1,12 @@
 
+%define __os_install_post \
+    /usr/lib/rpm/redhat/brp-compress \
+    %{!?__debug_package:/usr/lib/rpm/redhat/brp-strip %{__strip}} \
+    /usr/lib/rpm/redhat/brp-strip-static-archive %{__strip} \
+    /usr/lib/rpm/redhat/brp-strip-comment-note %{__strip} %{__objdump} \
+    /usr/lib/rpm/brp-python-bytecompile \
+%{nil}
+
 %define name tme-broker
 %define ver	#MAJOR_VER#
 %define debug_package %{nil}
@@ -121,3 +129,9 @@ elif [ "$1" = "0" ]; then
     # uninstall
     usleep 1
 fi
+
+%changelog
+
+* Mon Feb 14 2011 Chris Huang 20110214
+- Use fixed port 5567 of JMX to broker (http://wiki.spn.tw.trendnet.org/mediawiki/index.php/TME20_Installation_Guide#Firewall_Requirements)
+ 

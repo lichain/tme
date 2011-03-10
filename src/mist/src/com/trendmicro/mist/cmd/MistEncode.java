@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.mist.util.Packet;
 import com.trendmicro.mist.proto.MistMessage;
 import com.trendmicro.mist.proto.MistMessage.KeyValuePair;
@@ -85,7 +86,7 @@ public class MistEncode {
                 mblock_builder.addProperties(KeyValuePair.newBuilder().setKey(prop.getKey()).setValue(prop.getValue()).build());
             }
         }
-        mblock_builder.setId(messageId);
+        mblock_builder.setId(new Exchange(messageId).toString());
         mblock_builder.setMessage(ByteString.copyFrom(cont_builder.build().toByteArray()));
         if(messageTTL != -1)
             mblock_builder.setTtl(messageTTL);

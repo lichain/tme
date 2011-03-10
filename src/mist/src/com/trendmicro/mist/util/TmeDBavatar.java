@@ -107,6 +107,18 @@ public class TmeDBavatar implements DataListener{
 		public long TotalMsgBytesRemote = 0;
 		public long TotalMsgBytesHeldInTransaction = 0;
 	}
+	
+	public static final class ClientData {
+		public String type = null;
+		public String Host = null;
+		public long RealID = 0;
+		public int ExchangeID = 0;
+		public long NumMsg = 0;
+		public long NumMsgPending = 0;
+		public long LastUpdate = 0;
+		public long CreateTime = 0;
+		public long LastAckTime = 0;		
+	}
 
     private static Log logger = LogFactory.getLog(TmeDBavatar.class);
 
@@ -235,6 +247,24 @@ public class TmeDBavatar implements DataListener{
 		+ " FORWARDER_ID INT NOT NULL REFERENCES FORWARDER(FORWARDER_ID),"
 		+ " BROKER_ID INT NOT NULL REFERENCES BROKER(BROKER_ID), "
 		+ " LASTUPDATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP );";
+	
+	private static final String MYSQL_CLIENT
+	= "CREATE TABLE IF NOT EXISTS CLIENT( "
+	+ "CLIENT_ID INT AUTO_INCREMENT PRIMARY KEY, "
+	+ "CLIENT_TYPE CHAR(1) NOT NULL, "
+	+ "REAL_ID BIGINT NOT NULL, "
+	+ "EXCHANGE_ID INT NOT NULL REFERENCES EXCHANGE(EXCHANGE_ID), "
+	+ "HOST VARCHAR(32) NOT NULL,"
+	+ "NUM_MSG BIGINT, "
+	+ "NUM_MSG_PENDING BIGINT, "
+	+ "CREATETIME TIMESTAMP NOT NULL, "	
+	+ "LASTACKTIME TIMESTAMP NOT NULL, "
+	+ "LASTUPDATE TIMESTAMP NOT NULL);";
+	
+	private static final String PRES_CLIENT =
+		"insert into CLIENT(" +
+		"CLIENT_TYPE, REAL_ID, EXCHANGE_ID, HOST, NUM_MSG, NUM_MSG_PENDING, CREATETIME, LASTACKTIME, LASTUPDATE)" +
+		"values (?,?,?,?,?,?,?,?,?)";
 
 	private static final String PRES_EXCHANGE_HIS =
 	        "insert into EXCHANGE_HISTORY(" +
@@ -286,6 +316,7 @@ public class TmeDBavatar implements DataListener{
     private String createExchangeHisTable = MYSQL_EXCHANGE_HISTORY;
     private String createForwarderTable = MYSQL_FORWARDER;
     private String createForwarderHisTable = MYSQL_FORWARDER_HISTORY;
+    private String createClientTable = MYSQL_CLIENT;
 
     private PreparedStatement m_BrokerPS = null;
     private PreparedStatement m_BrokerHistoryPS = null;
@@ -295,6 +326,7 @@ public class TmeDBavatar implements DataListener{
     private PreparedStatement m_ExchangePS = null;
     private PreparedStatement m_ExchangeHisPS = null;
     private PreparedStatement m_UpExchangePS = null;
+    private PreparedStatement m_ClientPS = null;
 
     private static TmeDBavatar m_theSingleton = null;
 
@@ -354,17 +386,14 @@ public class TmeDBavatar implements DataListener{
 
 			// Create prepare statement
 			m_BrokerPS = m_dbConnection.prepareStatement(PRES_BROKER);
-			m_BrokerHistoryPS = m_dbConnection
-					.prepareStatement(PRES_BROKER_HIS);
+			m_BrokerHistoryPS = m_dbConnection.prepareStatement(PRES_BROKER_HIS);
 			m_BrokerStatPS = m_dbConnection.prepareStatement(PRES_BROKER_STAT);
 			m_ForwarderPS = m_dbConnection.prepareStatement(PRES_FORWARDER);
-			m_ForwarderHisPS = m_dbConnection
-					.prepareStatement(PRES_FORWARDER_HIS);
+			m_ForwarderHisPS = m_dbConnection.prepareStatement(PRES_FORWARDER_HIS);
 			m_ExchangePS = m_dbConnection.prepareStatement(PRES_EXCHANGE);
-			m_ExchangeHisPS = m_dbConnection
-					.prepareStatement(PRES_EXCHANGE_HIS);
-			m_UpExchangePS = m_dbConnection
-					.prepareStatement(PRES_UPDATE_EXCHANGE);
+			m_ExchangeHisPS = m_dbConnection.prepareStatement(PRES_EXCHANGE_HIS);
+			m_UpExchangePS = m_dbConnection.prepareStatement(PRES_UPDATE_EXCHANGE);
+			m_ClientPS = m_dbConnection.prepareStatement(PRES_CLIENT);
 
 			logger.info(connectionURL + " loaded successfully");
 		} catch (Exception e) {
@@ -459,6 +488,11 @@ public class TmeDBavatar implements DataListener{
 
 		if (!tablesName.contains("FORWARDER_HISTORY")) {
 			stat.execute(createForwarderHisTable);
+			// System.out.println("Create forwarder table ok");
+		}
+		
+		if (!tablesName.contains("CLIENT")) {
+			stat.execute(createClientTable);
 			// System.out.println("Create forwarder table ok");
 		}
 
@@ -1172,6 +1206,30 @@ public class TmeDBavatar implements DataListener{
         }
 
         return true;
+    }
+
+    public boolean insertClient(ClientData cd) {
+    	if (!isConnectionReady() || null == m_ClientPS)
+            return false;
+    	
+    	try {
+    		m_ClientPS.setString(1, cd.type);
+    		m_ClientPS.setLong(2, cd.RealID);
+    		m_ClientPS.setInt(3, cd.ExchangeID);
+    		m_ClientPS.setString(4, cd.Host);
+    		m_ClientPS.setLong(5, cd.NumMsg);
+    		m_ClientPS.setLong(6, cd.NumMsgPending);
+    		m_ClientPS.setTimestamp(7, new java.sql.Timestamp(cd.CreateTime));
+    		m_ClientPS.setTimestamp(8, new java.sql.Timestamp(cd.LastAckTime));
+    		m_ClientPS.setTimestamp(9, new java.sql.Timestamp(cd.LastUpdate));
+    		m_ClientPS.executeUpdate();
+    	}
+    	catch (Exception ex) {
+    		handleError(ex);
+    		return false;
+    	}
+    	
+    	return true;
     }
 
     public boolean deleteDB(java.util.Date time) {

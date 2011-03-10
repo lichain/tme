@@ -273,4 +273,23 @@ public class BrokerSpy {
             jmxCloseServer();
         }        
     }
+    
+    public Object invokeMBeanMethod(String name, String op_name, Object[] params) throws MistException {
+        Object result = null;
+        try {
+            jmxConnectServer();
+            Set<ObjectName> names = connection.queryNames(new ObjectName(name), null);
+            for(ObjectName n : names) {
+                result = connection.invoke(n, op_name, params, null);
+                break;
+            }            
+        }catch(Exception e) {
+            throw new MistException(e.getMessage());
+        }
+        finally {
+            jmxCloseServer();
+        }     
+
+        return result;
+    }
 }

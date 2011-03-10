@@ -382,7 +382,7 @@ public class ProducerSession extends Session {
 
         // Wait for 10 seconds to deliver the final message
         try {
-            sessionThread.join(10000);
+            sessionThread.join(60000);
         }
         catch(InterruptedException e) {
         }

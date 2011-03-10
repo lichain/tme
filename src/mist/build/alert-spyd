@@ -31,6 +31,8 @@ fi
 export ZK_SERVER=`grep mistd.zookeeper= /usr/share/mist/etc/mistd.properties | cut -d '=' -f 2`
 
 SMTP_SERVER=`zk-get -p /tme2/global/mail_smtp`
+mail_from=`zk-get -p /tme2/global/mail_sender`
+
 if [ $? -eq 1 ] || [ "$SMTP_SERVER" = "" ]; then
     echo can not get SMTP server from /tme2/global/mail_smtp
     exit 1
@@ -40,7 +42,9 @@ if [ $? -eq 1 ] || [ "$mail_to" = "" ]; then
    echo can not retrieve mail alert recipients from /tme2/global/mail_alert
    exit 1
 fi
-
-echo $mail_body | spn-mail -m $SMTP_SERVER -t "$mail_to" -s "$mail_subject"
+if [ "$mail_from" = "" ]; then
+   mail_from='spn-mail-noreply@trend.com.tw'
+fi
+echo $mail_body | spn-mail -m $SMTP_SERVER -f $mail_from -t "$mail_to" -s "$mail_subject"
 
 exit 0

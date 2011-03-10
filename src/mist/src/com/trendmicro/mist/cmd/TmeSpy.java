@@ -346,7 +346,7 @@ public class TmeSpy implements DataListener {
                     try {
                         ZooKeeperInfo.Loading load = brokerSpy.doSpy();
                         loadingNode.setContent(load.toString().getBytes());
-                        int threshold = Integer.valueOf(Daemon.propMIST.getProperty("spy.broker.alert.threshold").trim());
+                        int threshold = Integer.valueOf(Daemon.propMIST.getProperty("spy.broker.loading.threshold").trim());
                         if(load.getLoading() >= threshold) {
                             alertCount += 2;
                             // logger.info(String.format("Broker loading(%d) >= threshold(%d), count:%d",
@@ -558,25 +558,19 @@ public class TmeSpy implements DataListener {
     
     private void issueAlert(String exchange, long msg, long msgByte, long maxMsg, long maxMsgByte) {    	
      	if (maxMsg != 0 && maxMsgByte != 0) {
-    		float threshold = Float.valueOf(Daemon.propMIST.getProperty("spy.broker.alert.threshold").trim()) / 100.0f;
+     	   float threshold = Float.valueOf(Daemon.propMIST.getProperty("spy.queue.size.threshold").trim()) / 100.0f;
     		float msgRatio = (float)msg / maxMsg;
     		float byteRatio = (float)msgByte / maxMsgByte;    	
     		
     		if (msgRatio>threshold || byteRatio>threshold) {
     			try {
-    				String content = String.format("The queue size of exchange %s is more than %.2f%% (now:%.2f%%)!", exchange, threshold*100, Math.max(msgRatio, byteRatio)*100);
-    				ZNode smtp = new ZNode("/tme2/global/mail_smtp");
-        			ZNode mail_list = new ZNode("/tme2/global/mail_alert");        			
-        			String sh = String.format("echo \'%s\' | spn-mail --smtp=%s --to=\'%s\' --subject=%s",
-        					content,
-        					smtp.getContentString(), 
-        					mail_list.getContentString(),
-        					"\'[Alert]exchange queue will be full\'");   	
-        			String[] cmd = {"/bin/sh", "-c", sh};
-        			Runtime.getRuntime().exec(cmd);
-    			} catch (CODIException ex) {
-    				logger.error(ex.getMessage());
-    			}catch (IOException ex) {
+    			    String content = String.format("\'Alert! The queue size of exchange %s is more than %.2f%% threshold (now:%.2f%%)!\'", exchange, threshold*100, Math.max(msgRatio, byteRatio)*100);
+                    String[] command = {Daemon.propMIST.getProperty("spy.broker.alert.command"),
+                            "custom",
+                            "\'[TME2] Warning: exchange queue will be full\'",
+                            content};
+                    Runtime.getRuntime().exec(command);
+                }catch (Exception ex) {
     				logger.error(ex.getMessage());
     			}    			
     		}

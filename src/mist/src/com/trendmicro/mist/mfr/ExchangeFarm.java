@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -20,11 +21,12 @@ import com.trendmicro.codi.DataObserver;
 import com.trendmicro.codi.Node;
 import com.trendmicro.codi.NodeListener;
 import com.trendmicro.codi.ZNode;
+import com.trendmicro.codi.lock.Lock.LockType;
+import com.trendmicro.codi.lock.ZLock;
 import com.trendmicro.mist.BrokerAdmin;
-import com.trendmicro.mist.BrokerSpy;
-import com.trendmicro.mist.Daemon;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
 import com.trendmicro.mist.util.Exchange;
+import com.trendmicro.mist.util.ParallelExecutor;
 import com.trendmicro.spn.common.util.Utils;
 
 public class ExchangeFarm extends Thread implements DataListener {
@@ -39,7 +41,7 @@ public class ExchangeFarm extends Thread implements DataListener {
     private HashMap<String, ZooKeeperInfo.TLSConfig> tlsExchanges = new HashMap<String, ZooKeeperInfo.TLSConfig>();
     private HashMap<String, String> fixedExchanges = new HashMap<String, String>();
 
-    private HashMap<String, HashSet<ZNode>> allExchangeRefs = new HashMap<String, HashSet<ZNode>>();
+    private HashMap<String, ArrayList<ZNode>> allExchangeRefs = new HashMap<String, ArrayList<ZNode>>();
     private LinkedBlockingDeque<ExchangeEvent> exchangeEventQueue = new LinkedBlockingDeque<ExchangeEvent>();
 
     private DataObserver gocObs = null;
@@ -57,12 +59,10 @@ public class ExchangeFarm extends Thread implements DataListener {
     class RefListener extends ExchangeEvent implements NodeListener {
         private ZNode origNode = null;
         private Exchange exchange = null;
-        private String refRoot = null;
 
-        public RefListener(ZNode origNode, Exchange exchange, String refRoot) {
+        public RefListener(ZNode origNode, Exchange exchange) {
             this.origNode = origNode;
             this.exchange = exchange;
-            this.refRoot = refRoot;
         }
 
         @Override
@@ -72,7 +72,7 @@ public class ExchangeFarm extends Thread implements DataListener {
 
         @Override
         public boolean onConnected() {
-            return false;
+            return true;
         }
 
         @Override
@@ -97,6 +97,10 @@ public class ExchangeFarm extends Thread implements DataListener {
 
         @Override
         public boolean onSessionExpired() {
+            /**
+             * Put a request to the eventQueue, wait for the worker to recreate
+             * the expired reference node
+             */
             logger.info("ref node " + origNode.getPath() + " expired");
             try {
                 exchangeEventQueue.put(this);
@@ -107,14 +111,47 @@ public class ExchangeFarm extends Thread implements DataListener {
             return false;
         }
 
+        /**
+         * The function to recreate the reference node
+         */
         public void renewRef() {
-            synchronized(allExchangeRefs) {
-                ZNode newRefNode = genRefNode(refRoot);
-                HashSet<ZNode> refs = allExchangeRefs.get(exchange.toString());
-                refs.remove(origNode);
-                refs.add(newRefNode);
-                newRefNode.setNodeListener(new RefListener(newRefNode, exchange, refRoot));
-                logger.info("new ref node created: " + newRefNode.getPath());
+            ArrayList<ZNode> refList = allExchangeRefs.get(exchange.toString());
+            String lockPath = "/tme2/exchange/" + exchange.toString() + ".lock";
+            ZLock lock = new ZLock(lockPath);
+            try {
+                /**
+                 * Get the exchange's lock first
+                 */
+                logger.info("getting exchange lock: " + lockPath);
+                lock.acquire(LockType.WRITE_LOCK);
+                logger.info("exchange lock: " + lockPath + " acquired");
+
+                /**
+                 * If the node does not exist in the refList, it means that it
+                 * is discarded by decExchangeRef(), so it can be ignored
+                 */
+                if(!refList.contains(origNode)) {
+                    logger.info("ref Node " + origNode.getPath() + " removed, ignore");
+                    return;
+                }
+
+                /**
+                 * Remove the old node and create a new one
+                 */
+                refList.remove(origNode);
+                String newRefPath = incExchangeRef(exchange);
+                logger.info("new ref node created: " + newRefPath);
+            }
+            catch(Exception e) {
+                logger.error(Utils.convertStackTrace(e));
+            }
+            finally {
+                try {
+                    lock.release();
+                }
+                catch(Exception e) {
+                }
+                logger.info("lock released: " + lockPath);
             }
         }
     }
@@ -158,7 +195,48 @@ public class ExchangeFarm extends Thread implements DataListener {
         return hostname;
     }
 
-    private String decideExchangeHost(String name) {
+    /**
+     * The Runner of ParallelExecutor to check if the exchange is in use
+     */
+    class ExchangeJMXChecker implements ParallelExecutor.Runner<String> {
+        String exchangeName;
+        String broker;
+
+        public ExchangeJMXChecker(String exchangeName, String broker) {
+            this.exchangeName = exchangeName;
+            this.broker = broker;
+        }
+
+        @Override
+        public String run() {
+            if(BrokerAdmin.isExchangeInUse(broker, new Exchange(exchangeName)))
+                return broker;
+            else
+                return null;
+        }
+    }
+
+    /**
+     * Wrapper function to use the parallel executor to ask all available
+     * brokers if the specified exchange is on that broker. It will return null
+     * if the exchange does not exist, or the broker's host which the exchange
+     * lives on
+     */
+    private String checkExistingExchange(String exchangeName, Set<String> brokerSet) {
+        ParallelExecutor<String> pe = new ParallelExecutor<String>();
+        for(String broker : brokerSet)
+            pe.addRunner(new ExchangeJMXChecker(exchangeName, broker));
+
+        for(String broker : pe.waitCompleted()) {
+            if(broker != null) {
+                logger.warn("there is still client using " + exchangeName + ", reuse broker " + broker);
+                return broker;
+            }
+        }
+        return null;
+    }
+
+    private String decideExchangeHost(String name, boolean isMigrate) {
         if(BrokerFarm.getInstance().getBrokerCount() == 0)
             return null;
 
@@ -169,6 +247,16 @@ public class ExchangeFarm extends Thread implements DataListener {
         }
 
         Map<String, ZooKeeperInfo.Loading> loadingMap = BrokerFarm.getInstance().getAllLoading();
+
+        if(!isMigrate) {
+            /**
+             * If it is exchange migration, then the exchange is definitely
+             * exists, so exchange migration does not need the following check
+             */
+            String existingHost = checkExistingExchange(name, loadingMap.keySet());
+            if(existingHost != null)
+                return existingHost;
+        }
 
         for(Entry<String, ZooKeeperInfo.Loading> e : loadingMap.entrySet())
             loadingScaleVec.get(e.getValue().getLoading() / 10).add(e.getKey());
@@ -262,31 +350,6 @@ public class ExchangeFarm extends Thread implements DataListener {
         }
     }
 
-    private boolean hasPendingMessage(Exchange exchange) {
-        ZooKeeperInfo.Broker brk = BrokerFarm.getInstance().getBrokerByHost(exchange.getBroker());
-        if(brk == null) {
-            logger.warn("hasPendingMessage(): " + exchange.getBroker() + " does not exist");
-            return false;
-        }
-        else if(!BrokerFarm.checkConnectable(brk)) {
-            logger.warn("hasPendingMessage(): " + exchange.getBroker() + " is not connectable");
-            return false;
-        }
-
-        try {
-            BrokerSpy spy = new BrokerSpy(Daemon.propMIST.getProperty("spy.broker.type"), exchange.getBroker() + ":" + Daemon.propMIST.getProperty("spy.monitor.jmxport"), Daemon.propMIST.getProperty("spy.monitor.jmxauth"));
-            String pattern = String.format("com.sun.messaging.jms.server:type=Destination,subtype=Monitor,desttype=%s,name=\"%s\"", exchange.isQueue() ? "q": "t", exchange.getName());
-            spy.jmxConnectServer();
-            Map<String, String> map = spy.getMBeanAttributesMap(pattern, null);
-            spy.jmxCloseServer();
-            return(Integer.parseInt(map.get("NumMsgs")) > 0);
-        }
-        catch(Exception e) {
-            logger.error(Utils.convertStackTrace(e));
-            return true;
-        }
-    }
-
     private boolean hasReference(Exchange exchange) {
         try {
             String path = "/tme2/exchange/" + exchange.toString();
@@ -295,13 +358,13 @@ public class ExchangeFarm extends Thread implements DataListener {
             return !no_ref;
         }
         catch(Exception e) {
-            logger.warn(e.toString());
+            logger.error(Utils.convertStackTrace(e));
             return true;
         }
     }
 
     private ZNode genRefNode(String refRoot) {
-        for(int i = 0; i < 3; i++) {
+        for(;;) {
             try {
                 return ZNode.createSequentialNode(refRoot + "/ref", true, refdata.toString().getBytes());
             }
@@ -309,12 +372,12 @@ public class ExchangeFarm extends Thread implements DataListener {
                 logger.error("cannot generate reference node under " + refRoot);
                 logger.fatal(Utils.convertStackTrace(e));
                 logger.info("retrying...");
+                Utils.justSleep(1000);
             }
         }
-        return null;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////////////////////
 
     public static ExchangeFarm getInstance() {
         if(null == m_theSingleton)
@@ -345,26 +408,20 @@ public class ExchangeFarm extends Thread implements DataListener {
                 ExchangeEvent ev = exchangeEventQueue.take();
                 if(ev instanceof RefListener)
                     ((RefListener) ev).renewRef();
-                //TODO: check if this is not needed
-/*                else if(ev instanceof TlsConfigEvent) {
-                    TlsConfigEvent tlsEv = (TlsConfigEvent) ev;
-                    if(tlsExchanges.remove(tlsEv.exchange.toString()) != null) {
-                        synchronized(Daemon.sessionPool) {
-                            for(Session sess : Daemon.sessionPool)
-                                sess.removeTlsClient(tlsEv.exchange);
-                        }
-                    }
-                    if(tlsEv.tlsConfig != null) {
-                        tlsExchanges.put(tlsEv.exchange.toString(), tlsEv.tlsConfig);
-                        synchronized(Daemon.sessionPool) {
-                            for(Session sess : Daemon.sessionPool) {
-                                Client c = sess.findClient(tlsEv.exchange);
-                                if(c != null)
-                                    sess.addTlsClient(c, tlsEv.tlsConfig);
-                            }
-                        }
-                    }
-                }*/
+                // TODO: check if this is not needed
+                /*
+                 * else if(ev instanceof TlsConfigEvent) { TlsConfigEvent tlsEv
+                 * = (TlsConfigEvent) ev;
+                 * if(tlsExchanges.remove(tlsEv.exchange.toString()) != null) {
+                 * synchronized(Daemon.sessionPool) { for(Session sess :
+                 * Daemon.sessionPool) sess.removeTlsClient(tlsEv.exchange); } }
+                 * if(tlsEv.tlsConfig != null) {
+                 * tlsExchanges.put(tlsEv.exchange.toString(), tlsEv.tlsConfig);
+                 * synchronized(Daemon.sessionPool) { for(Session sess :
+                 * Daemon.sessionPool) { Client c =
+                 * sess.findClient(tlsEv.exchange); if(c != null)
+                 * sess.addTlsClient(c, tlsEv.tlsConfig); } } } }
+                 */
             }
             catch(InterruptedException e) {
                 continue;
@@ -372,36 +429,47 @@ public class ExchangeFarm extends Thread implements DataListener {
         }
     }
 
-    public String incExchangeRef(Exchange exchange, int session_id) {
+    public String incExchangeRef(Exchange exchange) {
         String exchangeFullName = exchange.toString();
         String refRoot = "/tme2/exchange/" + exchangeFullName;
         String exchangeRefPath = null;
 
-        try {
-            ZooKeeperInfo.Exchange.Builder builder = ZooKeeperInfo.Exchange.newBuilder();
-            builder.setHost(exchange.getBroker());
-            ZooKeeperInfo.Exchange xchgMsg = builder.build();
+        ZooKeeperInfo.Exchange.Builder builder = ZooKeeperInfo.Exchange.newBuilder();
+        builder.setHost(exchange.getBroker());
+        ZooKeeperInfo.Exchange xchgMsg = builder.build();
 
-            ZNode refRootNode = new ZNode(refRoot);
-            if(!refRootNode.exists())
-                refRootNode.create(false, xchgMsg.toString().getBytes());
-            else if(new String(refRootNode.getContent()).compareTo(xchgMsg.toString()) != 0)
-                refRootNode.setContent(xchgMsg.toString().getBytes());
-
-            ZNode refNode = genRefNode(refRoot);
-            exchangeRefPath = refNode.getPath();
-            synchronized(allExchangeRefs) {
-                HashSet<ZNode> refSet = allExchangeRefs.get(exchangeFullName);
-                if(refSet == null) {
-                    refSet = new HashSet<ZNode>();
-                    allExchangeRefs.put(exchangeFullName, refSet);
-                }
-                refSet.add(refNode);
-                refNode.setNodeListener(new RefListener(refNode, exchange, refRoot));
+        /**
+         * Try to create and set the reference's root node
+         */
+        ZNode refRootNode = new ZNode(refRoot);
+        for(;;) {
+            try {
+                if(!refRootNode.exists())
+                    refRootNode.create(false, xchgMsg.toString().getBytes());
+                else if(new String(refRootNode.getContent()).compareTo(xchgMsg.toString()) != 0)
+                    refRootNode.setContent(xchgMsg.toString().getBytes());
+                break;
+            }
+            catch(Exception e) {
+                logger.warn(Utils.convertStackTrace(e));
+                Utils.justSleep(1000);
             }
         }
-        catch(Exception e) {
-            logger.error("incExchangeRef(): " + e.toString());
+
+        /**
+         * Generate the reference ephemeral node and add it
+         */
+        ZNode refNode = genRefNode(refRoot);
+        refNode.setNodeListener(new RefListener(refNode, exchange));
+        exchangeRefPath = refNode.getPath();
+        synchronized(allExchangeRefs) { // To prevent concurrent list
+                                        // modification
+            ArrayList<ZNode> refList = allExchangeRefs.get(exchangeFullName);
+            if(refList == null) {
+                refList = new ArrayList<ZNode>();
+                allExchangeRefs.put(exchangeFullName, refList);
+            }
+            refList.add(refNode);
         }
         return exchangeRefPath;
     }
@@ -410,50 +478,39 @@ public class ExchangeFarm extends Thread implements DataListener {
         String exchangeFullName = exchange.toString();
         String refRoot = "/tme2/exchange/" + exchangeFullName;
 
-        HashSet<ZNode> refs = allExchangeRefs.get(exchangeFullName);
-        for(;;) {
-            ZNode refNode = null;
-            synchronized(allExchangeRefs) {
-                if(refs == null)
-                    break;
-                else if(refs.size() == 0)
-                    break;
-                else
-                    refNode = refs.iterator().next();
-            }
-            try {
-                if(!refNode.exists()) {
-                    refs.remove(refNode);
-                    continue;
-                }
-            }
-            catch(CODIException e) {
-                logger.warn(Utils.convertStackTrace(e));
-            }
-            try {
-                refNode.delete();
-                synchronized(allExchangeRefs) {
-                    refs.remove(refNode);
-                }
-                break;
-            }
-            catch(Exception e) {
-                logger.warn("decExchangeRef(): " + Utils.convertStackTrace(e) + " retry");
-                continue;
-            }
+        ArrayList<ZNode> refList = allExchangeRefs.get(exchangeFullName);
+        ZNode refNode = null;
+        refNode = refList.get(0);
+
+        String refPath = refNode.getPath();
+        try {
+            refNode.delete();
+            logger.info("refNode " + refPath + " deleted");
         }
+        catch(CODIException.NoNode e) {
+            logger.info("refNode " + refPath + " disappeared, ignore it");
+        }
+        catch(Exception e) {
+            logger.error(Utils.convertStackTrace(e));
+        }
+        refList.remove(0);
 
         try {
-            if(!hasReference(exchange)) {
-                logger.info("decExchangeRef(): no reference, check exchange " + exchangeFullName);
-                if(!hasPendingMessage(exchange)) {
-                    logger.info("decExchangeRef(): no pending message, remove exchange");
-                    new ZNode(refRoot).deleteRecursively();
-                }
+            if(hasReference(exchange))
+                return;
+
+            logger.info("decExchangeRef(): no reference, check exchange " + exchangeFullName);
+            ZNode exNode = new ZNode(refRoot);
+            ZooKeeperInfo.Exchange.Builder builder = ZooKeeperInfo.Exchange.newBuilder();
+            TextFormat.merge(new String(exNode.getContent()), builder);
+            String broker = builder.build().getHost();
+            if(!BrokerAdmin.isExchangeInUse(broker, exchange)) {
+                logger.info("decExchangeRef(): no other client and pending message, remove exchange");
+                exNode.delete();
             }
         }
         catch(Exception e) {
-            logger.error(e.getMessage());
+            logger.error(Utils.convertStackTrace(e));
         }
     }
 
@@ -470,23 +527,23 @@ public class ExchangeFarm extends Thread implements DataListener {
         ZNode exchangeNode = new ZNode(exchangeNodePath);
         try {
             if(!exchangeNode.exists())
-                hostname = decideExchangeHost(realname);
+                hostname = decideExchangeHost(realname, false);
             else {
                 ZooKeeperInfo.Exchange.Builder exBuilder = ZooKeeperInfo.Exchange.newBuilder();
                 TextFormat.merge(new String(exchangeNode.getContent()), exBuilder);
                 ZooKeeperInfo.Exchange ex = exBuilder.build();
                 hostname = ex.getHost();
-                
+
                 ZNode brokerNode = new ZNode("/tme2/broker/" + hostname);
                 if(hostname.compareTo("") == 0 || !brokerNode.exists()) {
-                    hostname = decideExchangeHost(realname);
+                    hostname = decideExchangeHost(realname, true);
                     exchangeNode.setContent(ZooKeeperInfo.Exchange.newBuilder().setHost(hostname).build().toString().getBytes());
                 }
                 else {
                     ZooKeeperInfo.Broker.Builder brkBuilder = ZooKeeperInfo.Broker.newBuilder();
                     TextFormat.merge(new String(brokerNode.getContent()), brkBuilder);
                     if(brkBuilder.build().getStatus() != ZooKeeperInfo.Broker.Status.ONLINE) {
-                        hostname = decideExchangeHost(realname);
+                        hostname = decideExchangeHost(realname, false);
                         ex = ZooKeeperInfo.Exchange.newBuilder().mergeFrom(ex).clearHost().setHost(hostname).build();
                         exchangeNode.setContent(ex.toString().getBytes());
                     }
@@ -544,7 +601,7 @@ public class ExchangeFarm extends Thread implements DataListener {
         }
         return list;
     }
-    
+
     public static String getCurrentExchangeHost(Exchange exchange) {
         String host = null;
         String exchangeFullName = exchange.toString();
@@ -584,7 +641,7 @@ public class ExchangeFarm extends Thread implements DataListener {
             return BrokerAdmin.FlowControlBehavior.BLOCK;
         }
     }
-    
+
     public static ZooKeeperInfo.TotalLimit getTotalLimit(Exchange exchange) {
         String path = "/tme2/global/limit_exchange" + "/" + exchange.getName();
         ZNode limitNode = new ZNode(path);

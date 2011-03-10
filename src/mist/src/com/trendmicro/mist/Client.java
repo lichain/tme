@@ -1,6 +1,5 @@
 package com.trendmicro.mist;
 
-import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,22 +7,20 @@ import javax.jms.BytesMessage;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
-import javax.jms.TextMessage;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.trendmicro.codi.CODIException;
 import com.trendmicro.codi.ZNode;
-import com.trendmicro.codi.lock.ZLock;
 import com.trendmicro.codi.lock.Lock.LockType;
-import com.trendmicro.mist.util.Exchange;
+import com.trendmicro.codi.lock.ZLock;
 import com.trendmicro.mist.mfr.ExchangeFarm;
 import com.trendmicro.mist.proto.GateTalk;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
+import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.spn.common.util.Utils;
 
 public class Client {
@@ -168,7 +165,7 @@ public class Client {
 
             if(!brokerDetermined) {
                 if(!isResume && !isMigrate) {
-                    String exchangeRefPath = ExchangeFarm.getInstance().incExchangeRef(exchange, getSessionId());
+                    String exchangeRefPath = ExchangeFarm.getInstance().incExchangeRef(exchange);
                     logger.info("exchangeRefPath added: " + exchangeRefPath);
                 }
             }

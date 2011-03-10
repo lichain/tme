@@ -1,5 +1,7 @@
 package com.trendmicro.mist;
 
+import java.util.Iterator;
+
 import javax.management.Attribute;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
@@ -105,5 +107,36 @@ public class BrokerAdmin {
             catch(Exception e) {
             }
         }
+    }
+    
+    public static boolean isExchangeInUse(String broker, Exchange exchange) {
+        JMXConnector jmxconn = null;
+        try {
+            jmxconn = createJMXConnector(broker);
+            MBeanServerConnection conn = jmxconn.getMBeanServerConnection();
+            String pattern = String.format("com.sun.messaging.jms.server:type=Destination,subtype=Monitor,desttype=%s,name=\"%s\"", exchange.isQueue() ? "q": "t", exchange.getName());
+            Iterator<ObjectName> iter = conn.queryNames(new ObjectName(pattern), null).iterator();
+            if(!iter.hasNext())
+                return false;
+            ObjectName name = iter.next();
+
+            if((Long) conn.getAttribute(name, "NumMsgs") > 0)
+                return true;
+            if((Integer) conn.getAttribute(name, "NumConsumers") > 0)
+                return true;
+            if((Integer) conn.getAttribute(name, "NumProducers") > 0)
+                return true;
+        }
+        catch(Exception e) {
+            logger.error(Utils.convertStackTrace(e));
+        }
+        finally {
+            try {
+                jmxconn.close();
+            }
+            catch(Exception e) {
+            }
+        }
+        return false;
     }
 }

@@ -99,7 +99,7 @@ public class MistEncode {
             Packet pack = new Packet();
             String line;
             while((line = src.readLine()) != null) {
-                pack.setPayload(packMessage(line.getBytes("UTF-16")).toByteArray());
+                pack.setPayload(packMessage(line.getBytes("UTF-8")).toByteArray());
                 pack.write(dest);
                 if(System.out.checkError()){
                     System.err.println("MistEncode: Pipe is broken!");

@@ -2,11 +2,10 @@ package com.trendmicro.nagios;
 
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
-import com.trendmicro.tme.util.Utils;
 
 import com.trendmicro.codi.ZKSessionManager;
 import com.trendmicro.codi.ZNode;
-import com.trendmicro.codi.CODIException;
+import com.trendmicro.tme.util.Utils;
 
 public class ZkCheck {
 	

@@ -123,6 +123,7 @@ public class ConsumerSession extends Session implements MessageListener {
     private Packet pack = new Packet();
     private String prefixThreadName = "";
     private boolean attached = false;
+    private boolean unack = false;
 
     public ConsumerSession(int sessId, GateTalk.Session sessConfig) throws MistException {
         super(sessId, sessConfig);
@@ -159,6 +160,17 @@ public class ConsumerSession extends Session implements MessageListener {
     @Override
     protected void detach() {
         attached = false;
+        detachNow = true;
+        for(int i = 0; i < 10; i++) {
+            if(!unack)
+                break;
+            Utils.justSleep(500);
+        }
+        try {
+            socketInput.close();
+        }
+        catch(IOException e) {
+        }
     }
 
     private void onMessageProcess(Message msg) throws IOException {
@@ -189,8 +201,9 @@ public class ConsumerSession extends Session implements MessageListener {
         }
 
         pack.setPayload(mp.msgBlock.toByteArray());
+        unack = true;
         pack.write(socketOutput);
-        
+
         ExchangeMetric metric = ExchangeMetric.getExchangeMetric(mp.from);
         metric.increaseMessageIn(mp.msgBlock.getMessage().size());
         if(mp.isGocRef)
@@ -202,6 +215,7 @@ public class ConsumerSession extends Session implements MessageListener {
         try {
             if(GateTalk.Response.newBuilder().mergeFrom(pack.getPayload()).build().getSuccess())
                 msg.acknowledge();
+            unack = false;
         }
         catch(Exception e) {
             logger.error(Utils.convertStackTrace(e));

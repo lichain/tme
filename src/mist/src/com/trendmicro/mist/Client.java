@@ -180,9 +180,11 @@ public class Client {
         }
         catch(CODIException e) {
             logger.error(Utils.convertStackTrace(e));
+            throw new MistException(e.getMessage());
         }
         catch(InterruptedException e) {
             logger.error(Utils.convertStackTrace(e));
+            throw new MistException(e.getMessage());
         }
         finally {
             if(!brokerDetermined) {

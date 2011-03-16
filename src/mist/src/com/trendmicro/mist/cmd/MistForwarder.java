@@ -79,8 +79,8 @@ public class MistForwarder extends ThreadInvoker {
         private final MistSink mySink;
         private final int sessID;
         private final int MAX_MSG_BUF_SIZE = 2048;
-        private boolean isClose = false;
-        private boolean isRunning = false;
+        private volatile boolean isClose = false;
+        private volatile boolean isRunning = false;
         private long dropCount = 0;
         private long deliveryCount =0;
 

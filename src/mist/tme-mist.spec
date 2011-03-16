@@ -1,4 +1,12 @@
 
+%define __os_install_post \
+    /usr/lib/rpm/brp-compress \
+    %{!?__debug_package:/usr/lib/rpm/brp-strip %{__strip}} \
+    /usr/lib/rpm/brp-strip-static-archive %{__strip} \
+    /usr/lib/rpm/brp-strip-comment-note %{__strip} %{__objdump} \
+    /usr/lib/rpm/brp-python-bytecompile \
+%{nil}
+
 %define name tme-mist
 %define ver #MAJOR_VER#
 
@@ -175,3 +183,20 @@ elif [ "$1" = "0" ]; then
     # uninstall
     usleep 1
 fi
+
+%changelog
+
+* Fri Feb 25 2011 Chris Huang 20110225 
+- Let user to customize mail sender of alert mail of exchange queue
+- Provide client information for each exchange
+* Fri Feb 18 2011 Chris Huang 20110218
+- bug fix TME2.0 Adoption-  00073: if a vertex has no sub-cycle, must remove itself or the traversal will cause infinite loop
+- fix shutdown to clear exchange on ZK
+- ignore the broker lock node in BrokerFarm
+- fix mount when ZNode:exchange's broker host not exist problem
+* Wed Feb 16 2011 Chris Huang 20110216
+- Fix TME2.0 Adoption- 00067: Prevent config corruption ; Add error handling ; Show clearer status ; Log console output
+- tme-bridge: use JGraphT to detect forwarding loops
+* Mon Feb 14 2011 Chris Huang 20110214
+- change the TextMessage to ByteMessage encoding from UTF-16 to UTF-8 to meet the standard
+- Use fixed port of JMX to broker

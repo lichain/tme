@@ -30,7 +30,7 @@ public class TlsSender extends ProducerSession {
 
     private TlsSender() throws MistException {
         super(0, null);
-        start();
+        new Thread(this).start();
     }
 
     private static void initialize() throws MistException {

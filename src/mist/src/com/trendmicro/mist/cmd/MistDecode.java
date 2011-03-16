@@ -63,7 +63,7 @@ public class MistDecode {
             int rdcnt = -1;
             do {
                 if((rdcnt = pack.read(src)) > 0) {
-                    String line = new String(unpackMessage(pack.getPayload()), "UTF-16");
+                    String line = new String(unpackMessage(pack.getPayload()), "UTF-8");
                     dest.write(line);
                     dest.newLine();
                     dest.flush();

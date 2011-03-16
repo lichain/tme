@@ -382,16 +382,19 @@ public class ProducerSession extends Session {
 
         // Wait for 10 seconds to deliver the final message
         try {
-            join(10000);
+            sessionThread.join(60000);
         }
         catch(InterruptedException e) {
         }
-        if(isAlive())
+        if(sessionThread.isAlive())
             logger.error("force closing the producer, the message might not have been delivered!");
     }
 
     @Override
     public boolean isAttached() {
-        return isAlive();
+        if(sessionThread == null)
+            return false;
+        else
+            return sessionThread.isAlive();
     }
 }

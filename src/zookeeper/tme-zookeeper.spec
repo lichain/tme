@@ -1,4 +1,12 @@
 
+%define __os_install_post \
+    /usr/lib/rpm/brp-compress \
+    %{!?__debug_package:/usr/lib/rpm/brp-strip %{__strip}} \
+    /usr/lib/rpm/brp-strip-static-archive %{__strip} \
+    /usr/lib/rpm/brp-strip-comment-note %{__strip} %{__objdump} \
+    /usr/lib/rpm/brp-python-bytecompile \
+%{nil}
+
 %define name tme-zookeeper
 %define ver	#MAJOR_VER#
 
@@ -27,12 +35,12 @@ Zookeeper package for TME
 %{__mkdir} -p $RPM_BUILD_ROOT/etc/init.d
 %{__mkdir} -p $RPM_BUILD_ROOT/usr/share/tme-zookeeper
 
-cd zookeeper-3.3.1/conf; cat zoo_sample.cfg | sed -e 's/dataDir=.*/dataDir=\/var\/tme-zookeeper/' > zoo.cfg; cd -
+cd zookeeper-3.3.2/conf; cat zoo_sample.cfg | sed -e 's/dataDir=.*/dataDir=\/var\/tme-zookeeper/' > zoo.cfg; cd -
 
-cp -rf zookeeper-3.3.1/zookeeper-3.3.1.jar $RPM_BUILD_ROOT/usr/share/tme-zookeeper
-cp -rf zookeeper-3.3.1/conf $RPM_BUILD_ROOT/usr/share/tme-zookeeper/conf
-cp -rf zookeeper-3.3.1/bin $RPM_BUILD_ROOT/usr/share/tme-zookeeper/bin
-cp -rf zookeeper-3.3.1/lib $RPM_BUILD_ROOT/usr/share/tme-zookeeper/lib
+cp -rf zookeeper-3.3.2/zookeeper-3.3.2.jar $RPM_BUILD_ROOT/usr/share/tme-zookeeper
+cp -rf zookeeper-3.3.2/conf $RPM_BUILD_ROOT/usr/share/tme-zookeeper/conf
+cp -rf zookeeper-3.3.2/bin $RPM_BUILD_ROOT/usr/share/tme-zookeeper/bin
+cp -rf zookeeper-3.3.2/lib $RPM_BUILD_ROOT/usr/share/tme-zookeeper/lib
 
 %build
 
@@ -124,3 +132,5 @@ elif [ "$1" = "0" ]; then
     # uninstall
     usleep 1
 fi
+
+%changelog

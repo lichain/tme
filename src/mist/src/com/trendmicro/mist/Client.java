@@ -1,6 +1,5 @@
 package com.trendmicro.mist;
 
-import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,22 +7,20 @@ import javax.jms.BytesMessage;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
-import javax.jms.TextMessage;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.trendmicro.codi.CODIException;
 import com.trendmicro.codi.ZNode;
-import com.trendmicro.codi.lock.ZLock;
 import com.trendmicro.codi.lock.Lock.LockType;
-import com.trendmicro.mist.util.Exchange;
+import com.trendmicro.codi.lock.ZLock;
 import com.trendmicro.mist.mfr.ExchangeFarm;
 import com.trendmicro.mist.proto.GateTalk;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
+import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.spn.common.util.Utils;
 
 public class Client {
@@ -168,7 +165,7 @@ public class Client {
 
             if(!brokerDetermined) {
                 if(!isResume && !isMigrate) {
-                    String exchangeRefPath = ExchangeFarm.getInstance().incExchangeRef(exchange, getSessionId());
+                    String exchangeRefPath = ExchangeFarm.getInstance().incExchangeRef(exchange);
                     logger.info("exchangeRefPath added: " + exchangeRefPath);
                 }
             }
@@ -183,9 +180,11 @@ public class Client {
         }
         catch(CODIException e) {
             logger.error(Utils.convertStackTrace(e));
+            throw new MistException(e.getMessage());
         }
         catch(InterruptedException e) {
             logger.error(Utils.convertStackTrace(e));
+            throw new MistException(e.getMessage());
         }
         finally {
             if(!brokerDetermined) {
@@ -261,31 +260,6 @@ public class Client {
                 logger.info("lock released: " + lockPath);
             }
         }
-    }
-
-    public byte[] recvMessageBytes() throws MistException {
-        byte[] msg_data = null;
-        try {
-            Message msg = getConsumer().receive(10);
-            if(msg != null) {
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                if(msg instanceof BytesMessage) {
-                    byte[] buffer = new byte[256];
-                    int ret = -1;
-                    while((ret = ((BytesMessage) msg).readBytes(buffer)) > 0)
-                        bos.write(buffer, 0, ret);
-                }
-                else if(msg instanceof TextMessage) {
-                    byte[] buffer = ((TextMessage) msg).getText().getBytes("UTF-16");
-                    bos.write(buffer, 0, buffer.length);
-                }
-                msg_data = bos.toByteArray();
-            }
-        }
-        catch(Exception e) {
-            throw new MistException(String.format("consumer (%d): %s", getSessionId(), e.getMessage()));
-        }
-        return msg_data;
     }
 
     public synchronized void sendMessageBytes(byte[] data, HashMap<String, String> props) throws MistException {

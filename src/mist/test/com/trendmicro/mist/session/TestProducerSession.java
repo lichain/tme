@@ -562,7 +562,7 @@ public class TestProducerSession extends TestCase {
          * Test successful detach
          */
         producerSession.detach(GateTalk.Request.Role.SINK);
-        assertFalse(producerSession.isAlive());
+        assertFalse(producerSession.isAttached());
     }
 
     public static Test suite() {

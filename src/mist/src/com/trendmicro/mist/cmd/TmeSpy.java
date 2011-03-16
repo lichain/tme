@@ -13,6 +13,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.management.openmbean.CompositeData;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.PropertyConfigurator;
@@ -31,6 +33,7 @@ import com.trendmicro.mist.proto.ZooKeeperInfo;
 import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.mist.util.TmeDBavatar;
 import com.trendmicro.mist.util.TmeDBavatar.BrokerInfoData;
+import com.trendmicro.mist.util.TmeDBavatar.ClientData;
 import com.trendmicro.spn.common.util.Utils;
 
 public class TmeSpy implements DataListener {
@@ -342,7 +345,7 @@ public class TmeSpy implements DataListener {
                     try {
                         ZooKeeperInfo.Loading load = brokerSpy.doSpy();
                         loadingNode.setContent(load.toString().getBytes());
-                        int threshold = Integer.valueOf(Daemon.propMIST.getProperty("spy.broker.alert.threshold").trim());
+                        int threshold = Integer.valueOf(Daemon.propMIST.getProperty("spy.broker.loading.threshold").trim());
                         if(load.getLoading() >= threshold) {
                             alertCount += 2;
                             // logger.info(String.format("Broker loading(%d) >= threshold(%d), count:%d",
@@ -545,6 +548,42 @@ public class TmeSpy implements DataListener {
                     }
                 }
                 dbAvatar.insertBrokerRecord(bid);
+                
+             // Insert consumer data
+                String pattern = String.format("com.sun.messaging.jms.server:type=ConsumerManager,subtype=Monitor");
+                Object result = brokerSpy.invokeMBeanMethod(pattern, "getConsumerInfo", null);
+                if (result != null) {
+                    for(CompositeData consumer : (CompositeData[])result) {
+                        ClientData cd = new ClientData();
+                        cd.type = "c";
+                        cd.Host = consumer.get("Host").toString();
+                        cd.ExchangeID = dbAvatar.queryExchangeID(consumer.get("DestinationName").toString(), consumer.get("DestinationType").toString());
+                        cd.NumMsg = Long.parseLong(consumer.get("NumMsgs").toString());
+                        cd.NumMsgPending = Long.parseLong(consumer.get("NumMsgsPending").toString());
+                        cd.RealID = Long.parseLong(consumer.get("ConsumerID").toString());
+                        cd.CreateTime = Long.parseLong(consumer.get("CreationTime").toString());
+                        cd.LastAckTime = Long.parseLong(consumer.get("LastAckTime").toString());
+                        cd.LastUpdate = rightNow.getTimeInMillis();
+                        dbAvatar.insertClient(cd);                        
+                    }
+                }
+                
+                // Insert producer data
+                pattern = String.format("com.sun.messaging.jms.server:type=ProducerManager,subtype=Monitor");
+                result = brokerSpy.invokeMBeanMethod(pattern, "getProducerInfo", null);
+                if (result != null) {
+                    for(CompositeData producer : (CompositeData[])result) {
+                        ClientData cd = new ClientData();
+                        cd.type = "p";
+                        cd.Host = producer.get("Host").toString();
+                        cd.ExchangeID = dbAvatar.queryExchangeID(producer.get("DestinationName").toString(), producer.get("DestinationType").toString());
+                        cd.NumMsg = Long.parseLong(producer.get("NumMsgs").toString());                     
+                        cd.RealID = Long.parseLong(producer.get("ProducerID").toString());
+                        cd.CreateTime = Long.parseLong(producer.get("CreationTime").toString());                        
+                        cd.LastUpdate = rightNow.getTimeInMillis();
+                        dbAvatar.insertClient(cd);                        
+                    }
+                }                
             }
             catch(Exception ex) {
                 logger.error(ex.getMessage());
@@ -554,25 +593,19 @@ public class TmeSpy implements DataListener {
     
     private void issueAlert(String exchange, long msg, long msgByte, long maxMsg, long maxMsgByte) {    	
      	if (maxMsg != 0 && maxMsgByte != 0) {
-    		float threshold = Float.valueOf(Daemon.propMIST.getProperty("spy.broker.alert.threshold").trim()) / 100.0f;
+     	   float threshold = Float.valueOf(Daemon.propMIST.getProperty("spy.queue.size.threshold").trim()) / 100.0f;
     		float msgRatio = (float)msg / maxMsg;
     		float byteRatio = (float)msgByte / maxMsgByte;    	
     		
     		if (msgRatio>threshold || byteRatio>threshold) {
     			try {
-    				String content = String.format("The queue size of exchange %s is more than %.2f%% (now:%.2f%%)!", exchange, threshold*100, Math.max(msgRatio, byteRatio)*100);
-    				ZNode smtp = new ZNode("/tme2/global/mail_smtp");
-        			ZNode mail_list = new ZNode("/tme2/global/mail_alert");        			
-        			String sh = String.format("echo \'%s\' | spn-mail --smtp=%s --to=\'%s\' --subject=%s",
-        					content,
-        					smtp.getContentString(), 
-        					mail_list.getContentString(),
-        					"\'[Alert]exchange queue will be full\'");   	
-        			String[] cmd = {"/bin/sh", "-c", sh};
-        			Runtime.getRuntime().exec(cmd);
-    			} catch (CODIException ex) {
-    				logger.error(ex.getMessage());
-    			}catch (IOException ex) {
+    			    String content = String.format("\'Alert! The queue size of exchange %s is more than %.2f%% threshold (now:%.2f%%)!\'", exchange, threshold*100, Math.max(msgRatio, byteRatio)*100);
+                    String[] command = {Daemon.propMIST.getProperty("spy.broker.alert.command"),
+                            "custom",
+                            "\'[TME2] Warning: exchange queue will be full\'",
+                            content};
+                    Runtime.getRuntime().exec(command);
+                }catch (Exception ex) {
     				logger.error(ex.getMessage());
     			}    			
     		}

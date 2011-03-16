@@ -1,4 +1,12 @@
 
+%define __os_install_post \
+    /usr/lib/rpm/brp-compress \
+    %{!?__debug_package:/usr/lib/rpm/brp-strip %{__strip}} \
+    /usr/lib/rpm/brp-strip-static-archive %{__strip} \
+    /usr/lib/rpm/brp-strip-comment-note %{__strip} %{__objdump} \
+    /usr/lib/rpm/brp-python-bytecompile \
+%{nil}
+
 %define name tme-nagios
 %define ver #MAJOR_VER#
 
@@ -47,3 +55,4 @@ rm -rf $RPM_BUILD_ROOT
 
 %postun
 
+%changelog

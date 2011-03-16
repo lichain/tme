@@ -274,7 +274,7 @@ public class ExchangeFarm extends Thread implements DataListener {
         }
 
         try {
-            BrokerSpy spy = new BrokerSpy(Daemon.propMIST.getProperty("spy.broker.type"), exchange.getBroker() + ":" + Daemon.propMIST.getProperty("spy.monitor.jmxport"), Daemon.propMIST.getProperty("spy.monitor.jmxauth"));
+            BrokerSpy spy = new BrokerSpy(Daemon.propMIST.getProperty("spy.broker.type"), exchange.getBroker() + ":" + Daemon.propMIST.getProperty("spy.monitor.jmxport"));
             String pattern = String.format("com.sun.messaging.jms.server:type=Destination,subtype=Monitor,desttype=%s,name=\"%s\"", exchange.isQueue() ? "q": "t", exchange.getName());
             spy.jmxConnectServer();
             Map<String, String> map = spy.getMBeanAttributesMap(pattern, null);

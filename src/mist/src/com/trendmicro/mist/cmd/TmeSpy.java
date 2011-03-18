@@ -29,6 +29,7 @@ import com.trendmicro.codi.lock.ZLock;
 import com.trendmicro.codi.lock.Lock.LockType;
 import com.trendmicro.mist.BrokerSpy;
 import com.trendmicro.mist.Daemon;
+import com.trendmicro.mist.MistException;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
 import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.mist.util.TmeDBavatar;
@@ -56,6 +57,7 @@ public class TmeSpy implements DataListener {
     private ZNode brokerNode = null;
     private ZNode loadingNode = null;
     private DataObserver obs = null;
+    private ZooKeeperInfo.Broker brokerInfo = null;
 
     private void addShutdownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -74,17 +76,9 @@ public class TmeSpy implements DataListener {
         logger.info("tme-spyd shutdown");
     }
 
-    private void addBrokerNode() {
-        ZooKeeperInfo.Broker.Builder brkBuilder = ZooKeeperInfo.Broker.newBuilder();
-        brkBuilder.setHost(brokerSpy.getBrokerHost());
-        brkBuilder.setPort(brokerSpy.getBrokerPort());
-        brkBuilder.setStatus(ZooKeeperInfo.Broker.Status.ONLINE);
-        brkBuilder.addAccount(ZooKeeperInfo.Broker.Account.newBuilder().setUser("admin").setPassword("admin").build());
-        brkBuilder.setBrokerType("openmq");
-        brkBuilder.setVersion(brokerSpy.getBrokerVersion());
-        brkBuilder.setReserved(false);
-        ZooKeeperInfo.Broker broker = brkBuilder.build();
-
+    private void addBrokerNode() throws MistException {
+        brokerInfo = getBrokerInfo();
+        
         ZooKeeperInfo.Loading load;
         for(;;) {
             try {
@@ -98,7 +92,7 @@ public class TmeSpy implements DataListener {
             }
         }
         try {
-            brokerNode.create(false, broker.toString().getBytes());
+            brokerNode.create(false, brokerInfo.toString().getBytes());
             obs.start();
         }
         catch(CODIException e) {
@@ -227,6 +221,30 @@ public class TmeSpy implements DataListener {
         catch(Exception e) {
             logger.error("getNewStatus(): " + e.getMessage());
             return null;
+        }
+    }
+    
+    private ZooKeeperInfo.Broker getBrokerInfo() throws MistException {
+        BrokerSpy spy = new BrokerSpy(Utils.getHostIP());
+        try {
+            spy.jmxConnectServer();
+            Map<String, String> attrMap = spy.getMBeanAttributesMap("com.sun.messaging.jms.server:type=Broker,subtype=Config", null);
+
+            ZooKeeperInfo.Broker.Builder broker_builder = ZooKeeperInfo.Broker.newBuilder();
+            broker_builder.setHost(attrMap.get("Host"));
+            broker_builder.setPort(attrMap.get("Port"));
+            broker_builder.setBrokerType("openmq");
+            broker_builder.setVersion(attrMap.get("Version"));
+            broker_builder.setStatus(ZooKeeperInfo.Broker.Status.ONLINE);
+            broker_builder.addAccount(ZooKeeperInfo.Broker.Account.newBuilder().setUser("admin").setPassword("admin").build());
+            broker_builder.setReserved(false);
+            return broker_builder.build();
+        }
+        catch(Exception e) {
+            throw new MistException(e.getMessage());
+        }
+        finally {
+            spy.jmxCloseServer();
         }
     }
 
@@ -393,7 +411,7 @@ public class TmeSpy implements DataListener {
             System.exit(myApp.retValue);
         }
         catch(Exception e) {
-            logger.fatal(e.getMessage());
+            logger.fatal(Utils.convertStackTrace(e));
         }
     }
     
@@ -434,15 +452,14 @@ public class TmeSpy implements DataListener {
                 if(!dbAvatar.isConnectionReady())
                     return;
                 // Insert Broker
-                ZooKeeperInfo.Broker broker = brokerSpy.getBroker();
-                if(-1 == dbAvatar.queryBrokerID(broker.getHost())) {
-                    dbAvatar.insertBroker(broker);
+                if(-1 == dbAvatar.queryBrokerID(brokerInfo.getHost())) {
+                    dbAvatar.insertBroker(brokerInfo);
                 }
                 Calendar rightNow = Calendar.getInstance();
 
                 // Insert Exchange
                 BrokerInfoData bid = getBrokerInfoData();
-                bid.broker = broker.getHost();
+                bid.broker = brokerInfo.getHost();
                 bid.timestamp = rightNow.getTimeInMillis();
 
                 ArrayList<Exchange> allExchanges = brokerSpy.getAllExchangeMetadata();
@@ -475,7 +492,7 @@ public class TmeSpy implements DataListener {
                         TmeDBavatar.ExchangeInfoData e = new TmeDBavatar.ExchangeInfoData();
                         e.name = exchangeName;
                         e.type = exchangeType;
-                        e.host = broker.getHost();
+                        e.host = brokerInfo.getHost();
                         e.AvgNumActiveConsumers = Integer.parseInt(map.get("AvgNumActiveConsumers"));
                         e.AvgNumBackupConsumers = Integer.parseInt(map.get("AvgNumBackupConsumers"));
                         e.AvgNumConsumers = Integer.parseInt(map.get("AvgNumConsumers"));
@@ -515,7 +532,7 @@ public class TmeSpy implements DataListener {
                         e.TotalMsgBytesRemote = Long.parseLong(map.get("TotalMsgBytesRemote"));
                         e.timestamp = rightNow.getTimeInMillis();
 
-                        TmeDBavatar.ExchangeInfoData pre_exc = dbAvatar.getLatestExchangeRec(broker.getHost(), exchangeName, exchangeType);
+                        TmeDBavatar.ExchangeInfoData pre_exc = dbAvatar.getLatestExchangeRec(brokerInfo.getHost(), exchangeName, exchangeType);
 
                         dbAvatar.insertExchangeRecord(e);
 

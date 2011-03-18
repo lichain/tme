@@ -29,65 +29,15 @@ import org.apache.commons.logging.LogFactory;
 public class BrokerSpy {
     private static Log logger = LogFactory.getLog(BrokerSpy.class);
     private String brokerHost;
-    private String brokerPort;
-    private String brokerVersion;
-
     private JMXConnector connector;
     private MBeanServerConnection connection;
 
-    private void connectBrokerJMX() throws Exception {
-        for(int i = 0; i < 10; i++) {
-            try {
-                jmxConnectServer();
-
-                ObjectName objname = new ObjectName("com.sun.messaging.jms.server:type=Broker,subtype=Config");
-                List<Attribute> attrList = connection.getAttributes(objname, new String[] {
-                    "Port", "Version"
-                }).asList();
-                brokerPort = ((Integer) (attrList.get(0).getValue())).toString();
-                brokerVersion = (String) (attrList.get(1).getValue());
-                jmxCloseServer();
-                break;
-            }
-            catch(Exception e) {
-                Utils.justSleep(1000);
-            }
-            finally {
-                jmxCloseServer();
-                if(i == 9)
-                    throw new Exception("cannot connect to broker");
-            }
-        }
-    }
-
     ////////////////////////////////////////////////////////////////////////////////
     
-	public BrokerSpy(String host) throws Exception {
+	public BrokerSpy(String host) {
 	    brokerHost = host;
-		connectBrokerJMX();
 	}
-	
-	public ZooKeeperInfo.Broker getBroker() throws MistException{
-        try {
-            jmxConnectServer();
 
-            ZooKeeperInfo.Broker.Builder broker_builder = ZooKeeperInfo.Broker.newBuilder();
-            broker_builder.setHost(getBrokerHost());
-            broker_builder.setPort(getBrokerPort());
-            broker_builder.setBrokerType("openmq");
-            broker_builder.setVersion(getBrokerVersion());
-            broker_builder.setStatus(ZooKeeperInfo.Broker.Status.ONLINE);
-            broker_builder.setReserved(false);
-            return broker_builder.build();
-        }
-        catch (Exception e) {
-            throw new MistException(e.getMessage());
-        }
-        finally {
-            jmxCloseServer();
-        }       
-    }
-	
     public String getExchangeAttribs(boolean isQueue, String exchangeName, String attrib) {
         String pattern = String.format("com.sun.messaging.jms.server:type=Destination,subtype=Monitor,desttype=%s,name=\"%s\"", isQueue ? "q": "t", exchangeName);
         try {
@@ -210,14 +160,6 @@ public class BrokerSpy {
         return brokerHost;
     }
 
-    public String getBrokerPort() {
-        return brokerPort;
-    }
-
-    public String getBrokerVersion() {
-        return brokerVersion;
-    }
-    
     public ArrayList<Exchange> getAllExchangeMetadata() throws Exception{        
         try {
             jmxConnectServer();

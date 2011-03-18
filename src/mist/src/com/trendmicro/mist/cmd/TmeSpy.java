@@ -80,7 +80,7 @@ public class TmeSpy implements DataListener {
         brkBuilder.setPort(brokerSpy.getBrokerPort());
         brkBuilder.setStatus(ZooKeeperInfo.Broker.Status.ONLINE);
         brkBuilder.addAccount(ZooKeeperInfo.Broker.Account.newBuilder().setUser("admin").setPassword("admin").build());
-        brkBuilder.setBrokerType(brokerSpy.getBrokerType());
+        brkBuilder.setBrokerType("openmq");
         brkBuilder.setVersion(brokerSpy.getBrokerVersion());
         brkBuilder.setReserved(false);
         ZooKeeperInfo.Broker broker = brkBuilder.build();

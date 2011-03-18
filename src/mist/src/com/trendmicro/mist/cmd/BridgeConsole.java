@@ -102,10 +102,9 @@ public class BridgeConsole implements Console.CommandListener {
                 BridgeTalk.Response response = sendRequest(BridgeTalk.Request.newBuilder().setCommand(command).build());
                 if(response.getSuccess()) {
                     retVal = 0;
-                    if(response.getContext().startsWith("EXIT"))
+                    myConsole.logResponse(response.getContext());
+                    if(response.getContext().startsWith("EXIT") || response.getContext().endsWith("EXIT\n"))
                         System.exit(0);
-                    else
-                        System.out.printf(response.getContext());
                 }
                 else {
                     retVal = 1;

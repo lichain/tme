@@ -1134,46 +1134,53 @@ public class TmeBridge implements Runnable {
                 Packet pack = new Packet();
                 pack.read(in);
                 BridgeTalk.Request request = BridgeTalk.Request.newBuilder().mergeFrom(pack.getPayload()).build();
-
-                String line = request.getCommand();
-                if(line.equals("COMPLETORS")) {
-                    String [] cmds = Console.getAllCommands(commandTable);
-                    String [] args = Console.getAllArguments(commandTable);
-                    String answer = cmds[0];
-                    for(int i = 0; i < cmds.length; i++)
-                        answer += (":" + cmds[i]);
-                    answer += ("," + args[0]);
-                    for(int i = 0; i < args.length; i++)
-                        answer += (":" + args[i]);
-                    BridgeTalk.Response response = BridgeTalk.Response.newBuilder().setSuccess(true).setContext(answer).build();
+                
+                if(!Utils.checkSocketConnectable(ZK_SERVER)) {
+                    BridgeTalk.Response response = BridgeTalk.Response.newBuilder().setSuccess(true).setContext("Network connection is lost, please try again later, EXIT\n").build();
                     pack.setPayload(response.toByteArray());
                     pack.write(out);
                 }
                 else {
-                    StringTokenizer tok = new StringTokenizer(line);
-                    if(tok.hasMoreElements()) {
-                        String cmd = tok.nextToken();
-                        clearResponseBuffer();
-                        retVal = 0;
-                        if(!isMaster) {
-                            if(!cmd.equals("exit")) {
-                                BridgeTalk.Response response = BridgeTalk.Response.newBuilder().setSuccess(true).setContext("in slave mode, no action\n").build();
-                                pack.setPayload(response.toByteArray());
-                                pack.write(out);
-                                continue;
+                    String line = request.getCommand();
+                    if(line.equals("COMPLETORS")) {
+                        String[] cmds = Console.getAllCommands(commandTable);
+                        String[] args = Console.getAllArguments(commandTable);
+                        String answer = cmds[0];
+                        for(int i = 0; i < cmds.length; i++)
+                            answer += (":" + cmds[i]);
+                        answer += ("," + args[0]);
+                        for(int i = 0; i < args.length; i++)
+                            answer += (":" + args[i]);
+                        BridgeTalk.Response response = BridgeTalk.Response.newBuilder().setSuccess(true).setContext(answer).build();
+                        pack.setPayload(response.toByteArray());
+                        pack.write(out);
+                    }
+                    else {
+                        StringTokenizer tok = new StringTokenizer(line);
+                        if(tok.hasMoreElements()) {
+                            String cmd = tok.nextToken();
+                            clearResponseBuffer();
+                            retVal = 0;
+                            if(!isMaster) {
+                                if(!cmd.equals("exit")) {
+                                    BridgeTalk.Response response = BridgeTalk.Response.newBuilder().setSuccess(true).setContext("in slave mode, no action\n").build();
+                                    pack.setPayload(response.toByteArray());
+                                    pack.write(out);
+                                    continue;
+                                }
+                            }
+                            if(commandTable.containsKey(cmd))
+                                commandTable.get(cmd).execute(line.split("\\s+"));
+                            else {
+                                outputResponse(String.format("Unknown command `%s'.", cmd));
+                                retVal = 1;
                             }
                         }
-                        if(commandTable.containsKey(cmd))
-                            commandTable.get(cmd).execute(line.split("\\s+"));
-                        else {
-                            outputResponse(String.format("Unknown command `%s'.", cmd));
-                            retVal = 1;
-                        }
-                    }
 
-                    BridgeTalk.Response response = BridgeTalk.Response.newBuilder().setSuccess(retVal == 0 ? true: false).setContext(getResponseBuffer()).build();
-                    pack.setPayload(response.toByteArray());
-                    pack.write(out);
+                        BridgeTalk.Response response = BridgeTalk.Response.newBuilder().setSuccess(retVal == 0 ? true: false).setContext(getResponseBuffer()).build();
+                        pack.setPayload(response.toByteArray());
+                        pack.write(out);
+                    }
                 }
             }
             catch(Exception e) {

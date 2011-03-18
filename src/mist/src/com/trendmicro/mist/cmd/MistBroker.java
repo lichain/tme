@@ -13,7 +13,6 @@ import javax.management.Query;
 import com.trendmicro.mist.Daemon;
 import com.trendmicro.mist.BrokerSpy;
 import com.trendmicro.mist.util.Address;
-import com.trendmicro.mist.util.Credential;
 import com.trendmicro.spn.common.util.Utils;
 
 import gnu.getopt.Getopt;
@@ -27,7 +26,6 @@ public class MistBroker {
     private CmdType currCmd = CmdType.ALL;
     private String brokerType;
     private Address jmxAddress = new Address();
-    private Credential jmxAuth = new Credential();
     private String destinationName = "*";
     private static MistBroker myApp;
     private int retValue = 0;
@@ -39,8 +37,6 @@ public class MistBroker {
         System.out.printf("Options: %n");
         System.out.printf("  --host=HOST:PORT, -b HOST:PORT %n");
         System.out.printf("        broker host to connect, default %s %n%n", jmxAddress.toString());
-        System.out.printf("    --auth=USERNAME:PASSWORD, -u USERNAME:PASSWORD %n");
-        System.out.printf("        specify account for authentication %n%n");
         System.out.printf("    --type=[activemq|openmq], -y [activemq|openmq] %n");
         System.out.printf("        specify broker type (default: openmq) %n%n");
         System.out.printf("  --broker, -i %n");
@@ -104,7 +100,6 @@ public class MistBroker {
     public MistBroker() {
         brokerType = "openmq";
         jmxAddress.set(Utils.getHostIP() + ":" + Daemon.propMIST.getProperty("spy.monitor.jmxport"));
-        jmxAuth.set(Daemon.propMIST.getProperty("spy.monitor.jmxauth"));
     }
 
     public QueryExp excludeBrokerSpecific() {
@@ -116,7 +111,6 @@ public class MistBroker {
     public void run(String argv[]) throws Exception {
         LongOpt[] longopts = new LongOpt[] {
             new LongOpt("help", LongOpt.NO_ARGUMENT, null, 'h'), 
-            new LongOpt("auth", LongOpt.REQUIRED_ARGUMENT, null, 'u'), 
             new LongOpt("host", LongOpt.REQUIRED_ARGUMENT, null, 'b'), 
             new LongOpt("all", LongOpt.OPTIONAL_ARGUMENT, null, 'a'), 
             new LongOpt("queue", LongOpt.OPTIONAL_ARGUMENT, null, 'q'), 
@@ -125,7 +119,7 @@ public class MistBroker {
             new LongOpt("type", LongOpt.REQUIRED_ARGUMENT, null, 'y'),
         };
 
-        Getopt g = new Getopt("mist-broker", argv, "hu:b:iy:", longopts);
+        Getopt g = new Getopt("mist-broker", argv, "hb:iy:", longopts);
         int c;
         String arg = null;
         while((c = g.getopt()) != -1) {
@@ -135,9 +129,6 @@ public class MistBroker {
                 break;
             case 'y':
                 brokerType = g.getOptarg();
-                break;
-            case 'u':
-                jmxAuth.set(g.getOptarg());
                 break;
             case 'a':
                 currCmd = CmdType.ALL;
@@ -172,7 +163,7 @@ public class MistBroker {
         if(currCmd == CmdType.HELP)
             printUsage();
         else {
-            brokerSpy = new BrokerSpy(brokerType, jmxAddress.toString(), jmxAuth.toString());
+            brokerSpy = new BrokerSpy(brokerType, jmxAddress.toString());
             try {
                 brokerSpy.jmxConnectServer();
                 if(currCmd == CmdType.ALL)

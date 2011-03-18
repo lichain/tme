@@ -25,9 +25,11 @@ script_path=/usr/share/tme-zookeeper/bin/$script
 echo "$service: change memory to $heap_size"
 
 echo -e "edit $script_path"
-cat $script_path | sed -e "s/JAVA_CMD=.*/JAVA_CMD=\"\/usr\/java\/latest\/bin\/java -Xmx$heap_size -Xms$heap_size\"/" > /tmp/$script
+cat $script_path | sed -e "s/java[\t ]*\"-Dzookeeper/\/usr\/java\/latest\/bin\/java -Xmx$heap_size -Xms$heap_size \"-Dzookeeper/g" > /tmp/$script
 mv /tmp/$script $script_path; chmod 755 $script_path
-echo "==> `grep JAVA_CMD= $script_path`"
+cat $script_path | sed -e "s/-Xmx.* -Xms[^ ^\t]*[ \t]/-Xmx$heap_size -Xms$heap_size /g" > /tmp/$script
+mv /tmp/$script $script_path; chmod 755 $script_path
+echo "==> `grep /usr/java $script_path`"
 
 echo done
 echo remember to restart $service

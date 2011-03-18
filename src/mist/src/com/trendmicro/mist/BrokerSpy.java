@@ -21,7 +21,6 @@ import com.sun.messaging.AdminConnectionConfiguration;
 import com.sun.messaging.AdminConnectionFactory;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
 import com.trendmicro.mist.util.Address;
-import com.trendmicro.mist.util.Credential;
 import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.spn.common.util.Utils;
 
@@ -31,7 +30,6 @@ import org.apache.commons.logging.LogFactory;
 public class BrokerSpy {
     private static Log logger = LogFactory.getLog(BrokerSpy.class);
     private Address jmxAddress = new Address();
-    private Credential jmxAuth = new Credential();
     private String brokerType;
     private String brokerHost;
     private String brokerPort;
@@ -71,10 +69,9 @@ public class BrokerSpy {
 
     ////////////////////////////////////////////////////////////////////////////////
     
-	public BrokerSpy(String type, String jmxserver, String jmxauth) throws Exception {
+	public BrokerSpy(String type, String jmxserver) throws Exception {
 	    brokerType = type;
 	    jmxAddress.set(jmxserver);
-	    jmxAuth.set(jmxauth);
 		connectBrokerJMX();
 	}
 	
@@ -146,7 +143,7 @@ public class BrokerSpy {
 		}
 	}
 	
-    public void jmxConnectServer() throws Exception {
+	public void jmxConnectServer() throws Exception {
         Exception e = null;
         for(int i = 0; i <= 60; i++) {
             try {

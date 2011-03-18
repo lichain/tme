@@ -20,7 +20,6 @@ import javax.management.remote.JMXConnector;
 import com.sun.messaging.AdminConnectionConfiguration;
 import com.sun.messaging.AdminConnectionFactory;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
-import com.trendmicro.mist.util.Address;
 import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.spn.common.util.Utils;
 
@@ -29,77 +28,16 @@ import org.apache.commons.logging.LogFactory;
 
 public class BrokerSpy {
     private static Log logger = LogFactory.getLog(BrokerSpy.class);
-    private Address jmxAddress = new Address();
-    private String brokerType;
     private String brokerHost;
-    private String brokerPort;
-    private String brokerVersion;
-
     private JMXConnector connector;
     private MBeanServerConnection connection;
 
-    private void connectBrokerJMX() throws Exception {
-        for(int i = 0; i < 10; i++) {
-            try {
-                jmxConnectServer();
-                if(brokerType.equals("openmq")) {
-                    ObjectName objname = new ObjectName("com.sun.messaging.jms.server:type=Broker,subtype=Config");
-                    List<Attribute> attrList = connection.getAttributes(objname, new String[] {
-                        "Port", "Version"
-                    }).asList();
-                    brokerHost = jmxAddress.getHost();
-                    brokerPort = ((Integer) (attrList.get(0).getValue())).toString();
-                    brokerVersion = (String) (attrList.get(1).getValue());
-                    jmxCloseServer();
-                    break;
-                }
-                else {
-                }
-            }
-            catch(Exception e) {
-                Utils.justSleep(1000);
-            }
-            finally {
-                jmxCloseServer();
-                if(i == 9)
-                    throw new Exception("cannot connect to broker");
-            }
-        }
-    }
-
     ////////////////////////////////////////////////////////////////////////////////
     
-	public BrokerSpy(String type, String jmxserver) throws Exception {
-	    brokerType = type;
-	    jmxAddress.set(jmxserver);
-		connectBrokerJMX();
+	public BrokerSpy(String host) {
+	    brokerHost = host;
 	}
-	
-	public ZooKeeperInfo.Broker getBroker() throws MistException{
-        try {
-            jmxConnectServer();
-            if (brokerType.equals("openmq")) {
-                ZooKeeperInfo.Broker.Builder broker_builder = ZooKeeperInfo.Broker.newBuilder();
-                broker_builder.setHost(getBrokerHost());
-                broker_builder.setPort(getBrokerPort());
-                broker_builder.setBrokerType(getBrokerType());
-                broker_builder.setVersion(getBrokerVersion());
-                broker_builder.setStatus(ZooKeeperInfo.Broker.Status.ONLINE);
-                broker_builder.setReserved(false);
-                return broker_builder.build();
-            }
-            else {
-                throw new MistException("not implemented");
-            }
-        }
-        catch (Exception e) {
-            throw new MistException(e.getMessage());
-        }
-        finally {
-            jmxCloseServer();
-        }       
-    }
-	
+
     public String getExchangeAttribs(boolean isQueue, String exchangeName, String attrib) {
         String pattern = String.format("com.sun.messaging.jms.server:type=Destination,subtype=Monitor,desttype=%s,name=\"%s\"", isQueue ? "q": "t", exchangeName);
         try {
@@ -119,21 +57,19 @@ public class BrokerSpy {
 	public ZooKeeperInfo.Loading doSpy() throws MistException {
 		try {
             jmxConnectServer();
-            if(brokerType.equals("openmq")) {
-                ObjectName objname = new ObjectName("com.sun.messaging.jms.server:type=JVM,subtype=Monitor");
-                List<Attribute> attrList = connection.getAttributes(objname, new String[] { "FreeMemory", "MaxMemory" }).asList();
-                long free = (Long) (attrList.get(0).getValue());
-                long max = (Long) (attrList.get(1).getValue());
-                ZooKeeperInfo.Loading.Builder load_builder = ZooKeeperInfo.Loading.newBuilder();
-                load_builder.setLoading(Math.round(((float) (max - free) / max) * 100));
-                load_builder.setLastUpdate(new Date().getTime());
-                load_builder.setFreeMemory(free);
-                load_builder.setMaxMemory(max);
-                return load_builder.build();
-            }
-            else {
-                throw new MistException("not implemented");
-            }
+
+            ObjectName objname = new ObjectName("com.sun.messaging.jms.server:type=JVM,subtype=Monitor");
+            List<Attribute> attrList = connection.getAttributes(objname, new String[] {
+                "FreeMemory", "MaxMemory"
+            }).asList();
+            long free = (Long) (attrList.get(0).getValue());
+            long max = (Long) (attrList.get(1).getValue());
+            ZooKeeperInfo.Loading.Builder load_builder = ZooKeeperInfo.Loading.newBuilder();
+            load_builder.setLoading(Math.round(((float) (max - free) / max) * 100));
+            load_builder.setLastUpdate(new Date().getTime());
+            load_builder.setFreeMemory(free);
+            load_builder.setMaxMemory(max);
+            return load_builder.build();
 		} 
 		catch(Exception e) {
 		    throw new MistException(e.getMessage());
@@ -149,7 +85,7 @@ public class BrokerSpy {
             try {
                 AdminConnectionFactory acf;
                 acf = new AdminConnectionFactory();
-                acf.setProperty(AdminConnectionConfiguration.imqAddress, jmxAddress.getHost());
+                acf.setProperty(AdminConnectionConfiguration.imqAddress, brokerHost);
                 connector = acf.createConnection();
                 connection = connector.getMBeanServerConnection();
                 return;
@@ -220,48 +156,31 @@ public class BrokerSpy {
         return result;
     }
 
-    public String getBrokerType() {
-        return brokerType;
-    }
-
     public String getBrokerHost() {
         return brokerHost;
     }
 
-    public String getBrokerPort() {
-        return brokerPort;
-    }
-
-    public String getBrokerVersion() {
-        return brokerVersion;
-    }
-    
     public ArrayList<Exchange> getAllExchangeMetadata() throws Exception{        
         try {
             jmxConnectServer();
             ArrayList<Exchange> result = new ArrayList<Exchange>();
 
-            if(brokerType.equals("openmq")) {
-                ObjectName objname = new ObjectName("com.sun.messaging.jms.server:type=Destination,subtype=Monitor,desttype=q,name=*");
-                for(ObjectName n : connection.queryNames(objname, null)) {
-                    Exchange excQ = new Exchange(connection.getAttribute(n, "Name").toString());
-                    excQ.setQueue();
-                    result.add(excQ);
-                }
-                objname = new ObjectName("com.sun.messaging.jms.server:type=Destination,subtype=Monitor,desttype=t,name=*");
-                for(ObjectName n : connection.queryNames(objname, null)){
-                    Exchange excT = new Exchange(connection.getAttribute(n, "Name").toString());
-                    excT.setTopic();
-                    result.add(excT);
-                }
-                Exchange excAdmin = new Exchange("mq.sys.dmq");
-                excAdmin.setQueue();                
-                result.remove(excAdmin);
-                return result;
+            ObjectName objname = new ObjectName("com.sun.messaging.jms.server:type=Destination,subtype=Monitor,desttype=q,name=*");
+            for(ObjectName n : connection.queryNames(objname, null)) {
+                Exchange excQ = new Exchange(connection.getAttribute(n, "Name").toString());
+                excQ.setQueue();
+                result.add(excQ);
             }
-            else {
-                throw new MistException("not implemented");
+            objname = new ObjectName("com.sun.messaging.jms.server:type=Destination,subtype=Monitor,desttype=t,name=*");
+            for(ObjectName n : connection.queryNames(objname, null)) {
+                Exchange excT = new Exchange(connection.getAttribute(n, "Name").toString());
+                excT.setTopic();
+                result.add(excT);
             }
+            Exchange excAdmin = new Exchange("mq.sys.dmq");
+            excAdmin.setQueue();
+            result.remove(excAdmin);
+            return result;
         } 
         catch(Exception e) {
             throw new MistException(e.getMessage());

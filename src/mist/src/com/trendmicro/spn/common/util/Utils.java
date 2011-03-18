@@ -1,6 +1,7 @@
 package com.trendmicro.spn.common.util;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.net.Socket;
 import java.io.IOException;
@@ -94,7 +95,8 @@ public class Utils {
 
     public static boolean checkSocketConnectable(String host, int port) {
         try {
-            Socket mySocket = new Socket(host, port);
+            Socket mySocket = new Socket();
+            mySocket.connect(new InetSocketAddress(host, port), 4000);
             mySocket.close();
         }
         catch (Exception e) {

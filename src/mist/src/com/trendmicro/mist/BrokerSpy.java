@@ -20,7 +20,6 @@ import javax.management.remote.JMXConnector;
 import com.sun.messaging.AdminConnectionConfiguration;
 import com.sun.messaging.AdminConnectionFactory;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
-import com.trendmicro.mist.util.Address;
 import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.spn.common.util.Utils;
 
@@ -29,7 +28,6 @@ import org.apache.commons.logging.LogFactory;
 
 public class BrokerSpy {
     private static Log logger = LogFactory.getLog(BrokerSpy.class);
-    private Address jmxAddress = new Address();
     private String brokerHost;
     private String brokerPort;
     private String brokerVersion;
@@ -46,7 +44,6 @@ public class BrokerSpy {
                 List<Attribute> attrList = connection.getAttributes(objname, new String[] {
                     "Port", "Version"
                 }).asList();
-                brokerHost = jmxAddress.getHost();
                 brokerPort = ((Integer) (attrList.get(0).getValue())).toString();
                 brokerVersion = (String) (attrList.get(1).getValue());
                 jmxCloseServer();
@@ -65,8 +62,8 @@ public class BrokerSpy {
 
     ////////////////////////////////////////////////////////////////////////////////
     
-	public BrokerSpy(String type, String jmxserver) throws Exception {
-	    jmxAddress.set(jmxserver);
+	public BrokerSpy(String host) throws Exception {
+	    brokerHost = host;
 		connectBrokerJMX();
 	}
 	
@@ -138,7 +135,7 @@ public class BrokerSpy {
             try {
                 AdminConnectionFactory acf;
                 acf = new AdminConnectionFactory();
-                acf.setProperty(AdminConnectionConfiguration.imqAddress, jmxAddress.getHost());
+                acf.setProperty(AdminConnectionConfiguration.imqAddress, brokerHost);
                 connector = acf.createConnection();
                 connection = connector.getMBeanServerConnection();
                 return;

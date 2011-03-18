@@ -10,9 +10,7 @@ import javax.management.AttributeValueExp;
 import javax.management.StringValueExp;
 import javax.management.Query;
 
-import com.trendmicro.mist.Daemon;
 import com.trendmicro.mist.BrokerSpy;
-import com.trendmicro.mist.util.Address;
 import com.trendmicro.spn.common.util.Utils;
 
 import gnu.getopt.Getopt;
@@ -24,18 +22,18 @@ public class MistBroker {
     }
 
     private CmdType currCmd = CmdType.ALL;
-    private Address jmxAddress = new Address();
     private String destinationName = "*";
     private static MistBroker myApp;
     private int retValue = 0;
     private BrokerSpy brokerSpy;
+    private String brokerHost = Utils.getHostIP();
 
     private void printUsage() {
         System.out.printf("Usage:%n");
         System.out.printf("      mist-broker [options [arguments...] ]... %n%n");
         System.out.printf("Options: %n");
         System.out.printf("  --host=HOST:PORT, -b HOST:PORT %n");
-        System.out.printf("        broker host to connect, default %s %n%n", jmxAddress.toString());
+        System.out.printf("        broker host to connect, default %s %n%n", brokerHost);
         System.out.printf("  --broker, -i %n");
         System.out.printf("        show broker information %n%n");
         System.out.printf("  --all[=EXCHANGENAME] %n");
@@ -84,10 +82,6 @@ public class MistBroker {
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    public MistBroker() {
-        jmxAddress.set(Utils.getHostIP() + ":" + Daemon.propMIST.getProperty("spy.monitor.jmxport"));
-    }
-
     public QueryExp excludeBrokerSpecific() {
         return Query.not(Query.initialSubString(new AttributeValueExp("Name"), new StringValueExp("mq.")));
     }
@@ -100,7 +94,6 @@ public class MistBroker {
             new LongOpt("queue", LongOpt.OPTIONAL_ARGUMENT, null, 'q'), 
             new LongOpt("topic", LongOpt.OPTIONAL_ARGUMENT, null, 't'), 
             new LongOpt("broker", LongOpt.NO_ARGUMENT, null, 'i'), 
-            new LongOpt("type", LongOpt.REQUIRED_ARGUMENT, null, 'y'),
         };
 
         Getopt g = new Getopt("mist-broker", argv, "hb:i", longopts);
@@ -109,7 +102,7 @@ public class MistBroker {
         while((c = g.getopt()) != -1) {
             switch(c) {
             case 'b':
-                jmxAddress.set(g.getOptarg());
+                brokerHost = g.getOptarg();
                 break;
             case 'a':
                 currCmd = CmdType.ALL;
@@ -144,7 +137,7 @@ public class MistBroker {
         if(currCmd == CmdType.HELP)
             printUsage();
         else {
-            brokerSpy = new BrokerSpy("openmq", jmxAddress.toString());
+            brokerSpy = new BrokerSpy(brokerHost);
             try {
                 brokerSpy.jmxConnectServer();
                 if(currCmd == CmdType.ALL)

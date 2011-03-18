@@ -315,7 +315,7 @@ public class TmeSpy implements DataListener {
             restartBrokerIfDead();
             if(!brokerDead){
                 try{
-                    brokerSpy = new BrokerSpy(Daemon.propMIST.getProperty("spy.broker.type"), Utils.getHostIP() + ":" + Daemon.propMIST.getProperty("spy.monitor.jmxport"));
+                    brokerSpy = new BrokerSpy(Utils.getHostIP());
                     break;
                 }
                 catch(Exception e){

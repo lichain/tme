@@ -356,10 +356,12 @@ public class TmeBridge implements Runnable {
             mistForwarder.waitForComplete();
         }
 
-        public void addForwarderDest(ExchangeIdentity eid) {
+        public void addForwarderDest(ExchangeIdentity eid) throws MistException {
             BridgeTalk.ForwarderInfo.Builder builder = BridgeTalk.ForwarderInfo.newBuilder();
             builder.mergeFrom(fwdInfo);
             builder.addDest((BridgeTalk.ForwarderInfo.Target.newBuilder().setBrokerId(eid.brokerId).setExchange(eid.exchange.toString()).build()));
+
+            mistForwarder.mountDestination(expandTarget(eid));
             fwdInfo = builder.build();
         }
 
@@ -372,7 +374,20 @@ public class TmeBridge implements Runnable {
                 if(!fwdInfo.getDest(i).equals(find))
                     builder.addDest(fwdInfo.getDest(i));
             }
+
+            mistForwarder.unmountDestination(expandTarget(eid));
             fwdInfo = builder.build();
+        }
+        
+        private String expandTarget(ExchangeIdentity eid) {
+            if(eid.brokerId == -1)
+                return eid.exchange.toString();
+            else {
+                BridgeTalk.BrokerInfo b = brokerPool.get(findBrokerIndex(eid.brokerId));
+                ConnectionList connList = new ConnectionList();
+                connList.set(b.getHost(), b.getPort());
+                return String.format("%s,%s,%s:%s,%s", b.getType(), connList.toString().replace(",", ";"), b.getUsername(), b.getPassword(), eid.exchange.toString());
+            }
         }
     }
 
@@ -647,23 +662,6 @@ public class TmeBridge implements Runnable {
                 outputResponse(String.format("forwarder id %d not found", id));
         }
 
-        private String expandTarget(String target) throws MistException {
-            try {
-                ExchangeIdentity eid = parseTarget(target);
-                if(eid.brokerId == -1)
-                    return eid.exchange.toString();
-                else {
-                    BridgeTalk.BrokerInfo b = brokerPool.get(findBrokerIndex(eid.brokerId));
-                    ConnectionList connList = new ConnectionList();
-                    connList.set(b.getHost(), b.getPort());
-                    return String.format("%s,%s,%s:%s,%s", b.getType(), connList.toString().replace(",", ";"), b.getUsername(), b.getPassword(), eid.exchange.toString());
-                }
-            }
-            catch(MistException e) {
-                throw e;
-            }
-        }
-
         private void mount(String [] argv) {
             if(argv.length == 1) {
                 outputResponse("missing `target'");
@@ -681,12 +679,10 @@ public class TmeBridge implements Runnable {
                     outputResponse("target is not the same region with others in this forwarder");
                     return;  
                 }
-                String flatTarget = expandTarget(target);
-                if(fwd.mistForwarder.mountDestination(flatTarget)) {
-                    fwd.addForwarderDest(eid);
-                    saveConfig();
-                    outputResponse(String.format("mount `%s' to forwarder id `%d'", target, id));
-                }
+
+                fwd.addForwarderDest(eid);
+                saveConfig();
+                outputResponse(String.format("mount `%s' to forwarder id `%d'", target, id));
             }
             catch(MistException e) {
                 outputResponse(e.getMessage());
@@ -705,12 +701,10 @@ public class TmeBridge implements Runnable {
                 if(idx == -1)
                     throw new MistException(String.format("forwarder id `%d' not found", id));
                 ForwarderEntity fwd = forwarderPool.get(idx);
-                String flatTarget = expandTarget(target);
-                if(fwd.mistForwarder.unmountDestination(flatTarget)) {
-                    fwd.removeForwarderDest(parseTarget(target));
-                    saveConfig();
-                    outputResponse(String.format("unmount `%s' from forwarder id `%d'", target, id));
-                }
+
+                fwd.removeForwarderDest(parseTarget(target));
+                saveConfig();
+                outputResponse(String.format("unmount `%s' from forwarder id `%d'", target, id));
             }
             catch(MistException e) {
                 outputResponse(e.getMessage());

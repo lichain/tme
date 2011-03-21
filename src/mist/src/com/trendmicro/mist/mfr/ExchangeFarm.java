@@ -24,6 +24,7 @@ import com.trendmicro.codi.ZNode;
 import com.trendmicro.codi.lock.Lock.LockType;
 import com.trendmicro.codi.lock.ZLock;
 import com.trendmicro.mist.BrokerAdmin;
+import com.trendmicro.mist.BrokerSpy;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
 import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.mist.util.ParallelExecutor;
@@ -194,22 +195,48 @@ public class ExchangeFarm extends Thread implements DataListener {
 
         return hostname;
     }
+    
+    private boolean isExchangeInUse(String broker, Exchange exchange) {
+        BrokerSpy spy = new BrokerSpy(broker);
+        try {
+            spy.jmxConnectServer();
+            Map<String, String> map = spy.getExchangeAttribMap(exchange);
+            if(map.isEmpty())
+                return false;
+            else if(Long.valueOf(map.get("NumMsgs")) > 0)
+                return true;
+            else if(Integer.valueOf(map.get("NumConsumers")) > 0)
+                return true;
+            else if(Integer.valueOf(map.get("NumProducers")) > 0)
+                return true;
+            else
+                return false;
+        }
+        catch(Exception e) {
+            logger.error(Utils.convertStackTrace(e));
+            return true;
+        }
+        finally {
+            spy.jmxCloseServer();
+        }
+    }
 
     /**
      * The Runner of ParallelExecutor to check if the exchange is in use
      */
     class ExchangeJMXChecker implements ParallelExecutor.Runner<String> {
-        String exchangeName;
+        Exchange exchange;
         String broker;
 
-        public ExchangeJMXChecker(String exchangeName, String broker) {
-            this.exchangeName = exchangeName;
+        public ExchangeJMXChecker(Exchange exchange, String broker) {
+            this.exchange = exchange;
             this.broker = broker;
         }
 
         @Override
         public String run() {
-            if(BrokerAdmin.isExchangeInUse(broker, new Exchange(exchangeName)))
+            //if(BrokerAdmin.isExchangeInUse(broker, new Exchange(exchangeName)))
+            if(isExchangeInUse(broker, exchange))
                 return broker;
             else
                 return null;
@@ -222,14 +249,14 @@ public class ExchangeFarm extends Thread implements DataListener {
      * if the exchange does not exist, or the broker's host which the exchange
      * lives on
      */
-    private String checkExistingExchange(String exchangeName, Set<String> brokerSet) {
+    private String checkExistingExchange(Exchange exchange, Set<String> brokerSet) {
         ParallelExecutor<String> pe = new ParallelExecutor<String>();
         for(String broker : brokerSet)
-            pe.addRunner(new ExchangeJMXChecker(exchangeName, broker));
+            pe.addRunner(new ExchangeJMXChecker(exchange, broker));
 
         for(String broker : pe.waitCompleted()) {
             if(broker != null) {
-                logger.warn("there is still client using " + exchangeName + ", reuse broker " + broker);
+                logger.warn("there is still client using " + exchange + ", reuse broker " + broker);
                 return broker;
             }
         }
@@ -253,7 +280,7 @@ public class ExchangeFarm extends Thread implements DataListener {
              * If it is exchange migration, then the exchange is definitely
              * exists, so exchange migration does not need the following check
              */
-            String existingHost = checkExistingExchange(name, loadingMap.keySet());
+            String existingHost = checkExistingExchange(new Exchange(name), loadingMap.keySet());
             if(existingHost != null)
                 return existingHost;
         }
@@ -504,7 +531,7 @@ public class ExchangeFarm extends Thread implements DataListener {
             ZooKeeperInfo.Exchange.Builder builder = ZooKeeperInfo.Exchange.newBuilder();
             TextFormat.merge(new String(exNode.getContent()), builder);
             String broker = builder.build().getHost();
-            if(!BrokerAdmin.isExchangeInUse(broker, exchange)) {
+            if(!isExchangeInUse(broker, exchange)) {
                 logger.info("decExchangeRef(): no other client and pending message, remove exchange");
                 exNode.delete();
             }

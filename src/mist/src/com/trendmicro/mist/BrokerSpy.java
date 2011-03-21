@@ -53,6 +53,11 @@ public class BrokerSpy {
         }
         return null;
     }
+    
+    public Map<String,String> getExchangeAttribMap(Exchange exchange) {
+        String pattern = String.format("com.sun.messaging.jms.server:type=Destination,subtype=Monitor,desttype=%s,name=\"%s\"", exchange.isQueue() ? "q": "t", exchange.getName());
+        return getMBeanAttributesMap(pattern, null);
+    }
 	
 	public ZooKeeperInfo.Loading doSpy() throws MistException {
 		try {

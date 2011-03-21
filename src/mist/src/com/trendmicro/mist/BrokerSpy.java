@@ -19,6 +19,8 @@ import javax.management.QueryExp;
 import javax.management.remote.JMXConnector;
 import com.sun.messaging.AdminConnectionConfiguration;
 import com.sun.messaging.AdminConnectionFactory;
+import com.trendmicro.mist.mfr.ExchangeFarm;
+import com.trendmicro.mist.mfr.ExchangeFarm.FlowControlBehavior;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
 import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.spn.common.util.Utils;
@@ -57,6 +59,17 @@ public class BrokerSpy {
     public Map<String,String> getExchangeAttribMap(Exchange exchange) {
         String pattern = String.format("com.sun.messaging.jms.server:type=Destination,subtype=Monitor,desttype=%s,name=\"%s\"", exchange.isQueue() ? "q": "t", exchange.getName());
         return getMBeanAttributesMap(pattern, null);
+    }
+    
+    public void setExchangeAttrib(Exchange exchange, String attribName, Object attribValue) {
+        try {
+            String pattern = String.format("com.sun.messaging.jms.server:type=Destination,subtype=Config,desttype=%s,name=\"%s\"", exchange.isQueue() ? "q": "t", exchange.getName());
+            ObjectName name = connection.queryNames(new ObjectName(pattern), null).iterator().next();
+            connection.setAttribute(name, new Attribute(attribName, attribValue));
+        }
+        catch(Exception e) {
+            logger.error(Utils.convertStackTrace(e));
+        }
     }
 	
 	public ZooKeeperInfo.Loading doSpy() throws MistException {
@@ -212,5 +225,62 @@ public class BrokerSpy {
         }     
 
         return result;
+    }
+    
+    public static void setExchangeFlowControl(Exchange exchange, FlowControlBehavior policy) {
+        BrokerSpy spy = null;
+        try {
+            String broker = ExchangeFarm.getCurrentExchangeHost(exchange);
+            if(broker == null)
+                return;
+            spy = new BrokerSpy(broker);
+            spy.jmxConnectServer();
+
+            switch(policy) {
+            case BLOCK:
+                spy.setExchangeAttrib(exchange, "LimitBehavior", "FLOW_CONTROL");
+                break;
+            case DROP_NEWEST:
+                spy.setExchangeAttrib(exchange, "LimitBehavior", "REJECT_NEWEST");
+                break;
+            case DROP_OLDEST:
+                spy.setExchangeAttrib(exchange, "LimitBehavior", "REMOVE_OLDEST");
+                break;
+            }
+        }
+        catch(Exception e) {
+            logger.error(Utils.convertStackTrace(e));
+        }
+        finally {
+            try {
+                spy.jmxCloseServer();
+            }
+            catch(Exception e) {
+            }
+        }
+    }
+    
+    public static void setExchangeTotalLimit(Exchange exchange, long sizeBytes, long count) {
+        BrokerSpy spy = null;
+        try {
+            String broker = ExchangeFarm.getCurrentExchangeHost(exchange);
+            if(broker == null)
+                return;
+            spy = new BrokerSpy(broker);
+            spy.jmxConnectServer();
+
+            spy.setExchangeAttrib(exchange, "MaxTotalMsgBytes", sizeBytes);
+            spy.setExchangeAttrib(exchange, "MaxNumMsgs", count);
+        }
+        catch(Exception e) {
+            logger.error(Utils.convertStackTrace(e));
+        }
+        finally {
+            try {
+                spy.jmxCloseServer();
+            }
+            catch(Exception e) {
+            }
+        }
     }
 }

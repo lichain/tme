@@ -169,9 +169,9 @@ public class Client {
                     logger.info("exchangeRefPath added: " + exchangeRefPath);
                 }
             }
-            BrokerAdmin.setExchangeFlowControl(exchange, ExchangeFarm.getDropPolicy(exchange));
+            BrokerSpy.setExchangeFlowControl(exchange, ExchangeFarm.getDropPolicy(exchange));
             ZooKeeperInfo.TotalLimit limit = ExchangeFarm.getTotalLimit(exchange);
-            BrokerAdmin.setExchangeTotalLimit(exchange, limit.getSizeBytes(), limit.getCount());
+            BrokerSpy.setExchangeTotalLimit(exchange, limit.getSizeBytes(), limit.getCount());
             opened = true;
         }
         catch(JMSException e) {

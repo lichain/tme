@@ -23,7 +23,6 @@ import com.trendmicro.codi.NodeListener;
 import com.trendmicro.codi.ZNode;
 import com.trendmicro.codi.lock.Lock.LockType;
 import com.trendmicro.codi.lock.ZLock;
-import com.trendmicro.mist.BrokerAdmin;
 import com.trendmicro.mist.BrokerSpy;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
 import com.trendmicro.mist.util.Exchange;
@@ -48,6 +47,10 @@ public class ExchangeFarm extends Thread implements DataListener {
     private DataObserver gocObs = null;
     private DataObserver tlsObs = null;
     private DataObserver fixedObs = null;
+    
+    public static enum FlowControlBehavior {
+        BLOCK, DROP_NEWEST, DROP_OLDEST,
+    }
 
     class ExchangeEvent {
     }
@@ -647,7 +650,7 @@ public class ExchangeFarm extends Thread implements DataListener {
         return host;
     }
 
-    public static BrokerAdmin.FlowControlBehavior getDropPolicy(Exchange exchange) {
+    public static FlowControlBehavior getDropPolicy(Exchange exchange) {
         String path = "/tme2/global/drop_exchange" + "/" + exchange.getName();
         ZNode dropNode = new ZNode(path);
         try {
@@ -656,16 +659,16 @@ public class ExchangeFarm extends Thread implements DataListener {
                 TextFormat.merge(dropNode.getContentString(), dropBuilder);
                 ZooKeeperInfo.DropConfig dropConf = dropBuilder.build();
                 if(dropConf.getPolicy().equals(ZooKeeperInfo.DropConfig.Policy.NEWEST))
-                    return BrokerAdmin.FlowControlBehavior.DROP_NEWEST;
+                    return FlowControlBehavior.DROP_NEWEST;
                 else
-                    return BrokerAdmin.FlowControlBehavior.DROP_OLDEST;
+                    return FlowControlBehavior.DROP_OLDEST;
             }
             else
-                return BrokerAdmin.FlowControlBehavior.BLOCK;
+                return FlowControlBehavior.BLOCK;
         }
         catch(Exception e) {
             logger.error(Utils.convertStackTrace(e));
-            return BrokerAdmin.FlowControlBehavior.BLOCK;
+            return FlowControlBehavior.BLOCK;
         }
     }
 

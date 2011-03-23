@@ -183,12 +183,12 @@ public class TmeDBavatar implements DataListener{
     private static final String MYSQL_EXCHANGE =
         "CREATE TABLE IF NOT EXISTS EXCHANGE "
         + "(EXCHANGE_ID INT AUTO_INCREMENT PRIMARY KEY, "
-        + "EXC_NAME VARCHAR(512) NOT NULL, "
+        + "EXC_NAME VARCHAR(512) NOT NULL COLLATE latin1_bin, "
         + "EXC_MAX_MSG_NUM BIGINT, "
         + "EXC_MAX_MSG_BYTES BIGINT, "
         + "EXC_TYPE CHAR(1) NOT NULL, "
         + "EXC_TEMPORARY CHAR(1), "
-        + "EXC_FIXED CHAR(1) " 
+        + "EXC_FIXED CHAR(1), " 
         + "UNIQUE (EXC_NAME,  EXC_TYPE));";
 
 	private static final String MYSQL_EXCHANGE_HISTORY =

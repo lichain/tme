@@ -30,7 +30,7 @@ import gnu.getopt.LongOpt;
 public class MistForwarder extends ThreadInvoker {
     class EnabledLock {
         public UUID lockID = UUID.randomUUID();
-        public boolean enabled = true;
+        public boolean enabled = false;
     }
 
     enum RetVal {

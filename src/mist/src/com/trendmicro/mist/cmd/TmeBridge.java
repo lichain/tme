@@ -342,7 +342,6 @@ public class TmeBridge implements Runnable {
             }
 
             String cmd = String.format("%s %s", sourceTarget, destTarget);
-            mistForwarder.disable();
             mistForwarder.invoke(cmd);
         }
 

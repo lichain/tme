@@ -118,29 +118,24 @@ public class TmeBridge implements Runnable {
         logger.info("tme-bridge shutdown");
     }
 
-    private void setupEnvironment() {
+    private void setupEnvironment() throws Exception{
         String namePidfile = "/var/run/tme/tme-bridge.pid";
         String nameLogfile = "/var/run/tme/tme-bridge.log";
         String pid = Utils.getCurrentPid();
 
-        try {
-            BufferedWriter pidfile = new BufferedWriter(new FileWriter(namePidfile));
-            pidfile.write(pid);
-            pidfile.newLine();
-            pidfile.close();
-            new File(namePidfile).deleteOnExit();
+        BufferedWriter pidfile = new BufferedWriter(new FileWriter(namePidfile));
+        pidfile.write(pid);
+        pidfile.newLine();
+        pidfile.close();
+        new File(namePidfile).deleteOnExit();
 
-            Properties prop = new Properties();
-            prop.load(new FileInputStream(System.getProperty("mistd.log.log4j", Daemon.nameLog4jConfig)));
-            prop.setProperty("log4j.rootLogger", "OFF");
-            prop.setProperty("log4j.logger.org.apache.zookeeper", "WARN, R");
-            prop.setProperty("log4j.logger.com.trendmicro.mist", "INFO, R");
-            prop.setProperty("log4j.appender.R.File", nameLogfile);
-            PropertyConfigurator.configure(prop);
-        }
-        catch(IOException e) {
-            logger.error(e.getMessage());
-        }
+        Properties prop = new Properties();
+        prop.load(new FileInputStream(System.getProperty("mistd.log.log4j", Daemon.nameLog4jConfig)));
+        prop.setProperty("log4j.rootLogger", "OFF");
+        prop.setProperty("log4j.logger.org.apache.zookeeper", "WARN, R");
+        prop.setProperty("log4j.logger.com.trendmicro.mist", "INFO, R");
+        prop.setProperty("log4j.appender.R.File", nameLogfile);
+        PropertyConfigurator.configure(prop);
     }
 
     private void clearResponseBuffer() {
@@ -945,25 +940,20 @@ public class TmeBridge implements Runnable {
     public static final int DAEMON_PORT = 7748;
 
     public TmeBridge() throws Exception {
-        if(Utils.checkSocketConnectable(ZK_SERVER))
-            new Thread(this).start();
-        else
-            throw new MistException(String.format("unable to connect zookeeper `%s'", ZK_SERVER));
-
         commandTable.put("broker", new BrokerCommand());
         commandTable.put("forwarder", new ForwarderCommand());
         commandTable.put("help", new HelpCommand());
         commandTable.put("exit", new ExitCommand());
 
         setupEnvironment();
-        addShutdownHook();
 
-        try {
-            server = new ServerSocket(DAEMON_PORT);
-        }
-        catch(IOException e) {
-            throw e;
-        }
+        if(Utils.checkSocketConnectable(ZK_SERVER))
+            new Thread(this).start();
+        else
+            throw new MistException(String.format("unable to connect zookeeper `%s'", ZK_SERVER));
+
+        addShutdownHook();
+        server = new ServerSocket(DAEMON_PORT);
     }
 
     public void run() {
@@ -1203,6 +1193,7 @@ public class TmeBridge implements Runnable {
             myApp.start();
         }
         catch(Exception e) {
+            e.printStackTrace(System.err);
             logger.error(e.getMessage());
         }
     }

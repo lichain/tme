@@ -32,13 +32,13 @@ else
     ping_file=/var/run/tme/mist-session.ping
     mist-session -p hello_mist > $ping_file &
     mypid=$!
-    for i in {1..50}; do
+    for i in {1..30}; do
         ps -p $mypid > /dev/null
         running=$?
         if [ $running -eq 1 ]; then
             break
         fi
-        sleep 0.1
+        sleep 1
     done
     if [ $running -eq 0 ]; then
         kill -9 $mypid

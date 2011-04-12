@@ -50,7 +50,6 @@ public class TmeSpy implements DataListener {
     private boolean brokerOfflineChanged = false;
     private Thread mainThread;
     private BrokerSpy brokerSpy;
-    private TmeDBavatar dbAvatar = null;
     private static String ZK_SERVER = Daemon.propMIST.getProperty("mistd.zookeeper");
     private static int ZK_TIMEOUT = Integer.valueOf(Daemon.propMIST.getProperty("mistd.zookeeper.timeout"));
     private static String ZK_NODE = "/tme2/broker/" + Utils.getHostIP();
@@ -283,7 +282,6 @@ public class TmeSpy implements DataListener {
         loadingNode = new ZNode(ZK_NODE + "/loading");
         obs = new DataObserver(ZK_NODE, this, false, 0);
         monInterval = Integer.valueOf(Daemon.propMIST.getProperty("spy.monitor.interval"));
-        dbAvatar = TmeDBavatar.getInstance();
     }
 
     private synchronized boolean getAndTestBrokerOffline() {
@@ -447,165 +445,168 @@ public class TmeSpy implements DataListener {
     }
 
     private void updateDatabase() {
-        synchronized(dbAvatar) {
-            try {
-                if(!dbAvatar.isConnectionReady())
-                    return;
-                // Insert Broker
-                if(-1 == dbAvatar.queryBrokerID(brokerInfo.getHost())) {
-                    dbAvatar.insertBroker(brokerInfo);
-                }
-                Calendar rightNow = Calendar.getInstance();
-
-                // Insert Exchange
-                BrokerInfoData bid = getBrokerInfoData();
-                bid.broker = brokerInfo.getHost();
-                bid.timestamp = rightNow.getTimeInMillis();
-
-                ArrayList<Exchange> allExchanges = brokerSpy.getAllExchangeMetadata();
-                
-                for(Exchange em : allExchanges) {
-                    String exchangeName = em.getName();
-                    String exchangeType = em.isQueue() ? "q" : "t";
-                    try {
-                        String pattern = String.format("com.sun.messaging.jms.server:type=Destination,subtype=Config,desttype=%s,name=\"%s\"", exchangeType, exchangeName);
-                        brokerSpy.jmxConnectServer();
-                        Map<String, String> mapConfig = brokerSpy.getMBeanAttributesMap(pattern, null);
-                        long maxMsgNum = Long.parseLong(mapConfig.get("MaxNumMsgs"));
-                        long maxMsgBytes = Long.parseLong(mapConfig.get("MaxTotalMsgBytes"));
-                        if(-1 == dbAvatar.queryExchangeID(exchangeName, exchangeType)) {
-                            dbAvatar.insertExchange(exchangeName, exchangeType, maxMsgNum, maxMsgBytes);
-                        }
-                        else {
-                            dbAvatar.updateExchange(exchangeName, exchangeType, maxMsgNum, maxMsgBytes);
-                        }
-                    }
-                    finally {
-                        brokerSpy.jmxCloseServer();
-                    }
-
-                    // Query destination attributes
-                    try {
-                        String pattern = String.format("com.sun.messaging.jms.server:type=Destination,subtype=Monitor,desttype=%s,name=\"%s\"", exchangeType, exchangeName);
-                        brokerSpy.jmxConnectServer();
-                        Map<String, String> map = brokerSpy.getMBeanAttributesMap(pattern, null);
-                        TmeDBavatar.ExchangeInfoData e = new TmeDBavatar.ExchangeInfoData();
-                        e.name = exchangeName;
-                        e.type = exchangeType;
-                        e.host = brokerInfo.getHost();
-                        e.AvgNumActiveConsumers = Integer.parseInt(map.get("AvgNumActiveConsumers"));
-                        e.AvgNumBackupConsumers = Integer.parseInt(map.get("AvgNumBackupConsumers"));
-                        e.AvgNumConsumers = Integer.parseInt(map.get("AvgNumConsumers"));
-                        e.AvgNumMsgs = Long.parseLong(map.get("AvgNumMsgs"));
-                        e.AvgTotalMsgBytes = Long.parseLong(map.get("AvgTotalMsgBytes"));
-                        e.ConnectionID = map.get("ConnectionID");
-                        e.DiskReserved = Long.parseLong(map.get("DiskReserved"));
-                        e.DiskUsed = Long.parseLong(map.get("DiskUsed"));
-                        e.DiskUtilizationRatio = Integer.parseInt(map.get("DiskUtilizationRatio"));
-                        e.MsgBytesIn = Long.parseLong(map.get("MsgBytesIn"));
-                        e.MsgBytesOut = Long.parseLong(map.get("MsgBytesOut"));
-                        e.NextMessageID = map.get("NextMessageID");
-                        e.NumActiveConsumers = Integer.parseInt(map.get("NumActiveConsumers"));
-                        e.NumBackupConsumers = Integer.parseInt(map.get("NumBackupConsumers"));
-                        e.NumConsumers = Integer.parseInt(map.get("NumConsumers"));
-                        e.NumMsgs = Long.parseLong(map.get("NumMsgs"));
-                        e.NumMsgsHeldInTransaction = Long.parseLong(map.get("NumMsgsHeldInTransaction"));
-                        e.NumMsgsIn = Long.parseLong(map.get("NumMsgsIn"));
-                        e.NumMsgsOut = Long.parseLong(map.get("NumMsgsOut"));
-                        e.NumMsgsPendingAcks = Long.parseLong(map.get("NumMsgsPendingAcks"));
-                        e.NumMsgsRemote = Long.parseLong(map.get("NumMsgsRemote"));
-                        e.NumProducers = Integer.parseInt(map.get("NumProducers"));
-                        e.NumWildcardConsumers = Integer.parseInt(map.get("NumWildcardConsumers"));
-                        e.NumWildcardProducers = Integer.parseInt(map.get("NumWildcardProducers"));
-                        e.NumWildcards = Integer.parseInt(map.get("NumWildcards"));
-                        e.PeakMsgBytes = Long.parseLong(map.get("PeakMsgBytes"));
-                        e.PeakNumMsgs = Long.parseLong(map.get("PeakNumMsgs"));
-                        e.PeakTotalMsgBytes = Long.parseLong(map.get("PeakTotalMsgBytes"));
-                        e.PeakNumActiveConsumers = Integer.parseInt(map.get("PeakNumActiveConsumers"));
-                        e.PeakNumBackupConsumers = Integer.parseInt(map.get("PeakNumBackupConsumers"));
-                        e.PeakNumConsumers = Integer.parseInt(map.get("PeakNumConsumers"));
-                        e.State = Integer.parseInt(map.get("State"));
-                        e.StateLabel = map.get("StateLabel");
-                        e.Temporary = Boolean.parseBoolean(map.get("Temporary"));
-                        e.TotalMsgBytes = Long.parseLong(map.get("TotalMsgBytes"));
-                        e.TotalMsgBytesHeldInTransaction = Long.parseLong(map.get("TotalMsgBytesHeldInTransaction"));
-                        e.TotalMsgBytesRemote = Long.parseLong(map.get("TotalMsgBytesRemote"));
-                        e.timestamp = rightNow.getTimeInMillis();
-
-                        TmeDBavatar.ExchangeInfoData pre_exc = dbAvatar.getLatestExchangeRec(brokerInfo.getHost(), exchangeName, exchangeType);
-
-                        dbAvatar.insertExchangeRecord(e);
-
-                        long in_diff, out_diff;
-                        in_diff = out_diff = 0;
-
-                        if (pre_exc != null) {
-                        	in_diff = e.NumMsgsIn - pre_exc.NumMsgsIn;
-                        	in_diff = in_diff < 0 ? e.NumMsgsIn : in_diff;
-
-							out_diff = e.NumMsgsOut - pre_exc.NumMsgsOut;
-							out_diff = out_diff < 0 ? e.NumMsgsOut : out_diff;
-
-                        } else {
-                        	in_diff = e.NumMsgsIn;
-                        	out_diff = e.NumMsgsOut;
-                        }
-
-                        bid.inc_msg_in += in_diff;
-                    	bid.inc_msg_out += out_diff;
-                    	bid.total_msg_pendding += e.NumMsgs;
-
-                        bid.total_consumer += e.NumConsumers;
-                        bid.total_producer += e.NumProducers;
-
-                        bid.num_exchange++;
-                    }
-                    finally {
-                        brokerSpy.jmxCloseServer();
-                    }
-                }
-                dbAvatar.insertBrokerRecord(bid);
-                
-             // Insert consumer data
-                String pattern = String.format("com.sun.messaging.jms.server:type=ConsumerManager,subtype=Monitor");
-                Object result = brokerSpy.invokeMBeanMethod(pattern, "getConsumerInfo", null);
-                if (result != null) {
-                    for(CompositeData consumer : (CompositeData[])result) {
-                        ClientData cd = new ClientData();
-                        cd.type = "c";
-                        cd.Host = consumer.get("Host").toString();
-                        cd.ExchangeID = dbAvatar.queryExchangeID(consumer.get("DestinationName").toString(), consumer.get("DestinationType").toString());
-                        cd.NumMsg = Long.parseLong(consumer.get("NumMsgs").toString());
-                        cd.NumMsgPending = Long.parseLong(consumer.get("NumMsgsPending").toString());
-                        cd.RealID = Long.parseLong(consumer.get("ConsumerID").toString());
-                        cd.CreateTime = Long.parseLong(consumer.get("CreationTime").toString());
-                        cd.LastAckTime = Long.parseLong(consumer.get("LastAckTime").toString());
-                        cd.LastUpdate = rightNow.getTimeInMillis();
-                        dbAvatar.insertClient(cd);                        
-                    }
-                }
-                
-                // Insert producer data
-                pattern = String.format("com.sun.messaging.jms.server:type=ProducerManager,subtype=Monitor");
-                result = brokerSpy.invokeMBeanMethod(pattern, "getProducerInfo", null);
-                if (result != null) {
-                    for(CompositeData producer : (CompositeData[])result) {
-                        ClientData cd = new ClientData();
-                        cd.type = "p";
-                        cd.Host = producer.get("Host").toString();
-                        cd.ExchangeID = dbAvatar.queryExchangeID(producer.get("DestinationName").toString(), producer.get("DestinationType").toString());
-                        cd.NumMsg = Long.parseLong(producer.get("NumMsgs").toString());                     
-                        cd.RealID = Long.parseLong(producer.get("ProducerID").toString());
-                        cd.CreateTime = Long.parseLong(producer.get("CreationTime").toString());                        
-                        cd.LastUpdate = rightNow.getTimeInMillis();
-                        dbAvatar.insertClient(cd);                        
-                    }
-                }                
+        TmeDBavatar dbAvatar = new TmeDBavatar();
+        try {
+            if(!dbAvatar.isConnectionReady())
+                return;
+            // Insert Broker
+            if(-1 == dbAvatar.queryBrokerID(brokerInfo.getHost())) {
+                dbAvatar.insertBroker(brokerInfo);
             }
-            catch(Exception ex) {
-                logger.error(ex.getMessage());
+            Calendar rightNow = Calendar.getInstance();
+            
+            // Insert Exchange
+            BrokerInfoData bid = getBrokerInfoData();
+            bid.broker = brokerInfo.getHost();
+            bid.timestamp = rightNow.getTimeInMillis();
+            
+            ArrayList<Exchange> allExchanges = brokerSpy.getAllExchangeMetadata();
+            
+            for(Exchange em : allExchanges) {
+                String exchangeName = em.getName();
+                String exchangeType = em.isQueue() ? "q": "t";
+                try {
+                    String pattern = String.format("com.sun.messaging.jms.server:type=Destination,subtype=Config,desttype=%s,name=\"%s\"", exchangeType, exchangeName);
+                    brokerSpy.jmxConnectServer();
+                    Map<String, String> mapConfig = brokerSpy.getMBeanAttributesMap(pattern, null);
+                    long maxMsgNum = Long.parseLong(mapConfig.get("MaxNumMsgs"));
+                    long maxMsgBytes = Long.parseLong(mapConfig.get("MaxTotalMsgBytes"));
+                    if(-1 == dbAvatar.queryExchangeID(exchangeName, exchangeType)) {
+                        dbAvatar.insertExchange(exchangeName, exchangeType, maxMsgNum, maxMsgBytes);
+                    }
+                    else {
+                        dbAvatar.updateExchange(exchangeName, exchangeType, maxMsgNum, maxMsgBytes);
+                    }
+                }
+                finally {
+                    brokerSpy.jmxCloseServer();
+                }
+                
+                // Query destination attributes
+                try {
+                    String pattern = String.format("com.sun.messaging.jms.server:type=Destination,subtype=Monitor,desttype=%s,name=\"%s\"", exchangeType, exchangeName);
+                    brokerSpy.jmxConnectServer();
+                    Map<String, String> map = brokerSpy.getMBeanAttributesMap(pattern, null);
+                    TmeDBavatar.ExchangeInfoData e = new TmeDBavatar.ExchangeInfoData();
+                    e.name = exchangeName;
+                    e.type = exchangeType;
+                    e.host = brokerInfo.getHost();
+                    e.AvgNumActiveConsumers = Integer.parseInt(map.get("AvgNumActiveConsumers"));
+                    e.AvgNumBackupConsumers = Integer.parseInt(map.get("AvgNumBackupConsumers"));
+                    e.AvgNumConsumers = Integer.parseInt(map.get("AvgNumConsumers"));
+                    e.AvgNumMsgs = Long.parseLong(map.get("AvgNumMsgs"));
+                    e.AvgTotalMsgBytes = Long.parseLong(map.get("AvgTotalMsgBytes"));
+                    e.ConnectionID = map.get("ConnectionID");
+                    e.DiskReserved = Long.parseLong(map.get("DiskReserved"));
+                    e.DiskUsed = Long.parseLong(map.get("DiskUsed"));
+                    e.DiskUtilizationRatio = Integer.parseInt(map.get("DiskUtilizationRatio"));
+                    e.MsgBytesIn = Long.parseLong(map.get("MsgBytesIn"));
+                    e.MsgBytesOut = Long.parseLong(map.get("MsgBytesOut"));
+                    e.NextMessageID = map.get("NextMessageID");
+                    e.NumActiveConsumers = Integer.parseInt(map.get("NumActiveConsumers"));
+                    e.NumBackupConsumers = Integer.parseInt(map.get("NumBackupConsumers"));
+                    e.NumConsumers = Integer.parseInt(map.get("NumConsumers"));
+                    e.NumMsgs = Long.parseLong(map.get("NumMsgs"));
+                    e.NumMsgsHeldInTransaction = Long.parseLong(map.get("NumMsgsHeldInTransaction"));
+                    e.NumMsgsIn = Long.parseLong(map.get("NumMsgsIn"));
+                    e.NumMsgsOut = Long.parseLong(map.get("NumMsgsOut"));
+                    e.NumMsgsPendingAcks = Long.parseLong(map.get("NumMsgsPendingAcks"));
+                    e.NumMsgsRemote = Long.parseLong(map.get("NumMsgsRemote"));
+                    e.NumProducers = Integer.parseInt(map.get("NumProducers"));
+                    e.NumWildcardConsumers = Integer.parseInt(map.get("NumWildcardConsumers"));
+                    e.NumWildcardProducers = Integer.parseInt(map.get("NumWildcardProducers"));
+                    e.NumWildcards = Integer.parseInt(map.get("NumWildcards"));
+                    e.PeakMsgBytes = Long.parseLong(map.get("PeakMsgBytes"));
+                    e.PeakNumMsgs = Long.parseLong(map.get("PeakNumMsgs"));
+                    e.PeakTotalMsgBytes = Long.parseLong(map.get("PeakTotalMsgBytes"));
+                    e.PeakNumActiveConsumers = Integer.parseInt(map.get("PeakNumActiveConsumers"));
+                    e.PeakNumBackupConsumers = Integer.parseInt(map.get("PeakNumBackupConsumers"));
+                    e.PeakNumConsumers = Integer.parseInt(map.get("PeakNumConsumers"));
+                    e.State = Integer.parseInt(map.get("State"));
+                    e.StateLabel = map.get("StateLabel");
+                    e.Temporary = Boolean.parseBoolean(map.get("Temporary"));
+                    e.TotalMsgBytes = Long.parseLong(map.get("TotalMsgBytes"));
+                    e.TotalMsgBytesHeldInTransaction = Long.parseLong(map.get("TotalMsgBytesHeldInTransaction"));
+                    e.TotalMsgBytesRemote = Long.parseLong(map.get("TotalMsgBytesRemote"));
+                    e.timestamp = rightNow.getTimeInMillis();
+                    
+                    TmeDBavatar.ExchangeInfoData pre_exc = dbAvatar.getLatestExchangeRec(brokerInfo.getHost(), exchangeName, exchangeType);
+                    
+                    dbAvatar.insertExchangeRecord(e);
+                    
+                    long in_diff, out_diff;
+                    in_diff = out_diff = 0;
+                    
+                    if(pre_exc != null) {
+                        in_diff = e.NumMsgsIn - pre_exc.NumMsgsIn;
+                        in_diff = in_diff < 0 ? e.NumMsgsIn: in_diff;
+                        
+                        out_diff = e.NumMsgsOut - pre_exc.NumMsgsOut;
+                        out_diff = out_diff < 0 ? e.NumMsgsOut: out_diff;
+                        
+                    }
+                    else {
+                        in_diff = e.NumMsgsIn;
+                        out_diff = e.NumMsgsOut;
+                    }
+                    
+                    bid.inc_msg_in += in_diff;
+                    bid.inc_msg_out += out_diff;
+                    bid.total_msg_pendding += e.NumMsgs;
+                    
+                    bid.total_consumer += e.NumConsumers;
+                    bid.total_producer += e.NumProducers;
+                    
+                    bid.num_exchange++;
+                }
+                finally {
+                    brokerSpy.jmxCloseServer();
+                }
             }
+            dbAvatar.insertBrokerRecord(bid);
+            
+            // Insert consumer data
+            String pattern = String.format("com.sun.messaging.jms.server:type=ConsumerManager,subtype=Monitor");
+            Object result = brokerSpy.invokeMBeanMethod(pattern, "getConsumerInfo", null);
+            if(result != null) {
+                for(CompositeData consumer : (CompositeData[]) result) {
+                    ClientData cd = new ClientData();
+                    cd.type = "c";
+                    cd.Host = consumer.get("Host").toString();
+                    cd.ExchangeID = dbAvatar.queryExchangeID(consumer.get("DestinationName").toString(), consumer.get("DestinationType").toString());
+                    cd.NumMsg = Long.parseLong(consumer.get("NumMsgs").toString());
+                    cd.NumMsgPending = Long.parseLong(consumer.get("NumMsgsPending").toString());
+                    cd.RealID = Long.parseLong(consumer.get("ConsumerID").toString());
+                    cd.CreateTime = Long.parseLong(consumer.get("CreationTime").toString());
+                    cd.LastAckTime = Long.parseLong(consumer.get("LastAckTime").toString());
+                    cd.LastUpdate = rightNow.getTimeInMillis();
+                    dbAvatar.insertClient(cd);
+                }
+            }
+            
+            // Insert producer data
+            pattern = String.format("com.sun.messaging.jms.server:type=ProducerManager,subtype=Monitor");
+            result = brokerSpy.invokeMBeanMethod(pattern, "getProducerInfo", null);
+            if(result != null) {
+                for(CompositeData producer : (CompositeData[]) result) {
+                    ClientData cd = new ClientData();
+                    cd.type = "p";
+                    cd.Host = producer.get("Host").toString();
+                    cd.ExchangeID = dbAvatar.queryExchangeID(producer.get("DestinationName").toString(), producer.get("DestinationType").toString());
+                    cd.NumMsg = Long.parseLong(producer.get("NumMsgs").toString());
+                    cd.RealID = Long.parseLong(producer.get("ProducerID").toString());
+                    cd.CreateTime = Long.parseLong(producer.get("CreationTime").toString());
+                    cd.LastUpdate = rightNow.getTimeInMillis();
+                    dbAvatar.insertClient(cd);
+                }
+            }
+            dbAvatar.closeDB();
         }
+        catch(Exception ex) {
+            logger.error(ex.getMessage());
+            if(dbAvatar != null)
+                dbAvatar.closeDB();
+        } 
     }
     
     private void issueAlert(String exchange, long msg, long msgByte, long maxMsg, long maxMsgByte) {    	

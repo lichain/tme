@@ -321,18 +321,9 @@ public class TmeDBavatar implements DataListener{
     private PreparedStatement m_ExchangePS = null;
     private PreparedStatement m_ExchangeHisPS = null;
     private PreparedStatement m_UpExchangePS = null;
-    private PreparedStatement m_ClientPS = null;
+    private PreparedStatement m_ClientPS = null;   
     
-    private static TmeDBavatar m_theSingleton = null;
-    
-    public static synchronized TmeDBavatar getInstance() {
-        if(null == m_theSingleton)
-            m_theSingleton = new TmeDBavatar();
-        
-        return m_theSingleton;
-    }
-    
-    private TmeDBavatar() {
+    public TmeDBavatar() {
         dbNode = new ZNode(ZNODE_TME_DB);
         obs = new DataObserver(ZNODE_TME_DB, this, false, 0);
         obs.start();
@@ -343,7 +334,7 @@ public class TmeDBavatar implements DataListener{
         closeDB();
     }
     
-    public synchronized boolean isConnectionReady() {
+    public boolean isConnectionReady() {
         // If db connection is not existed, try to open it.
         if(null == m_dbConnection)
             return openDB();
@@ -351,7 +342,7 @@ public class TmeDBavatar implements DataListener{
             return true;
     }
     
-    public synchronized boolean openDB() {
+    public  boolean openDB() {
         // if DB connection is existed, close it first.
         if(null != m_dbConnection)
             closeDB();
@@ -398,7 +389,7 @@ public class TmeDBavatar implements DataListener{
         return true;
     }
     
-    private synchronized void closeDB() {
+    public  void closeDB() {
         try {
             if(null != m_BrokerPS) {
                 m_BrokerPS.close();
@@ -492,7 +483,7 @@ public class TmeDBavatar implements DataListener{
         stat.close();
     }
     
-    public synchronized boolean insertBroker(ZooKeeperInfo.Broker broker) {
+    public  boolean insertBroker(ZooKeeperInfo.Broker broker) {
         if(!isConnectionReady() || null == m_BrokerPS)
             return false;
         
@@ -504,8 +495,6 @@ public class TmeDBavatar implements DataListener{
             m_BrokerPS.setString(4, broker.getBrokerType());
             m_BrokerPS.setString(5, broker.getVersion());
             m_BrokerPS.executeUpdate();
-            
-            // logger.info("Insert a record in broker ok");
         }
         catch(Exception ex) {
             handleError(ex);
@@ -515,7 +504,7 @@ public class TmeDBavatar implements DataListener{
         return true;
     }
     
-    public synchronized boolean insertBrokerRecord(BrokerInfoData data) {
+    public  boolean insertBrokerRecord(BrokerInfoData data) {
         if(!isConnectionReady() || null == m_BrokerHistoryPS)
             return false;
         
@@ -577,8 +566,6 @@ public class TmeDBavatar implements DataListener{
             m_BrokerHistoryPS.setLong(19, diff_time);
             m_BrokerHistoryPS.setTimestamp(20, new java.sql.Timestamp(data.timestamp));
             m_BrokerHistoryPS.executeUpdate();
-            
-            // logger.info("Insert a record in broker history ok");
         }
         catch(Exception ex) {
             handleError(ex);
@@ -588,7 +575,7 @@ public class TmeDBavatar implements DataListener{
         return true;
     }
     
-    public synchronized boolean insertExchange(String exchangeName, String exchangeType, long maxMsgNum, long maxMsgBytes) {
+    public  boolean insertExchange(String exchangeName, String exchangeType, long maxMsgNum, long maxMsgBytes) {
         if(!isConnectionReady() || null == m_ExchangePS)
             return false;
         
@@ -597,9 +584,7 @@ public class TmeDBavatar implements DataListener{
             m_ExchangePS.setString(2, exchangeType);
             m_ExchangePS.setLong(3, maxMsgNum);
             m_ExchangePS.setLong(4, maxMsgBytes);
-            m_ExchangePS.executeUpdate();
-            
-            // logger.info("Insert a record in exchange ok");
+            m_ExchangePS.executeUpdate();            
         }
         catch(Exception ex) {
             handleError(ex);
@@ -608,7 +593,7 @@ public class TmeDBavatar implements DataListener{
         return true;
     }
     
-    public synchronized boolean updateExchange(String exchangeName, String exchangeType, long maxMsgNum, long maxMsgBytes) {
+    public  boolean updateExchange(String exchangeName, String exchangeType, long maxMsgNum, long maxMsgBytes) {
         if(!isConnectionReady() || null == m_UpExchangePS)
             return false;
         
@@ -629,7 +614,6 @@ public class TmeDBavatar implements DataListener{
             
             rs.close();
             stat.close();
-            // logger.info("Update a record in exchange ok");
         }
         catch(Exception ex) {
             handleError(ex);
@@ -638,7 +622,7 @@ public class TmeDBavatar implements DataListener{
         return true;
     }
     
-    public synchronized boolean insertExchangeRecord(ExchangeInfoData e) {
+    public  boolean insertExchangeRecord(ExchangeInfoData e) {
         if(!isConnectionReady() || null == m_ExchangeHisPS)
             return false;
         

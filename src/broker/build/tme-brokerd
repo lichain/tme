@@ -12,8 +12,10 @@ if [ ! -x "$javacmd" ]; then
     exit 1
 fi
 
+mem=`sed -e '/imq\.system\.max_size=.*/!d ; s/.*=//g' /usr/share/tme-broker/mq/var/instances/imqbroker/props/config.properties`
+
 prog="/usr/share/tme-broker/mq/bin/imqbrokerd"
-jvm_mem="-XX:+UseParallelOldGC -Xmx4096m -Xms4096m"
+jvm_mem="-XX:+UseParallelOldGC -Xmx$mem -Xms$mem"
 jmx_auth="-Dcom.sun.management.jmxremote.password.file=/usr/share/tme-broker/etc/jmxremote.password -Dcom.sun.management.jmxremote.access.file=/usr/share/tme-broker/etc/jmxremote.access"
 jvm_jmx="-Dcom.sun.management.jmxremote.port=5566 -Dcom.sun.management.jmxremote.authenticate=true -Dcom.sun.management.jmxremote.ssl=false $jmx_auth"
 export _jvm_args="-server $jvm_mem $jvm_jmx"

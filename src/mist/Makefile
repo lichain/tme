@@ -46,6 +46,7 @@ rpm:
 	cp -f $(OUTPATH)/alert-spyd $(RPMPATH)/usr/share/mist/bin
 	cp -f $(OUTPATH)/test_autogoc $(RPMPATH)/usr/share/mist/bin
 	cp -f $(OUTPATH)/test_tls $(RPMPATH)/usr/share/mist/bin
+	cp -f $(OUTPATH)/mon_mistd $(RPMPATH)/usr/share/mist/bin
 	cp -f $(OUTPATH)/watchdog-mistd $(RPMPATH)/usr/share/mist/bin
 	cp -f $(OUTPATH)/install_mistd.sh $(RPMPATH)/usr/share/mist/bin
 	cp -f $(OUTPATH)/remove_mistd.sh $(RPMPATH)/usr/share/mist/bin

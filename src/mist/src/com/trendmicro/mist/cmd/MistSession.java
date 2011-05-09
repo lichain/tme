@@ -13,6 +13,7 @@ import gnu.getopt.LongOpt;
 import com.trendmicro.mist.Daemon;
 import com.trendmicro.mist.MistException;
 import com.trendmicro.mist.ThreadInvoker;
+import com.trendmicro.mist.Version;
 import com.trendmicro.mist.proto.GateTalk;
 import com.trendmicro.mist.util.Packet;
 import com.trendmicro.mist.util.ConnectionList;
@@ -30,6 +31,7 @@ public class MistSession extends ThreadInvoker {
         HELP,
         INFO, 
         PING, 
+        VERSION
     }
     
     enum RetVal {
@@ -69,6 +71,8 @@ public class MistSession extends ThreadInvoker {
         myOut.printf("        remove free sessions %n%n");
         myOut.printf("  --info=SESSION_ID, -i SESSION_ID %n");
         myOut.printf("        get session info by ID %n%n");
+        myOut.printf("  --version, -v %n");
+        myOut.printf("        get daemon version %n%n");
         myOut.printf("  --status, -s %n");
         myOut.printf("        get daemon status %n%n");
         myOut.printf("  --help, -h %n");
@@ -244,10 +248,11 @@ public class MistSession extends ThreadInvoker {
             new LongOpt("info", LongOpt.REQUIRED_ARGUMENT, null, 'i'), 
             new LongOpt("status", LongOpt.NO_ARGUMENT, null, 's'), 
             new LongOpt("clean", LongOpt.NO_ARGUMENT, null, 'e'),
+            new LongOpt("version", LongOpt.NO_ARGUMENT, null, 'v'),
             new LongOpt("ping", LongOpt.REQUIRED_ARGUMENT, null, 'p'), 
         };
 
-        Getopt g = new Getopt("mist-session", argv, "hla:c:d:seb:i:p:", longopts);
+        Getopt g = new Getopt("mist-session", argv, "hla:c:d:seb:i:p:v", longopts);
         int c;
         String arg = null;
         try {
@@ -296,6 +301,9 @@ public class MistSession extends ThreadInvoker {
                 case 'e':
                     currCmd = CmdType.CLEAN;
                     break;
+                case 'v':
+                    currCmd = CmdType.VERSION;
+                    break;
                 case 'h':
                     currCmd = CmdType.HELP;
                     break;
@@ -337,6 +345,8 @@ public class MistSession extends ThreadInvoker {
                 processCleanFree();
             else if(currCmd == CmdType.PING)
                 processPing(arg);
+            else if(currCmd == CmdType.VERSION)
+                myOut.println(Version.getVersion());
             else if(currCmd == CmdType.HELP)
                 printUsage();
         }

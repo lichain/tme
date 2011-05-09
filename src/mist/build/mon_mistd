@@ -1,0 +1,18 @@
+#!/bin/sh
+
+send="hello_mist"
+recv="tsim_olleh"
+
+echo ServiceName=mistd
+echo Version=`mist-session -v`
+echo GeneratedTimeUTC=`date +"%Y/%m/%d %H:%M:%S"`
+echo GeneratedTimestamp=`date +%s`
+
+answer=`mist-session -p $send`
+if [ "$answer" = "$recv" ]; then
+    echo StatusCode=OK
+    echo StatusMessage=OK: mistd on `hostname -i` is alive
+else
+    echo StatusCode=CRITICAL
+    echo StatusMessage=CRITICAL: mistd on `hostname -i` is down
+fi

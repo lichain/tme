@@ -100,6 +100,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir /usr/share/mist/bin
 %dir /usr/share/mist/etc
 /usr/share/mist/etc/*
+%config /usr/share/mist/etc/mistd.properties
 %dir /usr/share/mist/lib
 /usr/share/mist/lib/*
 
@@ -164,6 +165,11 @@ elif [ "$1" = "2" ]; then
 fi
 
 %preun
+
+configs=`rpm -qc %{name}`
+for c in $configs; do
+    cp $c $c.old 
+done
 
 if [ "$1" = "1" ]; then
     # upgrade

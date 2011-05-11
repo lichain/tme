@@ -168,11 +168,6 @@ fi
 
 %preun
 
-configs=`rpm -qc %{name}`
-for c in $configs; do
-    cp $c $c.old 
-done
-
 if [ "$1" = "1" ]; then
     # upgrade
     usleep 1

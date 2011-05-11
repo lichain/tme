@@ -35,7 +35,10 @@ rpm:
 	rm -f ${NAME}-tmp.spec
 
 upload:
-	export STAMP_VER=$(BUILD_TAG); curl -T "../../output/RPMS/output/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm" -u anonymous:anonymous ftp://wiki.spn.tw.trendnet.org/release/TME/TME-2.5/
+	export STAMP_VER=$(BUILD_TAG); curl -T "../../output/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm" -u anonymous:anonymous ftp://wiki.spn.tw.trendnet.org/dailybuild/TME/TME-2.5/
+
+install:
+	export STAMP_VER=$(BUILD_TAG); rpm -ivh ../../output/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm
 
 openmq:
 	@if [ "$$ANT_HOME" == "" ]; then echo "ANT_HOME is empty. Please use 'make openmq ANT_HOME=/path/to/ant'"; exit 1; fi

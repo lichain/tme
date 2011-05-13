@@ -4,7 +4,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.net.Socket;
-import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -52,13 +51,13 @@ public class Utils {
         int pid = -1;
         // because JRE does not provide the "jps" utility, we parse the output of ps instead
         String[] cmd = { "/bin/sh", "-c", "ps -C java -O start_time | grep " + className };
-        Process psProc = null;
+        Process proc = null;
         try {
-            psProc = Runtime.getRuntime().exec(cmd);
-            psProc.waitFor();
+            proc = Runtime.getRuntime().exec(cmd);
+            proc.waitFor();
             // read the output of the executed command into buffer
             byte[] buf = new byte[10];
-            psProc.getInputStream().read(buf);
+            proc.getInputStream().read(buf);
 
             String strArray[] = new String(buf).split("\\s+");
             // parse the first field (pid)
@@ -70,11 +69,7 @@ public class Utils {
         catch(Exception e) {
         }
         finally{
-            try {
-                psProc.getInputStream().close();
-            }
-            catch(IOException e) {
-            }
+            proc.destroy();
         }
         return pid;
     }

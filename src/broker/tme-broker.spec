@@ -68,6 +68,7 @@ rm -rf /tmp/tme-broker
 /usr/share/mist/bin/watchdog-spyd
 /usr/share/mist/bin/install_spyd.sh
 /usr/share/mist/bin/remove_spyd.sh
+%config /usr/share/tme-broker/mq/var/instances/imqbroker/props/config.properties
 
 %dir
 

@@ -103,6 +103,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir /usr/share/mist/etc
 /usr/share/mist/etc/*
 %config /usr/share/mist/etc/mistd.properties
+%config /usr/share/mist/etc/mistd.log4j
 %dir /usr/share/mist/lib
 /usr/share/mist/lib/*
 

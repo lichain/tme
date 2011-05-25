@@ -202,11 +202,11 @@ public class ServiceProvider implements Runnable {
         GateTalk.Command cmd = null;
         try {
             Packet pack = new Packet();
-            pack.read(in);
-
-            GateTalk.Command.Builder cmd_builder = GateTalk.Command.newBuilder();
-            cmd_builder.mergeFrom(pack.getPayload());
-            cmd = cmd_builder.build();
+            if(pack.read(in) > 0) {
+                GateTalk.Command.Builder cmd_builder = GateTalk.Command.newBuilder();
+                cmd_builder.mergeFrom(pack.getPayload());
+                cmd = cmd_builder.build();
+            }
         }
         catch(IOException e) {
             logger.error(e.getMessage());

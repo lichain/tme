@@ -40,7 +40,7 @@
 	</target>
 
 	<target name="compile" depends="init">
-		<javac srcdir="${dir.src}" destdir="${dir.class}" debug="true">
+		<javac includeantruntime="false" srcdir="${dir.src}" destdir="${dir.class}" debug="true">
 			<classpath refid="class.path"/>
 		</javac>
 		<unjar dest="${dir.class}">

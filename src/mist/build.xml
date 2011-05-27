@@ -24,10 +24,10 @@
     </target>
 
     <target name="mist" depends="init">
-        <javac srcdir="${dir.src}" destdir="${dir.class}" debug="true">
+        <javac includeantruntime="false" srcdir="${dir.src}" destdir="${dir.class}" debug="true">
             <classpath refid="class.path"/>
         </javac>
-        <javac srcdir="${dir.test}" destdir="${dir.class}" debug="true">
+        <javac includeantruntime="false" srcdir="${dir.test}" destdir="${dir.class}" debug="true">
             <classpath refid="class.path"/>
         </javac>
         <copy file="${dir.cfg}/log4j.properties" todir="${dir.class}"/>

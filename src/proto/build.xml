@@ -17,7 +17,7 @@
     </target>
 
     <target name="default" depends="init">
-        <javac srcdir="${dir.src}" destdir="${dir.class}" debug="true">
+        <javac includeantruntime="false" srcdir="${dir.src}" destdir="${dir.class}" debug="true">
             <classpath refid="class.path"/>
         </javac>
         <jar destfile="${dir.lib}/${file.jar}" basedir="${dir.class}"/>

@@ -48,8 +48,6 @@ cp -f config.properties $RPM_BUILD_ROOT/usr/share/tme-broker/mq/var/instances/im
 install -m755 etc/init.d/tme-brokerd $RPM_BUILD_ROOT/etc/init.d
 install -m755 etc/init.d/tme-spyd $RPM_BUILD_ROOT/etc/init.d
 install -m755 usr/share/mist/bin/watchdog-spyd $RPM_BUILD_ROOT/usr/share/mist/bin
-install -m755 usr/share/mist/bin/install_spyd.sh $RPM_BUILD_ROOT/usr/share/mist/bin
-install -m755 usr/share/mist/bin/remove_spyd.sh $RPM_BUILD_ROOT/usr/share/mist/bin
 install -m755 usr/share/tme-broker/install_brokerd.sh $RPM_BUILD_ROOT/usr/share/tme-broker
 install -m755 usr/share/tme-broker/remove_brokerd.sh $RPM_BUILD_ROOT/usr/share/tme-broker
 install -m755 usr/share/tme-broker/change_broker_mem.sh $RPM_BUILD_ROOT/usr/share/tme-broker
@@ -66,8 +64,6 @@ rm -rf /tmp/tme-broker
 /etc/init.d/tme-brokerd
 /etc/init.d/tme-spyd
 /usr/share/mist/bin/watchdog-spyd
-/usr/share/mist/bin/install_spyd.sh
-/usr/share/mist/bin/remove_spyd.sh
 %config /usr/share/tme-broker/mq/var/instances/imqbroker/props/config.properties
 
 %dir
@@ -105,6 +101,10 @@ chown -R TME.TME /usr/share/tme-broker
 
 if [ "$1" = "1" ]; then
     # install
+    /sbin/chkconfig --add tme-brokerd
+    /sbin/chkconfig --level 35 tme-brokerd on
+    /sbin/chkconfig --add tme-spyd
+    /sbin/chkconfig --level 35 tme-spyd on
     echo done. please configure and execute install_brokerd.sh to install service
 elif [ "$1" = "2" ]; then
     # upgrade
@@ -119,6 +119,8 @@ if [ "$1" = "1" ]; then
 elif [ "$1" = "0" ]; then
     # uninstall
     /usr/share/tme-broker/remove_brokerd.sh
+    /sbin/chkconfig --del tme-spyd
+    /sbin/chkconfig --del tme-brokerd
 fi
 
 %postun
@@ -135,4 +137,3 @@ fi
 
 * Mon Feb 14 2011 Chris Huang 20110214
 - Use fixed port 5567 of JMX to broker (http://wiki.spn.tw.trendnet.org/mediawiki/index.php/TME20_Installation_Guide#Firewall_Requirements)
- 

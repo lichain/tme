@@ -1,13 +1,13 @@
-#!/bin/sh
+#!/bin/sh -e
 
 if [ `whoami` != "root" ]; then 
     echo requires root permission
     exit 1;
 fi
 
-/sbin/chkconfig --add tme-brokerd
-if [ $? != 0 ]; then echo "$0: error at line $LINENO"; exit $?; fi
 /sbin/service tme-brokerd start
-if [ $? != 0 ]; then echo "$0: error at line $LINENO"; exit $?; fi
+
+cp -f /usr/share/tme-broker/etc/tme-spyd.cron /etc/cron.d
+/sbin/service tme-spyd start
 
 exit 0

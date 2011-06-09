@@ -19,8 +19,6 @@ rpm:
 	tar xfz openmq4_4-binary.tgz -C $(RPMPATH)/
 	cp -f $(BINPATH)/tme-brokerd $(RPMPATH)/etc/init.d
 	cp -f $(BINPATH)/tme-spyd  $(RPMPATH)/etc/init.d
-	cp -f $(BINPATH)/install_spyd.sh  $(RPMPATH)/usr/share/mist/bin
-	cp -f $(BINPATH)/remove_spyd.sh  $(RPMPATH)/usr/share/mist/bin
 	cp -f $(BINPATH)/watchdog-spyd  $(RPMPATH)/usr/share/mist/bin
 	cp -f $(BINPATH)/install_brokerd.sh  $(RPMPATH)/usr/share/tme-broker
 	cp -f $(BINPATH)/remove_brokerd.sh  $(RPMPATH)/usr/share/tme-broker

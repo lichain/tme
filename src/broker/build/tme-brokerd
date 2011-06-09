@@ -119,17 +119,13 @@ stop_broker)
     ;;
 start)
     start_daemon
-    if [ $ret_code -eq 0 ]; then /usr/share/mist/bin/install_spyd.sh; fi
     ;;
 stop)
-    /usr/share/mist/bin/remove_spyd.sh
     stop_daemon
     ;;
 restart)
-    /usr/share/mist/bin/remove_spyd.sh
     stop_daemon
     start_daemon
-    if [ $ret_code -eq 0 ]; then /usr/share/mist/bin/install_spyd.sh; fi
     ;;
 status)
     check_process $classname 5 1

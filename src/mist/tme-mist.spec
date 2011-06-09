@@ -160,6 +160,10 @@ chown -R TME.TME /var/run/tme
 
 if [ "$1" = "1" ]; then
     # install
+    /sbin/chkconfig --add mistd
+    /sbin/chkconfig --level 35 mistd on
+    /sbin/chkconfig --add tme-bridge
+    /sbin/chkconfig --level 35 tme-bridge on
     echo done. please configure and execute install_mistd.sh to install service
     usleep 1
 elif [ "$1" = "2" ]; then
@@ -176,6 +180,8 @@ elif [ "$1" = "0" ]; then
     # uninstall
     /usr/share/mist/bin/remove_bridge.sh
     /usr/share/mist/bin/remove_mistd.sh
+    /sbin/chkconfig --del tme-bridge
+    /sbin/chkconfig --del mistd
 fi
 
 %postun

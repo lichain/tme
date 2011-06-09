@@ -7,7 +7,7 @@ fi
 
 /sbin/service tme-brokerd start
 
-cp -f /usr/share/tme-broker/etc/tme-spyd.cron /etc/cron.d
 /sbin/service tme-spyd start
+cp -f /usr/share/tme-broker/etc/tme-spyd.cron /etc/cron.d
 
 exit 0

@@ -5,7 +5,7 @@ if [ `whoami` != "root" ]; then
     exit 1;
 fi
 
-cp -f /usr/share/mist/etc/tme-mist.cron /etc/cron.d
 /sbin/service mistd start
+cp -f /usr/share/mist/etc/tme-mist.cron /etc/cron.d
 
 exit 0;

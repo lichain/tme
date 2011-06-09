@@ -107,6 +107,8 @@ chown -R TME.TME /var/run/tme
 /usr/share/tme-zookeeper/change_zk_mem.sh 3072m > /dev/null
 if [ "$1" = "1" ]; then
     # install
+    /sbin/chkconfig --add tme-zookeeperd
+    /sbin/chkconfig --level 35 tme-zookeeperd on
     echo done. please configure and execute install_zookeeperd.sh to install service
 elif [ "$1" = "2" ]; then
     # upgrade
@@ -121,6 +123,7 @@ if [ "$1" = "1" ]; then
 elif [ "$1" = "0" ]; then
     # uninstall
     /usr/share/tme-zookeeper/remove_zookeeperd.sh
+    /sbin/chkconfig --del tme-zookeeperd
 fi
 
 %postun

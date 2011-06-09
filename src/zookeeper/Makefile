@@ -31,4 +31,4 @@ rpm:
 	rm -f ${NAME}-tmp.spec
 
 upload:
-	export STAMP_VER=$(BUILD_TAG); curl -T "../../output/RPMS/output/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm" -u anonymous:anonymous ftp://wiki.spn.tw.trendnet.org/release/TME/TME-2.5/
+	export STAMP_VER=$(BUILD_TAG); curl -T "../../output/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm" -u anonymous:anonymous ftp://wiki.spn.tw.trendnet.org/dailybuild/TME/TME-2.5/

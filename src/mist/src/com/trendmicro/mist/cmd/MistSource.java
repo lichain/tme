@@ -188,6 +188,9 @@ public class MistSource extends ThreadInvoker {
                 reaper.setBirth(new Date().getTime());
                 if((rdcnt = pack.read(socketIn)) > 0) {
                     pack.write(out);
+                    if(myOut.checkError()) {
+                        throw new IOException("MistSource: Pipe is broken!");
+                    }
                     cnt++;
 
                     pack.setPayload(GateTalk.Response.newBuilder().setSuccess(true).build().toByteArray());

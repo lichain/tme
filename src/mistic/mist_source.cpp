@@ -5,8 +5,14 @@
  *      Author: Scott Wang <scott_wang@trend.com.tw>
  */
 
+#include <proto/MistMessage.pb.h>
+#include <proto/SpnMessage.pb.h>
+#include <proto/GateTalk.pb.h>
+
 #include<iostream>
 #include<fstream>
+#include<stdlib.h>
+
 #include<arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -15,11 +21,7 @@
 #include <sys/file.h>
 #include<signal.h>
 #include<unistd.h>
-#include<stdlib.h>
 #include<boost/program_options.hpp>
-#include"mist_protos/MistMessage.pb.h"
-#include"mist_protos/SpnMessage.pb.h"
-#include "mist_protos/GateTalk.pb.h"
 
 #define MISTD_PORT 9498
 

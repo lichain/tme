@@ -5,12 +5,14 @@
  *      Author: Scott Wang <scott_wang@trend.com.tw>
  */
 
+#include <proto/MistMessage.pb.h>
+#include <proto/SpnMessage.pb.h>
+
+#include<string>
 #include<iostream>
+
 #include<arpa/inet.h>
 #include<boost/program_options.hpp>
-#include<string>
-#include"mist_protos/MistMessage.pb.h"
-#include"mist_protos/SpnMessage.pb.h"
 
 using namespace com::trendmicro::mist::proto;
 using namespace com::trendmicro::spn::proto;

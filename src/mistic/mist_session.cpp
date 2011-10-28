@@ -5,8 +5,12 @@
  *      Author: Scott Wang <scott_wang@trend.com.tw>
  */
 
+#include <proto/GateTalk.pb.h>
+
 #include<iostream>
 #include<fstream>
+#include<stdlib.h>
+
 #include<arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -14,9 +18,7 @@
 #include <netinet/tcp.h>
 #include<signal.h>
 #include<unistd.h>
-#include<stdlib.h>
 #include<boost/program_options.hpp>
-#include "mist_protos/GateTalk.pb.h"
 
 #define MISTD_PORT 9498
 

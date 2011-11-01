@@ -5,7 +5,7 @@
  *      Author: Scott Wang <scott_wang@trend.com.tw>
  */
 
-#include <proto/GateTalk.pb.h>
+#include <mist_proto/GateTalk.pb.h>
 
 #include<iostream>
 #include<fstream>

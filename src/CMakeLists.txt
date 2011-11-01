@@ -6,5 +6,5 @@ list(
   CMAKE_MODULE_PATH
   ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-add_subdirectory (proto) 
+add_subdirectory (mist_proto) 
 add_subdirectory (mistic)

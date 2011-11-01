@@ -7,4 +7,4 @@ set(args
 )
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${args})
 
-add_library(proto ${PROTO_SRCS})
+add_library(mist_proto ${PROTO_SRCS})

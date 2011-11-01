@@ -5,8 +5,8 @@
  *      Author: Scott Wang <scott_wang@trend.com.tw>
  */
 
-#include <proto/MistMessage.pb.h>
-#include <proto/SpnMessage.pb.h>
+#include <mist_proto/MistMessage.pb.h>
+#include <mist_proto/SpnMessage.pb.h>
 
 #include<iostream>
 

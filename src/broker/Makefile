@@ -1,6 +1,6 @@
 
 NAME        = tme-broker
-VERSION     = 2.0u1_4.5.1
+VERSION     = 2.5_4.5.1
 PKGNAME     = ${NAME}-${VERSION}
 
 OUTPATH     = ../../output
@@ -21,8 +21,6 @@ rpm:
 
 	cp -f $(BINPATH)/tme-brokerd $(RPMPATH)/etc/init.d
 	cp -f $(BINPATH)/tme-spyd  $(RPMPATH)/etc/init.d
-	cp -f $(BINPATH)/install_spyd.sh  $(RPMPATH)/usr/share/mist/bin
-	cp -f $(BINPATH)/remove_spyd.sh  $(RPMPATH)/usr/share/mist/bin
 	cp -f $(BINPATH)/watchdog-spyd  $(RPMPATH)/usr/share/mist/bin
 	cp -f $(BINPATH)/install_brokerd.sh  $(RPMPATH)/usr/share/tme-broker
 	cp -f $(BINPATH)/remove_brokerd.sh  $(RPMPATH)/usr/share/tme-broker

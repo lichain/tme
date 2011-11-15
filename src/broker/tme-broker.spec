@@ -48,8 +48,6 @@ cp -f config.properties $RPM_BUILD_ROOT/usr/share/tme-broker/mq/var/instances/im
 install -m755 etc/init.d/tme-brokerd $RPM_BUILD_ROOT/etc/init.d
 install -m755 etc/init.d/tme-spyd $RPM_BUILD_ROOT/etc/init.d
 install -m755 usr/share/mist/bin/watchdog-spyd $RPM_BUILD_ROOT/usr/share/mist/bin
-install -m755 usr/share/mist/bin/install_spyd.sh $RPM_BUILD_ROOT/usr/share/mist/bin
-install -m755 usr/share/mist/bin/remove_spyd.sh $RPM_BUILD_ROOT/usr/share/mist/bin
 install -m755 usr/share/tme-broker/install_brokerd.sh $RPM_BUILD_ROOT/usr/share/tme-broker
 install -m755 usr/share/tme-broker/remove_brokerd.sh $RPM_BUILD_ROOT/usr/share/tme-broker
 install -m755 usr/share/tme-broker/change_broker_mem.sh $RPM_BUILD_ROOT/usr/share/tme-broker
@@ -66,8 +64,6 @@ rm -rf /tmp/tme-broker
 /etc/init.d/tme-brokerd
 /etc/init.d/tme-spyd
 /usr/share/mist/bin/watchdog-spyd
-/usr/share/mist/bin/install_spyd.sh
-/usr/share/mist/bin/remove_spyd.sh
 
 %dir
 

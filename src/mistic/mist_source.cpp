@@ -178,11 +178,13 @@ void mount(const string& session_id, const string& exName) {
 	}
 }
 
+string session_id;
+
 void cleanup() {
-	unlink("/var/run/tme/pid/test.pid");
+	unlink((string("/var/run/tme/pid/") + session_id + string(".pid")).c_str());
 }
 
-string session_id;
+
 
 void handler(int signo){
 	cerr<<"handler"<<endl;

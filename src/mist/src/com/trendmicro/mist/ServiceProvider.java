@@ -43,8 +43,8 @@ public class ServiceProvider implements Runnable {
 
                 Session sess = SessionPool.getOrCreateConcreteSession(sessId, client_config.getType() == GateTalk.Client.Type.CONSUMER ? GateTalk.Request.Role.SOURCE: GateTalk.Request.Role.SINK);
                 if(client_config.getAction() == GateTalk.Client.Action.MOUNT) {
-                    Client client = sess.addClient(client_config);
-                    res_builder.setSuccess(true).setContext(String.format("exchange %s mounted (%s)", exchange.toString(), client.getBrokerHost()));
+                    sess.addClient(client_config);
+                    res_builder.setSuccess(true).setContext(String.format("exchange %s mounted", exchange.toString()));
                 }
                 else if(client_config.getAction() == GateTalk.Client.Action.UNMOUNT) {
                     sess.removeClient(client_config);

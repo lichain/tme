@@ -6,7 +6,6 @@
  */
 
 #include <mist_proto/MistMessage.pb.h>
-#include <mist_proto/SpnMessage.pb.h>
 
 #include<string>
 #include<iostream>
@@ -15,24 +14,14 @@
 #include<boost/program_options.hpp>
 
 using namespace com::trendmicro::mist::proto;
-using namespace com::trendmicro::spn::proto;
 using namespace std;
 
-void process_line(bool raw, const string& message_id) {
+void process_line(const string& message_id) {
 	string line;
 	while (getline(cin, line)) {
 		MessageBlock msg;
 		msg.set_id(message_id);
-		if (raw) {
-			msg.set_message(line);
-		} else {
-			Container container;
-			container.mutable_container_base()->mutable_message_list()->add_messages()->set_derived(
-					line);
-			container.mutable_container_base()->mutable_message_list()->mutable_messages(
-					0)->mutable_msg_base()->set_subject("");
-			msg.set_message(container.SerializeAsString());
-		}
+		msg.set_message(line);
 		uint32_t payload_length = htonl(msg.ByteSize());
 		cout.write((char*) &payload_length, 4);
 		msg.SerializeToOstream(&cout);
@@ -44,8 +33,7 @@ int main(int argc, char* argv[]) {
 
 	program_opt::options_description opt_desc("Allowed options");
 	opt_desc.add_options()("help", "Display help messages")("line,l",
-			"Encode each text line as a message")("raw,r",
-			"Do not pack the message into SPN Message V2")(
+			"Encode each text line as a message")(
 			"wrap,w",
 			program_opt::value<string>(),
 			"wrap as message block of MESSAGEID\nMESSAGEID={queue|topic}:EXCHANGENAME\nif exchange type prefix is not given, default to queue");
@@ -65,7 +53,7 @@ int main(int argc, char* argv[]) {
 	message_id = var_map["wrap"].as<string> ();
 
 	if (var_map.count("line")) {
-		process_line(var_map.count("raw") > 0, message_id);
+		process_line(message_id);
 	} else {
 		cout << opt_desc << endl;
 		return 1;

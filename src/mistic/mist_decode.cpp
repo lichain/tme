@@ -6,7 +6,6 @@
  */
 
 #include <mist_proto/MistMessage.pb.h>
-#include <mist_proto/SpnMessage.pb.h>
 
 #include<iostream>
 
@@ -14,10 +13,9 @@
 #include<boost/program_options.hpp>
 
 using namespace com::trendmicro::mist::proto;
-using namespace com::trendmicro::spn::proto;
 using namespace std;
 
-void process_line(bool raw) {
+void process_line() {
 	uint32_t payload_length;
 
 	while (cin.read((char*) &payload_length, 4)) {
@@ -27,15 +25,7 @@ void process_line(bool raw) {
 
 		MessageBlock msg;
 		msg.ParseFromArray(buf, payload_length);
-		if (raw) {
-			cout << msg.message() << endl;
-		} else {
-			Container container;
-			container.ParseFromString(msg.message());
-			cout
-					<< container.container_base().message_list().messages(0).derived()
-					<< endl;
-		}
+		cout << msg.message() << endl;
 		cout.flush();
 
 		delete[] buf;
@@ -47,8 +37,7 @@ int main(int argc, char* argv[]) {
 
 	program_opt::options_description opt_desc("Allowed options");
 	opt_desc.add_options()("help", "Display help messages")("line,l",
-			"Decode message stream into line text file")("raw,r",
-			"Do not unpack the message from SPN Message V2");
+			"Decode message stream into line text file");
 
 	program_opt::variables_map var_map;
 	program_opt::store(program_opt::parse_command_line(argc, argv, opt_desc),
@@ -56,7 +45,7 @@ int main(int argc, char* argv[]) {
 	program_opt::notify(var_map);
 
 	if (var_map.count("line")) {
-		process_line(var_map.count("raw") > 0);
+		process_line();
 	} else {
 		cerr << opt_desc << endl;
 		return 1;

@@ -1,5 +1,4 @@
 #include <mist_proto/MistMessage.pb.h>
-#include <mist_proto/SpnMessage.pb.h>
 #include <mist_proto/GateTalk.pb.h>
 
 #include<iostream>
@@ -19,7 +18,6 @@
 #define MISTD_PORT 9498
 
 using namespace com::trendmicro::mist::proto;
-using namespace com::trendmicro::spn::proto;
 using namespace std;
 
 const uint32_t ACK_HEADER = ntohl(*((uint32_t*) &"ACK\n"));

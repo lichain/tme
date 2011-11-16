@@ -29,6 +29,8 @@ using namespace com::trendmicro::mist::proto;
 using namespace com::trendmicro::spn::proto;
 using namespace std;
 
+bool on_close = false;
+
 int connectTo(int port){
     int sock=socket(AF_INET,SOCK_STREAM,0);
     struct sockaddr_in sa;
@@ -108,7 +110,7 @@ void attach(const string& session_id, bool ack){
 			for (;;) {
 				MessageBlock msg;
 				uint32_t besize;
-				if (read(sock, &besize, 4) <= 0){
+				if (on_close || read(sock, &besize, 4) <= 0){
 					break;
 				}
 
@@ -186,15 +188,17 @@ void cleanup() {
 
 
 
+
 void handler(int signo){
-	cerr<<"handler"<<endl;
+	on_close = true;
+	/*cerr<<"handler"<<endl;
 	Command req_cmd;
 	Command res;
 	Request* req_ptr = req_cmd.add_request();
 	req_ptr->set_type(Request::CLIENT_DETACH);
 	req_ptr->set_argument(session_id);
 	req_ptr->set_role(Request::SOURCE);
-	sendRequest(req_cmd, res);
+	sendRequest(req_cmd, res);*/
 }
 
 

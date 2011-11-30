@@ -1,8 +1,10 @@
 package com.trendmicro.tme.grapheditor;
 
 import java.io.FileInputStream;
+import java.net.URL;
 import java.util.Properties;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jasper.servlet.JspServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerList;
@@ -61,6 +63,11 @@ public class GraphEditor {
             server.start();
             System.err.println("Graph Editor started listening on port " + port);
             logger.info("Graph Editor started listening on port " + port);
+            
+            IOUtils.closeQuietly(new URL(String.format("http://localhost:%d/%s?jsp_precompile", port, "graph/graph.jsp")).openConnection().getInputStream());
+            IOUtils.closeQuietly(new URL(String.format("http://localhost:%d/%s?jsp_precompile", port, "graph/index.jsp")).openConnection().getInputStream());
+            IOUtils.closeQuietly(new URL(String.format("http://localhost:%d/%s?jsp_precompile", port, "processor/processor.jsp")).openConnection().getInputStream());
+            IOUtils.closeQuietly(new URL(String.format("http://localhost:%d/%s?jsp_precompile", port, "processor/index.jsp")).openConnection().getInputStream());
             
             server.join();
         }

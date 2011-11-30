@@ -74,9 +74,9 @@ public class GraphModel {
             processor.addToGraph(graph, RenderView.GRAPH_EDITOR);
         }
         for(String rule : rules) {
-            String[] tmpArray = rule.split("->");
-            String src = tmpArray[0].replaceAll("\\\"", "").trim();
-            String dst = tmpArray[1].replaceAll("\\\"", "").trim();
+            String[] tmpArray = rule.split("-");
+            String src = tmpArray[0];
+            String dst = tmpArray[1];
             
             SWIGTYPE_p_Agedge_t edge = gv.edge(graph, src, dst);
             gv.setv(edge, "style", enabled ? "solid": "dashed");

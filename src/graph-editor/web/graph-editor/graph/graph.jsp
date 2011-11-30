@@ -177,7 +177,7 @@
    			 	
    		jQuery('a[id^="input-"]').droppable({
       		drop: function(event, ui) {
-      			rule = '"' + ui.draggable[0].id.split('-')[1] + '" -> "' + this.id.split('-')[1] + '"';
+      			rule = ui.draggable[0].id.split('-')[1] + '-' + this.id.split('-')[1];
       			add_rule(rule);
       		}
     	});    			

@@ -19,6 +19,7 @@ import javax.xml.bind.JAXBException;
 import org.graphviz.SWIGTYPE_p_Agraph_t;
 import org.graphviz.gv;
 
+import com.google.gson.Gson;
 import com.sun.jersey.api.view.Viewable;
 import com.trendmicro.codi.CODIException;
 import com.trendmicro.codi.ZNode;
@@ -47,7 +48,7 @@ public class Processor {
     @Produces(MediaType.APPLICATION_JSON)
     public ProcessorModel getProcessor(@PathParam("name") String name) throws JAXBException, CODIException {
         ZNode node = new ZNode("/tme2/global/graph/processor/" + name);
-        return ObjectMarshaller.unmarshallFromJson(ProcessorModel.class, node.getContentString());
+        return new Gson().fromJson(node.getContentString(), ProcessorModel.class);
     }
     
     @Path("/{name}")
@@ -57,7 +58,7 @@ public class Processor {
         ProcessorModel processor = new ProcessorModel(name);
         processor.addInput(name + ".in");
         processor.addOutput(name + ".out");
-        node.create(false, ObjectMarshaller.marshallToJson(processor));
+        node.create(false, new Gson().toJson(processor));
     }
     
     @Path("/{name}")
@@ -69,7 +70,7 @@ public class Processor {
     
     private void setProcessor(ProcessorModel processor) throws CODIException, JAXBException {
         ZNode node = new ZNode("/tme2/global/graph/processor/" + processor.getName());
-        node.setContent(ObjectMarshaller.marshallToJson(processor));
+        node.setContent(new Gson().toJson(processor));
     }
     
     private SWIGTYPE_p_Agraph_t generateGraph(ProcessorModel processor) {

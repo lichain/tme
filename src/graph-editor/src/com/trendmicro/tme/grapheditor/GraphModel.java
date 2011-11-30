@@ -12,6 +12,7 @@ import org.graphviz.SWIGTYPE_p_Agedge_t;
 import org.graphviz.SWIGTYPE_p_Agraph_t;
 import org.graphviz.gv;
 
+import com.google.gson.Gson;
 import com.trendmicro.codi.CODIException;
 import com.trendmicro.codi.ZNode;
 import com.trendmicro.tme.grapheditor.ProcessorModel.RenderView;
@@ -70,7 +71,7 @@ public class GraphModel {
     public void addToGraph(SWIGTYPE_p_Agraph_t graph) throws JAXBException, CODIException {
         for(String processorName : processors) {
             ZNode node = new ZNode("/tme2/global/graph/processor/" + processorName);
-            ProcessorModel processor = ObjectMarshaller.unmarshallFromJson(ProcessorModel.class, node.getContentString());
+            ProcessorModel processor = new Gson().fromJson(node.getContentString(), ProcessorModel.class);
             processor.addToGraph(graph, RenderView.GRAPH_EDITOR);
         }
         for(String rule : rules) {

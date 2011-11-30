@@ -22,6 +22,7 @@ import javax.xml.bind.JAXBException;
 import org.graphviz.SWIGTYPE_p_Agraph_t;
 import org.graphviz.gv;
 
+import com.google.gson.Gson;
 import com.sun.jersey.api.view.Viewable;
 import com.trendmicro.codi.CODIException;
 import com.trendmicro.codi.ZNode;
@@ -70,7 +71,8 @@ public class Graph {
     public void createGraph(@PathParam("name") String name) throws CODIException, JAXBException {
         ZNode node = new ZNode("/tme2/global/graph/route/" + name);
         GraphModel graph = new GraphModel(name);
-        node.create(false, ObjectMarshaller.marshallToJson(graph));
+        node.create(false, new Gson().toJson(graph));
+        //node.create(false, ObjectMarshaller.marshallToJson(graph));
     }
     
     @Path("/{name}")
@@ -82,7 +84,8 @@ public class Graph {
     
     private void setGraph(GraphModel graph) throws CODIException, JAXBException {
         ZNode node = new ZNode("/tme2/global/graph/route/" + graph.getName());
-        node.setContent(ObjectMarshaller.marshallToJson(graph));
+        node.setContent(new Gson().toJson(graph));
+        //node.setContent(ObjectMarshaller.marshallToJson(graph));
     }
     
     private SWIGTYPE_p_Agraph_t generateGraph(List<GraphModel> graphs) throws JAXBException, CODIException {
@@ -108,7 +111,8 @@ public class Graph {
     @Produces(MediaType.APPLICATION_JSON)
     public GraphModel getGraph(@PathParam("name") String name) throws CODIException, JAXBException {
         ZNode node = new ZNode("/tme2/global/graph/route/" + name);
-        return ObjectMarshaller.unmarshallFromJson(GraphModel.class, node.getContentString());
+        //return ObjectMarshaller.unmarshallFromJson(GraphModel.class, node.getContentString());
+        return new Gson().fromJson(node.getContentString(), GraphModel.class);
     }
     
     @Path("/{name}")

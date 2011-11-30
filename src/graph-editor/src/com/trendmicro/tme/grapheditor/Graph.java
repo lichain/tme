@@ -72,7 +72,6 @@ public class Graph {
         ZNode node = new ZNode("/tme2/global/graph/route/" + name);
         GraphModel graph = new GraphModel(name);
         node.create(false, new Gson().toJson(graph));
-        //node.create(false, ObjectMarshaller.marshallToJson(graph));
     }
     
     @Path("/{name}")
@@ -85,7 +84,6 @@ public class Graph {
     private void setGraph(GraphModel graph) throws CODIException, JAXBException {
         ZNode node = new ZNode("/tme2/global/graph/route/" + graph.getName());
         node.setContent(new Gson().toJson(graph));
-        //node.setContent(ObjectMarshaller.marshallToJson(graph));
     }
     
     private SWIGTYPE_p_Agraph_t generateGraph(List<GraphModel> graphs) throws JAXBException, CODIException {
@@ -111,7 +109,6 @@ public class Graph {
     @Produces(MediaType.APPLICATION_JSON)
     public GraphModel getGraph(@PathParam("name") String name) throws CODIException, JAXBException {
         ZNode node = new ZNode("/tme2/global/graph/route/" + name);
-        //return ObjectMarshaller.unmarshallFromJson(GraphModel.class, node.getContentString());
         return new Gson().fromJson(node.getContentString(), GraphModel.class);
     }
     

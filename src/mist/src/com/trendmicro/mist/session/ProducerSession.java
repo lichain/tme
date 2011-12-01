@@ -330,8 +330,6 @@ public class ProducerSession extends Session {
             if(destList == null) {
                 // If the message is not routed, use the not routed
                 // destination
-                notRoutedDest.clear();
-                notRoutedDest.add(mp.dest);
                 destList = notRoutedDest;
             }
 

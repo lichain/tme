@@ -45,6 +45,7 @@ endif
 
 .PHONY: default
 default: 
+	@ant
 
 .PHONY: rebuild
 rebuild: clean default
@@ -58,6 +59,7 @@ rpm: default
 	# Create source tarball
 	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
 	cp -rf $(LIBPATH)/* $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
+	cp -f $(BUILDPATH)/*.jar $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
 	cd $(BUILDPATH); tar cfz $(PKGNAME).tar.gz $(PKGNAME)
 	mv $(BUILDPATH)/$(PKGNAME).tar.gz $(RPMBUILD_DIR)/SOURCES
 	rm -rf $(RPMPATH) 
@@ -69,35 +71,7 @@ rpm: default
 	cp -f $(RPMBUILD_DIR)/RPMS/*/$(NAME)-*.rpm $(ARTIFACTS_DIR)/;
 	cp -f $(RPMBUILD_DIR)/SRPMS/$(NAME)-*.rpm  $(ARTIFACTS_DIR)/;
 
-.PHONY: chagelog
-changelog:
-	export STAMP_VER=$(CI_TAG); rpm -qp --changelog "../../output/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm" > /tmp/$(NAME)-changelog.txt; curl -T /tmp/$(NAME)-changelog.txt -u anonymous:anonymous ftp://wiki.spn.tw.trendnet.org/release/$(CODE)/$(CODE)-$(VERSION)/
-
-.PHONY: rpminfo
-rpminfo:
-	@export STAMP_VER=$(CI_TAG); echo "==> RPM contents"; rpm -qpl "../../output/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm"; echo "==> RPM changelog"; rpm -qp --changelog "../../output/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm" 
-
-.PHONY: install
-install:
-	@export STAMP_VER=$(CI_TAG); rpm -ivh "../../output/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm"
-
-.PHONY: uninstall
-uninstall:
-	@rpm -e $(NAME)
-
-.PHONY: upgrade
-upgrade:
-	@export STAMP_VER=$(CI_TAG); rpm -Uvh --force "../../output/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm"
-
-.PHONY: upload
-upload:
-	export STAMP_VER=$(CI_TAG); curl -T "../../output/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm" -u anonymous:anonymous ftp://wiki.spn.tw.trendnet.org/release/$(CODE)/$(CODE)-$(VERSION)/
-
 .PHONY: clean
 clean:
-	rm -rf $(BUILDPATH)
-
-.PHONY: test
-test: clean
-	ant coverage;
+	@ant clean
 

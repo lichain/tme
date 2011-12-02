@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="tme-common">
+    <property environment="env"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.6"/>
+    <property name="source" value="1.6"/>
+    <path id="tme-common.classpath">
+        <fileset dir="lib">
+            <include name="**/*.jar" />
+        </fileset>
+    </path>
+
+    <target name="init">
+        <mkdir dir="build/class"/>
+        <copy includeemptydirs="false" todir="build/class">
+            <fileset dir="src">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="clean">
+        <delete dir="build"/>
+    </target>
+
+    <target depends="init" name="build">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="build/class" source="${source}" target="${target}" includeantruntime="false">
+            <src path="src"/>
+            <classpath refid="tme-common.classpath"/>
+        </javac>
+		<jar destfile="build/tme-common.jar" basedir="build/class"/>
+	</target>
+</project>

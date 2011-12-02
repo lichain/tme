@@ -19,7 +19,7 @@ import com.sun.jersey.spi.container.servlet.ServletContainer;
 import com.trendmicro.codi.ZKSessionManager;
 
 public class GraphEditor {
-    private static final String CONFIG_PATH = System.getProperty("com.trendmicro.tme.grapheditor.conf", "/opt/trend/tme/conf/graph-editor.properties");
+    private static final String CONFIG_PATH = System.getProperty("com.trendmicro.tme.grapheditor.conf", "/opt/trend/tme/conf/graph-editor/graph-editor.properties");
     private static final Logger logger = LoggerFactory.getLogger(GraphEditor.class);
     
     static {

@@ -18,7 +18,7 @@ License: Trend Micro Inc.
 Group: System Environment/Daemons
 Source: %{name}-%{ver}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{ver}-root
-Requires: jdk, graphviz-java
+Requires: jdk, graphviz-java, tme-common
 Requires(post): /sbin/chkconfig, /sbin/service
 Requires(preun): /sbin/chkconfig, /sbin/service
 
@@ -50,8 +50,8 @@ rm -rf $RPM_BUILD_ROOT
 /opt/trend/tme/lib
 /opt/trend/tme/web
 
-%config /opt/trend/tme/conf/graph-editor.properties
-%config /opt/trend/tme/conf/logback.xml
+%config /opt/trend/tme/conf/graph-editor/graph-editor.properties
+%config /opt/trend/tme/conf/graph-editor/logback.xml
 
 %pre
 

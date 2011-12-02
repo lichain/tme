@@ -29,14 +29,6 @@ INSTALLPATH	= /opt/trend/tme
 
 SRCDIR      = src
 
-# The CI_TAG represent when and in which CI build the package was built.
-# - The RPM release version will be/contain this tag.
-# - JOB_NAME and BUILD_NUMBER will be defined automatically if the package
-#   is built by Hudson/Jenkins.
-# - Hudson/Jenkins job name should not contain '-' character, which is
-#   invalid in RPM release version. That is why we should not use BUILD_TAG
-#   from Hudson/Jenkins directly.
-# - XXX: Is the generated RPM release version conform with GOD standard?
 ifndef CI_TAG
 CI_TAG        = $(shell date -u "+%Y%m%dZ")
 ifdef JOB_NAME
@@ -72,7 +64,7 @@ rpm: default
 	cp -f $(BINPATH)/graph-editor $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
 	cp -f $(BUILDPATH)/*.jar $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
 	cp -rf $(LIBPATH)/* $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
-	cp -f $(CONFPATH)/* $(RPMPATH)/$(INSTALLPATH)/$(CONFPATH)
+	cp -rf $(CONFPATH)/* $(RPMPATH)/$(INSTALLPATH)/$(CONFPATH)
 	cp -rf $(WEBPATH)/* $(RPMPATH)/$(INSTALLPATH)/$(WEBPATH)
 	cd $(BUILDPATH); tar cfz $(PKGNAME).tar.gz $(PKGNAME)
 	mv $(BUILDPATH)/$(PKGNAME).tar.gz $(RPMBUILD_DIR)/SOURCES
@@ -85,35 +77,7 @@ rpm: default
 	cp -f $(RPMBUILD_DIR)/RPMS/*/$(NAME)-*.rpm $(ARTIFACTS_DIR)/;
 	cp -f $(RPMBUILD_DIR)/SRPMS/$(NAME)-*.rpm  $(ARTIFACTS_DIR)/;
 
-.PHONY: chagelog
-changelog:
-	export STAMP_VER=$(CI_TAG); rpm -qp --changelog "../../output/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm" > /tmp/$(NAME)-changelog.txt; curl -T /tmp/$(NAME)-changelog.txt -u anonymous:anonymous ftp://wiki.spn.tw.trendnet.org/release/$(CODE)/$(CODE)-$(VERSION)/
-
-.PHONY: rpminfo
-rpminfo:
-	@export STAMP_VER=$(CI_TAG); echo "==> RPM contents"; rpm -qpl "../../output/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm"; echo "==> RPM changelog"; rpm -qp --changelog "../../output/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm" 
-
-.PHONY: install
-install:
-	@export STAMP_VER=$(CI_TAG); rpm -ivh "../../output/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm"
-
-.PHONY: uninstall
-uninstall:
-	@rpm -e $(NAME)
-
-.PHONY: upgrade
-upgrade:
-	@export STAMP_VER=$(CI_TAG); rpm -Uvh --force "../../output/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm"
-
-.PHONY: upload
-upload:
-	export STAMP_VER=$(CI_TAG); curl -T "../../output/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm" -u anonymous:anonymous ftp://wiki.spn.tw.trendnet.org/release/$(CODE)/$(CODE)-$(VERSION)/
-
 .PHONY: clean
 clean:
 	@ant clean
-
-.PHONY: test
-test: clean
-	ant coverage;
 

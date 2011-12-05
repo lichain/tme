@@ -40,6 +40,25 @@ cp -rf * $RPM_BUILD_ROOT/
 
 rm -rf $RPM_BUILD_ROOT
 
+%pre
+
+if [ "`getent passwd TME`" == "" ]; then
+    echo "Error: must create user TME first!"
+    exit 1
+fi
+
+%post
+if [ "$1" = "1" ]; then
+    # install
+    mkdir -p /var/lib/tme
+    chown TME:TME /var/lib/tme
+    mkdir -p /var/log/tme
+    chown TME:TME /var/log/tme
+    mkdir -p /var/run/tme
+    chown TME:TME /var/run/tme
+fi
+
+
 %files
 
 %dir 

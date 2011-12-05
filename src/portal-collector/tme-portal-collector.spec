@@ -45,6 +45,7 @@ mkdir -p $RPM_BUILD_ROOT/var/lib/tme/portal-collector
 rm -rf $RPM_BUILD_ROOT
 
 %files
+/etc/init.d/tme-portal-collector
 
 %dir 
 /opt/trend/tme/bin
@@ -57,11 +58,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %pre
 
-if [ "`getent passwd TME`" == "" ]; then
-	echo "Error: must create user TME first!"
-	exit 1
-fi
-
 if [ "$1" = "1" ]; then
     # install
 	usleep 1
@@ -73,6 +69,7 @@ fi
 %post
 
 if [ "$1" = "1" ]; then
+    chown TME:TME /var/lib/tme/portal-collector
     # install
     usleep 1
 elif [ "$1" = "2" ]; then

@@ -7,10 +7,10 @@
     /usr/lib/rpm/brp-python-bytecompile \
 %{nil}
 
-%define name tme-graph-editor
+%define name tme-portal-collector
 %define ver #MAJOR_VER#
 
-Summary: TME Graph Editor
+Summary: TME Portal Collector
 Name: %{name}
 Version: %{ver}
 Release: #RELEASE_VER#
@@ -18,13 +18,13 @@ License: Trend Micro Inc.
 Group: System Environment/Daemons
 Source: %{name}-%{ver}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{ver}-root
-Requires: jdk, graphviz-java, tme-common
+Requires: jdk, tme-common
 Requires(post): /sbin/chkconfig, /sbin/service
 Requires(preun): /sbin/chkconfig, /sbin/service
 
 %description
 
-TME Graph Editor
+TME Portal Collector
 
 %prep
 
@@ -38,6 +38,7 @@ mkdir -p $RPM_BUILD_ROOT
 %install
 
 cp -rf * $RPM_BUILD_ROOT/
+mkdir -p $RPM_BUILD_ROOT/var/lib/tme/portal-collector
 
 %clean
 
@@ -48,10 +49,11 @@ rm -rf $RPM_BUILD_ROOT
 %dir 
 /opt/trend/tme/bin
 /opt/trend/tme/lib
-/opt/trend/tme/web
+/var/lib/tme/portal-collector
 
-%config /opt/trend/tme/conf/graph-editor/graph-editor.properties
-%config /opt/trend/tme/conf/graph-editor/logback.xml
+%config /opt/trend/tme/conf/portal-collector/portal-collector.properties
+%config /opt/trend/tme/conf/portal-collector/exchange.xml
+%config /opt/trend/tme/conf/portal-collector/logback.xml
 
 %pre
 

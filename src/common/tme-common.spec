@@ -43,7 +43,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 
 %dir 
-/opt/trend/tme/lib
+/opt/trend/tme
 
 %changelog
 * Tue Nov 29 2011 Scott Wang

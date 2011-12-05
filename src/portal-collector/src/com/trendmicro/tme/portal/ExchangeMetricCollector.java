@@ -44,6 +44,7 @@ public class ExchangeMetricCollector {
     }
     
     public void run() {
+        logger.info("Exchange Metric Collector started");
         while(true) {
             JmxProcess jmxProcess = new JmxProcess();
             for(Broker broker : brokerFarm.getAllBrokers().values()) {
@@ -78,8 +79,13 @@ public class ExchangeMetricCollector {
             // Let the system properties override the ones in the config file
             prop.putAll(System.getProperties());
             
-            ZKSessionManager.initialize(prop.getProperty("com.trendmicro.tme.portal.collector.zookeeper.quorum"), Integer.valueOf(prop.getProperty("com.trendmicro.tme.portal.collector.zookeeper.timeout")));
-            ZKSessionManager.instance().waitConnected();
+            String zkQuorum = prop.getProperty("com.trendmicro.tme.portal.collector.zookeeper.quorum");
+            int zkTimeout = Integer.valueOf(prop.getProperty("com.trendmicro.tme.portal.collector.zookeeper.timeout"));
+            
+            ZKSessionManager.initialize(zkQuorum, zkTimeout);
+            if(!ZKSessionManager.instance().waitConnected(zkTimeout)) {
+                throw new Exception("Cannot connect to ZooKeeper Quorom " + zkQuorum);
+            }
             
             ExchangeMetricWriter writer = new ExchangeMetricWriter();
             writer.addSetting("templateFile", prop.getProperty("com.trendmicro.tme.portal.collector.template"));

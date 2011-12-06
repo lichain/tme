@@ -18,7 +18,7 @@ License: Trend Micro Inc.
 Group: System Environment/Daemons
 Source: %{name}-%{ver}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{ver}-root
-Requires: jdk, tme-common
+Requires: jdk, tme-common, rrdtool, monit
 Requires(post): /sbin/chkconfig, /sbin/service
 Requires(preun): /sbin/chkconfig, /sbin/service
 
@@ -52,6 +52,7 @@ rm -rf $RPM_BUILD_ROOT
 /opt/trend/tme/lib
 /var/lib/tme/portal-collector
 
+%config /opt/trend/tme/conf/portal-collector/tme-portal-collector.monit
 %config /opt/trend/tme/conf/portal-collector/portal-collector.properties
 %config /opt/trend/tme/conf/portal-collector/exchange.xml
 %config /opt/trend/tme/conf/portal-collector/logback.xml
@@ -78,6 +79,8 @@ elif [ "$1" = "2" ]; then
 fi
 
 %preun
+
+/opt/trend/tme/bin/remove_tme-portal-collector.sh
 
 if [ "$1" = "1" ]; then
     # upgrade

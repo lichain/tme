@@ -1,0 +1,5 @@
+set daemon 20
+check process tme-portal-collector
+   with pidfile "/var/run/tme/tme-portal-collector.pid"
+   start program = "/etc/init.d/tme-portal-collector start"
+   stop program = "/etc/init.d/tme-portal-collector stop"

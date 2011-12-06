@@ -63,6 +63,8 @@ rpm: default
 	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(CONFPATH)
 	cp -f $(BINPATH)/tme-portal-collector $(RPMPATH)/etc/init.d
 	cp -f $(BINPATH)/portal-collector.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BINPATH)/install_tme-portal-collector.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BINPATH)/remove_tme-portal-collector.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
 	cp -f $(BUILDPATH)/*.jar $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
 	cp -rf $(LIBPATH)/* $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
 	cp -rf $(CONFPATH)/* $(RPMPATH)/$(INSTALLPATH)/$(CONFPATH)

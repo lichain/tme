@@ -1,0 +1,5 @@
+set daemon 20
+check process tme-graph-editor
+   with pidfile "/var/run/tme/tme-graph-editor.pid"
+   start program = "/etc/init.d/tme-graph-editor start"
+   stop program = "/etc/init.d/tme-graph-editor stop"

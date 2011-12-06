@@ -44,12 +44,14 @@ cp -rf * $RPM_BUILD_ROOT/
 rm -rf $RPM_BUILD_ROOT
 
 %files
+/etc/init.d/tme-graph-editor
 
 %dir 
 /opt/trend/tme/bin
 /opt/trend/tme/lib
 /opt/trend/tme/web
 
+%config /opt/trend/tme/conf/graph-editor/tme-graph-editor.monit
 %config /opt/trend/tme/conf/graph-editor/graph-editor.properties
 %config /opt/trend/tme/conf/graph-editor/logback.xml
 

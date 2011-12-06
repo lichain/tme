@@ -57,11 +57,15 @@ release: rebuild upload
 rpm: default
 	mkdir -p $(RPMBUILD_DIR)/{RPMS,SOURCES,BUILD,SPECS,SRPMS}
 	# Create source tarball
+	mkdir -p $(RPMPATH)/etc/init.d
 	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
 	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
 	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(CONFPATH)
 	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(WEBPATH)
-	cp -f $(BINPATH)/graph-editor $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BINPATH)/tme-graph-editor $(RPMPATH)/etc/init.d
+	cp -f $(BINPATH)/graph-editor.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BINPATH)/install_tme-graph-editor.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BINPATH)/remove_tme-graph-editor.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
 	cp -f $(BUILDPATH)/*.jar $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
 	cp -rf $(LIBPATH)/* $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
 	cp -rf $(CONFPATH)/* $(RPMPATH)/$(INSTALLPATH)/$(CONFPATH)

@@ -57,8 +57,10 @@
 		location.reload();
 	}
 	
-	function edit_processor(processor){
-		jQuery('<iframe onload="jQuery(this).contents().find(\'.ui-widget-header\').remove();" title="Processor Editor" id="dialog" > </iframe>').dialog({
+	function processor_onclick(processor){
+		jQuery('<div title="Processor Editor">')
+		.append('<input type=button value="Remove ' + processor + '" onclick="remove_processor(\'' + processor + '\')">')
+		.append('<iframe onload="jQuery(this).contents().find(\'.ui-widget-header\').remove();" id="dialog" >').dialog({
 			close: function(){location.reload();},
 			modal: true,
 			width: window.innerWidth * 0.75, 
@@ -66,6 +68,7 @@
 		});
 		
 		jQuery('#dialog').css("width", "100%");
+		jQuery('#dialog').css("height", "80%");
 		jQuery('#dialog').attr("src", "/webapp/graph-editor/processor/" + processor);
 	}
 	

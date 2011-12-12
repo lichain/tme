@@ -20,7 +20,7 @@ public class ProcessorModel {
     }
     
     private String name;
-    private Set<String> inputs = new HashSet<String>();
+    private Set<ExchangeModel> inputs = new HashSet<ExchangeModel>();
     private Set<String> outputs = new HashSet<String>();
     
     public ProcessorModel() {
@@ -34,7 +34,7 @@ public class ProcessorModel {
         return name;
     }
     
-    public Set<String> getInputs() {
+    public Set<ExchangeModel> getInputs() {
         return inputs;
     }
     
@@ -43,11 +43,11 @@ public class ProcessorModel {
     }
     
     public void addInput(String input) {
-        inputs.add(input);
+        inputs.add(new ExchangeModel(input));
     }
     
     public void removeInput(String input) {
-        inputs.remove(input);
+        inputs.remove(new ExchangeModel(input));
     }
     
     public void addOutput(String output) {
@@ -65,13 +65,8 @@ public class ProcessorModel {
         gv.setv(subGraph, "nodesep", "0.2");
         gv.setv(subGraph, "ranksep", "0.2");
         
-        for(String input : inputs) {
-            SWIGTYPE_p_Agnode_t inputNode = gv.node(subGraph, input);
-            gv.setv(inputNode, "id", "input-" + input);
-            gv.setv(inputNode, "shape", "record");
-            gv.setv(inputNode, "color", "red");
-            gv.setv(inputNode, "href", view.equals(RenderView.PROCESSOR_EDITOR) ? String.format("javascript:remove_input('%s');", input): "void(0);");
-            gv.setv(gv.edge(inputNode, name), "style", "dotted");
+        for(ExchangeModel input : inputs) {
+            input.addToGraph(subGraph, name);
         }
         
         if(view.equals(RenderView.PROCESSOR_EDITOR)) {
@@ -85,21 +80,10 @@ public class ProcessorModel {
             gv.setv(addInputLink, "style", "invisible");
         }
         
-        if(view.equals(RenderView.GRAPH_EDITOR)) {
-            SWIGTYPE_p_Agnode_t removeProcessorNode = gv.node(subGraph, "remove_processor_" + name);
-            gv.setv(removeProcessorNode, "label", "X");
-            gv.setv(removeProcessorNode, "shape", "doublecircle");
-            gv.setv(removeProcessorNode, "href", String.format("javascript:remove_processor('%s');", name));
-            
-            SWIGTYPE_p_Agedge_t removeProcessorLink = gv.edge(removeProcessorNode, name);
-            gv.setv(removeProcessorLink, "dir", "none");
-            gv.setv(removeProcessorLink, "style", "invisible");
-        }
-        
         SWIGTYPE_p_Agnode_t processorNode = gv.node(subGraph, name);
         gv.setv(processorNode, "shape", "box3d");
         if(view.equals(RenderView.GRAPH_EDITOR)) {
-            gv.setv(processorNode, "href", String.format("javascript:edit_processor('%s');", name));
+            gv.setv(processorNode, "href", String.format("javascript:processor_onclick('%s');", name));
         }
         
         if(view.equals(RenderView.PROCESSOR_EDITOR)) {

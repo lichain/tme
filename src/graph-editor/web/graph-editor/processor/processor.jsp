@@ -20,7 +20,21 @@
 <script type="text/javascript" src="/static/canviz/canviz.js"></script>
 <script type="text/javascript" src="/static/canviz/path/path.js"></script>
 
-<script type="text/javascript">
+<script type="text/javascript">	 
+	function exchange_onclick(exchange){
+		jQuery('<div title="Exchange Editor"></div>')
+		.append('<input type=button value="Remove ' + exchange + '" onclick="remove_input(\'' + exchange + '\')">')
+		.append('<iframe onload="jQuery(this).contents().find(\'.ui-widget-header\').remove();"  id="dialog" > </iframe>').dialog({
+			close: function(){location.reload();},
+			modal: true,
+			width: window.innerWidth * 0.5, 
+			height: window.innerHeight * 0.5
+		});
+		
+		jQuery('#dialog').css("width", "100%");
+		jQuery('#dialog').attr("src", "/webapp/graph-editor/exchange/" + exchange);
+	}
+	
 	function remove_output(name){
 		if(confirm('Are you sure to remove output ' + name + ' ?')){
 		jQuery.ajax({
@@ -100,19 +114,7 @@
         		Accept : "application/x-xdot",
 	        },			
 			success: function(data){
-				//alert(data);
    			 	canviz.parse(data);
-   			 	
-/*   			 	jQuery('a[id^="output-"]').draggable();
-   			 	jQuery('a[id^="output-"]').draggable({revert: true});
-   			 	jQuery('a[id^="output-"]').draggable('enable');
-   			 	
-   			 	jQuery('a[id^="input-"]').droppable({
-      				drop: function(event, ui) {
-      					rule = ui.draggable[0].id.split('-')[1] + " -> " + this.id.split('-')[1];
-      					alert(rule);
-      				}
-    			});*/
   			},
 			error: function(xhr,text,err){
 				alert(xhr.responseText);					

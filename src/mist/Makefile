@@ -9,6 +9,9 @@ LIBPATH     = lib
 CFGPATH     = etc
 RPMPATH     = $(OUTPATH)/$(PKGNAME)
 
+RPMBUILD_DIR = ../../output/rpmbuild
+ARTIFACTS_DIR = ../../output/artifacts
+
 SRCDIR      = src
 
 ifndef BUILD_TAG
@@ -27,7 +30,7 @@ doc:
 	@ant doc
 
 rpm: 
-	-if [ ! -d ../../output/RPMS ]; then mkdir ../../output/{BUILD,RPMS,SOURCES,SPECS,SRPMS}; fi
+	mkdir -p $(RPMBUILD_DIR)/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 	mkdir -p $(RPMPATH)/etc/init.d
 	mkdir -p $(RPMPATH)/usr/bin
 	mkdir -p $(RPMPATH)/usr/share/mist/bin
@@ -60,17 +63,20 @@ rpm:
 	cp -f $(CFGPATH)/mistd.log4j $(RPMPATH)/usr/share/mist/etc
 	cp -f $(CFGPATH)/mistd.properties $(RPMPATH)/usr/share/mist/etc
 	cp -rf $(LIBPATH)/* $(RPMPATH)/usr/share/mist/lib
-	cd $(OUTPATH); tar cfz ../../../output/SOURCES/$(PKGNAME).tar.gz $(PKGNAME)
+	cd $(OUTPATH); tar cfz ../../../output/rpmbuild/SOURCES/$(PKGNAME).tar.gz $(PKGNAME)
 	rm -rf $(RPMPATH) 
 	export STAMP_VER=$(BUILD_TAG); cat $(NAME).spec | sed -e "s/#RELEASE_VER#/$$STAMP_VER/" -e "s/#MAJOR_VER#/$(VERSION)/" > $(NAME)-tmp.spec
-	rpmbuild --target noarch --define="_topdir `pwd`/../../output" -bb $(NAME)-tmp.spec
+	rpmbuild --target noarch --define="_topdir `pwd`/../../output/rpmbuild" -ba $(NAME)-tmp.spec
 	rm -f $(NAME)-tmp.spec
+	mkdir -p $(ARTIFACTS_DIR);
+	cp -f $(RPMBUILD_DIR)/RPMS/*/$(NAME)-*.rpm $(ARTIFACTS_DIR)/;
+	cp -f $(RPMBUILD_DIR)/SRPMS/$(NAME)-*.rpm  $(ARTIFACTS_DIR)/;
 
 upload:
-	export STAMP_VER=$(BUILD_TAG); curl -T "../../output/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm" -u anonymous:anonymous ftp://wiki.spn.tw.trendnet.org/dailybuild/TME/TME-2.5/
+	export STAMP_VER=$(BUILD_TAG); curl -T "../../output/rpmbuild/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm" -u anonymous:anonymous ftp://wiki.spn.tw.trendnet.org/dailybuild/TME/TME-2.5/
 
 install:
-	export STAMP_VER=$(BUILD_TAG); rpm -ivh ../../output/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm
+	export STAMP_VER=$(BUILD_TAG); rpm -ivh ../../output/rpmbuild/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm
 
 clean:
 	@ant clean

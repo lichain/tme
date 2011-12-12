@@ -26,7 +26,7 @@ import com.trendmicro.codi.ZNode;
 import com.trendmicro.tme.grapheditor.ProcessorModel.RenderView;
 
 @Path("/processor")
-public class Processor {
+public class ProcessorManager {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> getProcessorList() throws CODIException {

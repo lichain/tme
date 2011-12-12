@@ -12,7 +12,7 @@ import com.sun.jersey.api.view.Viewable;
 import com.trendmicro.codi.CODIException;
 
 @Path("/exchange")
-public class Exchange {
+public class ExchangeManager {
     
     public ExchangeModel getExchange(@PathParam("name") String name){
         return new ExchangeModel(name);

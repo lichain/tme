@@ -28,7 +28,7 @@ import com.trendmicro.codi.CODIException;
 import com.trendmicro.codi.ZNode;
 
 @Path("/graph")
-public class Graph {
+public class GraphManager {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> getGraphList() throws CODIException {

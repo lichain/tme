@@ -29,7 +29,7 @@ unit_test:
 doc:
 	@ant doc
 
-rpm: 
+rpm: mist
 	mkdir -p $(RPMBUILD_DIR)/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 	mkdir -p $(RPMPATH)/etc/init.d
 	mkdir -p $(RPMPATH)/usr/bin

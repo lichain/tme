@@ -32,6 +32,7 @@
 		});
 		
 		jQuery('#dialog').css("width", "100%");
+		jQuery('#dialog').css("height", "90%");
 		jQuery('#dialog').attr("src", "/webapp/graph-editor/exchange/" + exchange);
 	}
 	

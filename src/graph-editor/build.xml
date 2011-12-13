@@ -11,6 +11,9 @@
         <fileset dir="../common/lib">
             <include name="**/*.jar" />
         </fileset>
+        <fileset dir="../common/build">
+            <include name="tme-common.jar" />
+        </fileset>
     </path>
 
     <target name="init">
@@ -21,6 +24,7 @@
                 <exclude name="**/*.java"/>
             </fileset>
         </copy>
+        <ant antfile="../common/build.xml" target="build" dir="../common/" inheritAll="false"/>
     </target>
 
     <target name="clean">

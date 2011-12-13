@@ -21,6 +21,52 @@
 <script type="text/javascript" src="/static/canviz/path/path.js"></script>
 
 <script type="text/javascript">
+	function block(){
+		jQuery.ajax({
+			type: "DELETE",
+			async: false,
+			url: "/webapp/graph-editor/exchange/${it.name}/drop",
+			success: function(){
+			},
+			error: function(xhr,text,err){
+				alert(err);					
+			}
+		});
+		location.reload();
+	}
+	
+	function drop_newest(){
+		jQuery.ajax({
+			type: "PUT",
+			async: false,
+			url: "/webapp/graph-editor/exchange/${it.name}/drop",
+			contentType: "text/plain",
+			data: "newest",
+			success: function(){
+			},
+			error: function(xhr,text,err){
+				alert(err);					
+			}
+		});
+		location.reload();
+	}
+	
+	function drop_oldest(){
+		jQuery.ajax({
+			type: "PUT",
+			async: false,
+			url: "/webapp/graph-editor/exchange/${it.name}/drop",
+			contentType: "text/plain",
+			data: "oldest",
+			success: function(){
+			},
+			error: function(xhr,text,err){
+				alert(err);					
+			}
+		});
+		location.reload();
+	}
+
 	jQuery(document).ready(function() {
 	});
 </script>
@@ -30,7 +76,9 @@
 <%@ include file="/static/header.html" %>
 	<h1>Exchange: ${it.name}</h1>
 	<div>
-		<input type=button value="Block ${it.name}">
+		<input type=button value="Make ${it.name} Blocking" onclick="block();"><br>
+		<input type=button value="Make ${it.name} Drop Newest" onclick="drop_newest();"><br>
+		<input type=button value="Make ${it.name} Drop Oldest" onclick="drop_oldest();"><br>
 	</div>
 </body>
 </html>

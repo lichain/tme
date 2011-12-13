@@ -42,9 +42,6 @@ public class Client {
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    public ZooKeeperInfo.TLSConfig tlsConfig = null;
-    public Client tlsClient = null;
-    
     public Client(GateTalk.Client client_config, GateTalk.Session sess_config) {
         clientConfig = client_config;
         sessionConfig = sess_config;
@@ -215,10 +212,6 @@ public class Client {
         ZLock lock = new ZLock(lockPath);
         ZNode lockNode = new ZNode(lockPath);
         try {
-            logger.info("closing TLS client");
-            if(tlsClient != null && !isPause && !isMigrate)
-                tlsClient.closeClient(isPause, isMigrate);
-
             logger.info("closing jms client");
             if(isConsumer())
                 consumer.close();

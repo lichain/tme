@@ -8,8 +8,6 @@ public class MistException extends Exception {
     public static final String INCOMPATIBLE_TYPE_SINK = "incompatible type, session is mounted as producer";
     public static final String INCOMPATIBLE_TYPE_SOURCE = "incompatible type, session is mounted as consumer";
 
-    public static final String UNABLE_TO_UPLOAD_TO_GOC = "unable to upload GOC";
-
     public static final String INVALID_MESSAGE_SIZE = "invalid message size";
 
     public static final String UNABLE_TO_PARSE_MIST_MESSAGE = "unable to parse mist message block";

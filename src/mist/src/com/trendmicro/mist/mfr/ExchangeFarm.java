@@ -2,7 +2,6 @@ package com.trendmicro.mist.mfr;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,20 +31,14 @@ import com.trendmicro.spn.common.util.Utils;
 public class ExchangeFarm extends Thread implements DataListener {
     private static Log logger = LogFactory.getLog(ExchangeFarm.class);
     private static ExchangeFarm m_theSingleton = null;
-    private static final String GOC_NODE = "/tme2/global/goc_exchange";
-    private static final String TLS_NODE = "/tme2/global/tls_exchange";
     private static final String FIXED_NODE = "/tme2/global/fixed_exchange";
     private static final ZooKeeperInfo.Reference refdata = ZooKeeperInfo.Reference.newBuilder().setHost(Utils.getHostIP()).build();
 
-    private HashSet<String> gocExchanges = new HashSet<String>();
-    private HashMap<String, ZooKeeperInfo.TLSConfig> tlsExchanges = new HashMap<String, ZooKeeperInfo.TLSConfig>();
     private HashMap<String, String> fixedExchanges = new HashMap<String, String>();
 
     private HashMap<String, ArrayList<ZNode>> allExchangeRefs = new HashMap<String, ArrayList<ZNode>>();
     private LinkedBlockingDeque<ExchangeEvent> exchangeEventQueue = new LinkedBlockingDeque<ExchangeEvent>();
 
-    private DataObserver gocObs = null;
-    private DataObserver tlsObs = null;
     private DataObserver fixedObs = null;
     
     public static enum FlowControlBehavior {
@@ -53,11 +46,6 @@ public class ExchangeFarm extends Thread implements DataListener {
     }
 
     class ExchangeEvent {
-    }
-
-    class TlsConfigEvent extends ExchangeEvent {
-        public Exchange exchange = new Exchange();
-        public ZooKeeperInfo.TLSConfig tlsConfig = null;
     }
 
     class RefListener extends ExchangeEvent implements NodeListener {
@@ -161,12 +149,8 @@ public class ExchangeFarm extends Thread implements DataListener {
     }
 
     private ExchangeFarm() {
-        gocObs = new DataObserver(GOC_NODE, this, true, 0);
-        tlsObs = new DataObserver(TLS_NODE, this, true, 0);
         fixedObs = new DataObserver(FIXED_NODE, this, true, 0);
 
-        gocObs.start();
-        tlsObs.start();
         fixedObs.start();
         new Thread(this).start();
     }
@@ -324,43 +308,6 @@ public class ExchangeFarm extends Thread implements DataListener {
         return null;
     }
 
-    private void updateGocExchanges(Map<String, byte[]> changeMap) {
-        for(Entry<String, byte[]> ent : changeMap.entrySet()) {
-            if(ent.getKey().length() == 0)
-                continue;
-            if(ent.getValue() == null)
-                gocExchanges.remove(ent.getKey());
-            else
-                gocExchanges.add(ent.getKey());
-        }
-    }
-
-    private void updateTlsExchanges(Map<String, byte[]> changeMap) {
-        for(Entry<String, byte[]> ent : changeMap.entrySet()) {
-            if(ent.getKey().length() == 0)
-                continue;
-            TlsConfigEvent ev = new TlsConfigEvent();
-            ev.exchange = new Exchange(ent.getKey());
-            if(ent.getValue() != null) {
-                try {
-                    ZooKeeperInfo.TLSConfig.Builder tlsCfgBuilder = ZooKeeperInfo.TLSConfig.newBuilder();
-                    TextFormat.merge(new String(ent.getValue()), tlsCfgBuilder);
-                    ev.tlsConfig = tlsCfgBuilder.build();
-                }
-                catch(Exception e) {
-                    logger.error(Utils.convertStackTrace(e));
-                    continue;
-                }
-            }
-            try {
-                exchangeEventQueue.put(ev);
-            }
-            catch(InterruptedException e) {
-                logger.error(Utils.convertStackTrace(e));
-            }
-        }
-    }
-
     private void updateFixedExchanges(Map<String, byte[]> changeMap) {
         for(Entry<String, byte[]> ent : changeMap.entrySet()) {
             if(ent.getKey().length() == 0)
@@ -416,18 +363,12 @@ public class ExchangeFarm extends Thread implements DataListener {
     }
 
     public void reset() {
-        gocExchanges.clear();
-        tlsExchanges.clear();
         fixedExchanges.clear();
         allExchangeRefs.clear();
         exchangeEventQueue.clear();
 
-        gocObs = new DataObserver(GOC_NODE, this, true, 0);
-        tlsObs = new DataObserver(TLS_NODE, this, true, 0);
         fixedObs = new DataObserver(FIXED_NODE, this, true, 0);
 
-        gocObs.start();
-        tlsObs.start();
         fixedObs.start();
     }
 
@@ -438,20 +379,6 @@ public class ExchangeFarm extends Thread implements DataListener {
                 ExchangeEvent ev = exchangeEventQueue.take();
                 if(ev instanceof RefListener)
                     ((RefListener) ev).renewRef();
-                // TODO: check if this is not needed
-                /*
-                 * else if(ev instanceof TlsConfigEvent) { TlsConfigEvent tlsEv
-                 * = (TlsConfigEvent) ev;
-                 * if(tlsExchanges.remove(tlsEv.exchange.toString()) != null) {
-                 * synchronized(Daemon.sessionPool) { for(Session sess :
-                 * Daemon.sessionPool) sess.removeTlsClient(tlsEv.exchange); } }
-                 * if(tlsEv.tlsConfig != null) {
-                 * tlsExchanges.put(tlsEv.exchange.toString(), tlsEv.tlsConfig);
-                 * synchronized(Daemon.sessionPool) { for(Session sess :
-                 * Daemon.sessionPool) { Client c =
-                 * sess.findClient(tlsEv.exchange); if(c != null)
-                 * sess.addTlsClient(c, tlsEv.tlsConfig); } } } }
-                 */
             }
             catch(InterruptedException e) {
                 continue;
@@ -586,18 +513,6 @@ public class ExchangeFarm extends Thread implements DataListener {
         return hostname;
     }
 
-    public boolean belongsGOC(String exchange) {
-        if(exchange.startsWith("queue:") || exchange.startsWith("topic:"))
-            exchange = exchange.substring(6);
-        return gocExchanges.contains(exchange);
-    }
-
-    public ZooKeeperInfo.TLSConfig belongsTLS(String exchange) {
-        if(!tlsExchanges.containsKey(exchange))
-            return null;
-        return tlsExchanges.get(exchange);
-    }
-
     public static class ExchangeInfo {
         public String name;
         public String host;
@@ -687,11 +602,7 @@ public class ExchangeFarm extends Thread implements DataListener {
 
     @Override
     public void onDataChanged(String parentPath, Map<String, byte[]> changeMap) {
-        if(parentPath.compareTo(GOC_NODE) == 0)
-            updateGocExchanges(changeMap);
-        else if(parentPath.compareTo(TLS_NODE) == 0)
-            updateTlsExchanges(changeMap);
-        else if(parentPath.compareTo(FIXED_NODE) == 0)
+        if(parentPath.compareTo(FIXED_NODE) == 0)
             updateFixedExchanges(changeMap);
     }
 }

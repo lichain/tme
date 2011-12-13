@@ -12,8 +12,6 @@ public class ExchangeMetric {
     private long msgOutBytes = 0;
     private long msgIn = 0;
     private long msgInBytes = 0;
-    private long gocReference = 0;
-    private long gocDeReference = 0;
 
     // //////////////////////////////////////////////////////////////////////////////
 
@@ -61,22 +59,6 @@ public class ExchangeMetric {
         msgOutBytes = 0;
     }
 
-    public synchronized void increaseGOCRef() {
-        gocReference++;
-    }
-
-    public synchronized void increaseGOCDeRef() {
-        gocDeReference++;
-    }
-
-    public synchronized void resetGOCRef() {
-        gocReference = 0;
-    }
-
-    public synchronized void resetGOCDeRef() {
-        gocDeReference = 0;
-    }
-
     public long getMessageOutCount() {
         return msgOut;
     }
@@ -91,13 +73,5 @@ public class ExchangeMetric {
 
     public long getMessageInBytes() {
         return msgInBytes;
-    }
-
-    public long getGOCReferenceCount() {
-        return gocReference;
-    }
-
-    public long getGOCDeReferenceCount() {
-        return gocDeReference;
     }
 }

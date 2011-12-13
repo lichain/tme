@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Vector;
 
 import javax.jms.JMSException;
-import javax.jms.Message;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -24,20 +23,13 @@ import com.google.protobuf.ByteString;
 import com.sun.messaging.jmq.jmsservice.JMSServiceException;
 import com.trendmicro.codi.CODIException;
 import com.trendmicro.codi.ZKSessionManager;
-import com.trendmicro.codi.ZNode;
 import com.trendmicro.mist.Daemon;
 import com.trendmicro.mist.MistException;
 import com.trendmicro.mist.mfr.BrokerFarm;
-import com.trendmicro.mist.mfr.ExchangeFarm;
 import com.trendmicro.mist.mfr.RouteFarm;
 import com.trendmicro.mist.proto.GateTalk;
 import com.trendmicro.mist.proto.MistMessage;
-import com.trendmicro.mist.proto.MistMessage.KeyValuePair;
-import com.trendmicro.mist.proto.MistMessage.MessageBlock;
-import com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig;
 import com.trendmicro.mist.util.Exchange;
-import com.trendmicro.mist.util.GOCTestServer;
-import com.trendmicro.mist.util.GOCUtils;
 import com.trendmicro.mist.util.OpenMQTestBroker;
 import com.trendmicro.mist.util.Packet;
 import com.trendmicro.mist.util.ZKTestServer;
@@ -176,150 +168,6 @@ public class TestProducerSession extends TestCase {
         brk.stop();
     }
 
-    public void testMessagePrepared() throws MistException, CODIException, InterruptedException, IOException {
-        ExchangeFarm.getInstance().reset();
-        /**
-         * Create a goc exchange node and wait until it takes effect
-         */
-        ZNode gocNode = new ZNode("/tme2/global/goc_exchange/gocEx");
-        gocNode.create(false, "gocEx".getBytes());
-        for(int i = 0; i < 10; i++) {
-            if(ExchangeFarm.getInstance().belongsGOC("gocEx"))
-                break;
-            Thread.sleep(500);
-        }
-        assertTrue(ExchangeFarm.getInstance().belongsGOC("gocEx"));
-
-        /**
-         * Test raw message, should fail
-         */
-        byte[] raw = "test".getBytes();
-        Exception ex = null;
-        ProducerSession.MessagePrepared mp = null;
-        try {
-            mp = new ProducerSession.MessagePrepared(raw, null);
-        }
-        catch(MistException e) {
-            ex = e;
-        }
-        assertEquals(MistException.UNABLE_TO_PARSE_MIST_MESSAGE, ex.getMessage());
-
-        /**
-         * Test MessageBlock and its attributes
-         */
-        MistMessage.MessageBlock mBlock = MistMessage.MessageBlock.newBuilder().setId("queue:test").setMessage(ByteString.copyFrom(raw)).setTtl(123).addProperties(KeyValuePair.newBuilder().setKey("key").setValue("value").build()).build();
-        mp = new ProducerSession.MessagePrepared(mBlock.toByteArray(), null);
-        assertEquals("queue:test", mp.dest.toString());
-        assertEquals(123L, mp.ttl);
-        assertEquals(new Long(123L).toString(), mp.props.get(Session.MIST_MESSAGE_TTL));
-        assertEquals(new String(raw), new String(mp.msg));
-        assertEquals(mp.props.get("key"), "value");
-
-        /**
-         * Test MessageBlock without TTL, should be default
-         */
-        mBlock = MistMessage.MessageBlock.newBuilder().setId("queue:test").setMessage(ByteString.copyFrom(raw)).addProperties(KeyValuePair.newBuilder().setKey("key").setValue("value").build()).build();
-        mp = new ProducerSession.MessagePrepared(mBlock.toByteArray(), null);
-        assertEquals("queue:test", mp.dest.toString());
-        assertEquals(Message.DEFAULT_TIME_TO_LIVE, mp.ttl);
-        assertNull(mp.props.get(Session.MIST_MESSAGE_TTL));
-        assertEquals(new String(raw), new String(mp.msg));
-        assertEquals(mp.props.get("key"), "value");
-        assertNull(mp.tlsMessage);
-
-        /**
-         * Test a large MessageBlock without GOC
-         */
-        ex = null;
-        raw = new byte[Daemon.MAX_TRANSMIT_MESSAGE_SIZE + 1];
-        mBlock = MistMessage.MessageBlock.newBuilder().setId("test").setMessage(ByteString.copyFrom(raw)).build();
-        try {
-            mp = new ProducerSession.MessagePrepared(mBlock.toByteArray(), null);
-        }
-        catch(MistException e) {
-            ex = e;
-        }
-        assertEquals(MistException.sizeTooLarge(Daemon.MAX_TRANSMIT_MESSAGE_SIZE + 1), ex.getMessage());
-
-        /**
-         * Test a large MessageBlock goes to GOC with null GOC server
-         */
-        ex = null;
-        mBlock = MistMessage.MessageBlock.newBuilder().setId("gocEx").setMessage(ByteString.copyFrom(raw)).build();
-        try {
-            mp = new ProducerSession.MessagePrepared(mBlock.toByteArray(), null);
-        }
-        catch(MistException e) {
-            ex = e;
-        }
-        assertEquals(MistException.UNABLE_TO_UPLOAD_TO_GOC, ex.getMessage());
-
-        /**
-         * Test a large MessageBlock goes to GOC fails
-         */
-        ex = null;
-        try {
-            mp = new ProducerSession.MessagePrepared(mBlock.toByteArray(), new GOCUtils());
-        }
-        catch(MistException e) {
-            ex = e;
-        }
-        assertEquals(MistException.UNABLE_TO_UPLOAD_TO_GOC, ex.getMessage());
-
-        /**
-         * Test a large SPN Message goes to GOC fails
-         */
-        ZNode gocConfigNode = new ZNode("/tme2/global/goc_server");
-        gocConfigNode.create(false, "http://localhost:12345/depot/*".getBytes());
-        mBlock = MistMessage.MessageBlock.newBuilder().setId("gocEx").setMessage(genSPNMessage(raw).toByteString()).build();
-        try {
-            mp = new ProducerSession.MessagePrepared(mBlock.toByteArray(), new GOCUtils());
-        }
-        catch(MistException e) {
-            ex = e;
-        }
-        assertEquals(MistException.UNABLE_TO_UPLOAD_TO_GOC, ex.getMessage());
-
-        /**
-         * Test a large MessageBlock goes to GOC success
-         */
-        GOCTestServer gocServer = new GOCTestServer(12345);
-        GOCUtils gocClient = new GOCUtils();
-
-        mp = new ProducerSession.MessagePrepared(mBlock.toByteArray(), gocClient);
-        Container.Builder cont_builder = Container.newBuilder();
-        cont_builder.mergeFrom(gocClient.GOCUnPack(mp.msg));
-        Container container = cont_builder.build();
-        byte[] downloadedRaw = container.getContainerBase().getMessageList().getMessages(0).getDerived().toByteArray();
-        assertEquals(new String(raw), new String(downloadedRaw));
-
-        /**
-         * Test TLS message
-         */
-        TLSConfig tlsConfig = TLSConfig.newBuilder().setLogChannel("tlsEx").setPrefix("pre").setType("type").setVersion(0).build();
-        ZNode tlsNode = new ZNode("/tme2/global/tls_exchange/queue:test");
-        tlsNode.create(false, tlsConfig.toString());
-        for(int i = 0; i < 10; i++) {
-            if(ExchangeFarm.getInstance().belongsTLS("queue:test") != null)
-                break;
-            Utils.justSleep(500);
-        }
-        assertNotNull(ExchangeFarm.getInstance().belongsTLS("queue:test"));
-
-        mBlock = MessageBlock.newBuilder().setId("test").setMessage(genSPNMessage("test".getBytes()).toByteString()).build();
-        mp = new ProducerSession.MessagePrepared(mBlock.toByteArray(), gocClient);
-        Container tlsMessage = mp.tlsMessage;
-        assertEquals(new Exchange("tlsEx"), mp.tlsExchange);
-        assertNotNull(tlsMessage);
-        assertEquals("send", tlsMessage.getLogInfo().getEvent());
-        assertEquals("type", tlsMessage.getLogInfo().getType());
-        assertEquals("pre", tlsMessage.getLogInfo().getPrefix());
-        assertEquals(0, tlsMessage.getLogInfo().getVersion());
-        assertEquals("test", new String(tlsMessage.getContainerBase().getMessageList().getMessages(0).getDerived().toByteArray()));
-
-        gocServer.close();
-    }
-
     public void testAckClient() throws MistException, SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, UnknownHostException, IOException, InterruptedException {
         /**
          * Setup session, socket and get the ackClient method
@@ -394,32 +242,6 @@ public class TestProducerSession extends TestCase {
         GateTalk.Response res = GateTalk.Response.newBuilder().mergeFrom(packet.getPayload()).build();
         assertFalse(res.getSuccess());
         assertEquals(MistException.INVALID_MESSAGE_SIZE, res.getException());
-
-        ExchangeFarm.getInstance().reset();
-        /**
-         * Create a goc exchange node and wait until it takes effect
-         */
-        ZNode gocNode = new ZNode("/tme2/global/goc_exchange/gocEx");
-        gocNode.create(false, "gocEx".getBytes());
-        for(int i = 0; i < 10; i++) {
-            if(ExchangeFarm.getInstance().belongsGOC("gocEx"))
-                break;
-            Thread.sleep(500);
-        }
-        assertTrue(ExchangeFarm.getInstance().belongsGOC("gocEx"));
-
-        /**
-         * Test message cannot upload to GOC
-         */
-        largeMsg = new byte[Daemon.MAX_TRANSMIT_MESSAGE_SIZE + 1];
-        ZNode gocConfigNode = new ZNode("/tme2/global/goc_server");
-        gocConfigNode.create(false, "http://localhost:12345/depot/*".getBytes());
-        MistMessage.MessageBlock mBlock = MistMessage.MessageBlock.newBuilder().setId("gocEx").setMessage(genSPNMessage(largeMsg).toByteString()).build();
-        packet.setPayload(mBlock.toByteArray());
-        packet.write(socketOutput);
-        packet.read(socketInput);
-        res = GateTalk.Response.newBuilder().mergeFrom(packet.getPayload()).build();
-        assertEquals(MistException.UNABLE_TO_UPLOAD_TO_GOC, res.getException());
     }
 
     public void testSendMessageOK() throws ClassNotFoundException, IllegalAccessException, InstantiationException, InterruptedException, IOException, MistException, JMSServiceException, JMSException, CODIException {
@@ -498,21 +320,6 @@ public class TestProducerSession extends TestCase {
         assertEquals("test-route", new String(recvMsg));
         recvMsg = brk.getMessage(true, "log.in");
         assertEquals("test-route", new String(recvMsg));
-
-        /**
-         * Test TLS logging
-         */
-        ExchangeFarm.getInstance().reset();
-        TlsSender.reset();
-        TLSConfig tlsConfig = TLSConfig.newBuilder().setLogChannel("tlsEx").setPrefix("pre").setType("type").setVersion(0).build();
-        ZNode tlsNode = new ZNode("/tme2/global/tls_exchange/queue:foo.out");
-        tlsNode.create(false, tlsConfig.toString());
-        for(int i = 0; i < 10; i++) {
-            if(ExchangeFarm.getInstance().belongsTLS("queue:foo.out") != null)
-                break;
-            Utils.justSleep(500);
-        }
-        assertNotNull(ExchangeFarm.getInstance().belongsTLS("queue:foo.out"));
 
         msg = MistMessage.MessageBlock.newBuilder().setId("queue:foo.out").setMessage(genSPNMessage("test-tls".getBytes()).toByteString()).build();
         packet.setPayload(msg.toByteArray());

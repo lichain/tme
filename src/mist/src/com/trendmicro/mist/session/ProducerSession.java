@@ -11,18 +11,13 @@ import com.trendmicro.mist.Client;
 import com.trendmicro.mist.Daemon;
 import com.trendmicro.mist.ExchangeMetric;
 import com.trendmicro.mist.MistException;
-import com.trendmicro.mist.mfr.ExchangeFarm;
 import com.trendmicro.mist.mfr.RouteFarm;
 import com.trendmicro.mist.proto.GateTalk;
 import com.trendmicro.mist.proto.MistMessage;
 import com.trendmicro.mist.proto.MistMessage.KeyValuePair;
-import com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig;
 import com.trendmicro.mist.util.Exchange;
-import com.trendmicro.mist.util.GOCUtils;
 import com.trendmicro.mist.util.Packet;
 import com.trendmicro.spn.common.util.Utils;
-import com.trendmicro.spn.proto.SpnMessage;
-import com.trendmicro.spn.proto.SpnMessage.LogInfo;
 
 public class ProducerSession extends Session {
     /**
@@ -36,13 +31,6 @@ public class ProducerSession extends Session {
         public Exchange dest;
 
         /**
-         * TLS message going to be logged, if it is null, then the message won't
-         * be logged
-         */
-        public SpnMessage.Container tlsMessage = null;
-        public Exchange tlsExchange = null;
-
-        /**
          * The TTL of the message. It will remain the default TTL of JMS if not
          * specified in message
          */
@@ -54,39 +42,11 @@ public class ProducerSession extends Session {
         public byte[] msg;
 
         /**
-         * If it is a GOC Reference Message
-         */
-        public boolean isGocRef = false;
-
-        /**
          * The JMS property map, if not in the mist message then it will be null
          * Note that if ttl in MessageBlock is set, then a property named
          * "MIST_TTL" will be added to carry over the TTL value
          */
         public HashMap<String, String> props = null;
-
-        private void setupTlsMessage() {
-            TLSConfig tlsConfig = ExchangeFarm.getInstance().belongsTLS(dest.toString());
-            if(tlsConfig == null)
-                return;
-            try {
-                SpnMessage.Container.Builder tlsMsgBuilder = SpnMessage.Container.newBuilder().mergeFrom(msg);
-                LogInfo.Builder logInfoBuilder = LogInfo.newBuilder();
-                logInfoBuilder.setOriginalExchange(dest.toString());
-                logInfoBuilder.setType(tlsConfig.getType());
-                logInfoBuilder.setVersion(tlsConfig.getVersion());
-                logInfoBuilder.setEvent("send");
-                logInfoBuilder.setTimestamp(System.currentTimeMillis());
-                logInfoBuilder.setPrefix(tlsConfig.getPrefix());
-                tlsMsgBuilder.setLogInfo(logInfoBuilder.build());
-
-                tlsMessage = tlsMsgBuilder.build();
-                tlsExchange = new Exchange(tlsConfig.getLogChannel());
-            }
-            catch(Exception e) {
-                logger.error("message to TLS exchange not packed as SPN Message: " + Utils.convertStackTrace(e));
-            }
-        }
 
         /**
          * Where a raw message gets prepared. A MistException will be thrown if
@@ -94,13 +54,11 @@ public class ProducerSession extends Session {
          * 
          * @param raw
          *            The incoming raw message from socket
-         * @param gocServer
-         *            The GOC client of the session
          * @throws MistException
          *             It contains the reason why the message cannot be
          *             delivered
          */
-        public MessagePrepared(byte[] raw, GOCUtils gocServer) throws MistException {
+        public MessagePrepared(byte[] raw) throws MistException {
             // Try to parse the raw message as MistMessage.MessageBlock
             MistMessage.MessageBlock mBlock = null;
             try {
@@ -127,20 +85,6 @@ public class ProducerSession extends Session {
                 for(KeyValuePair pair : mBlock.getPropertiesList())
                     props.put(pair.getKey(), pair.getValue());
             }
-
-            // If the message is too large and GOC is set, try to upload it
-            if(ExchangeFarm.getInstance().belongsGOC(dest.getName()) && msg.length > Daemon.GOC_UPLOAD_SIZE) {
-                if(gocServer == null)
-                    throw new MistException(MistException.UNABLE_TO_UPLOAD_TO_GOC);
-                long expire = (System.currentTimeMillis() + (mBlock.hasTtl() ? ttl: 900 * 1000)) / 1000;
-                msg = gocServer.GOCPack(mBlock.getMessage().toByteArray(), expire);
-                if(msg == null)
-                    throw new MistException(MistException.UNABLE_TO_UPLOAD_TO_GOC);
-                isGocRef = true;
-            }
-
-            // Set TLS Message
-            setupTlsMessage();
 
             if(msg.length > Daemon.MAX_TRANSMIT_MESSAGE_SIZE)
                 throw new MistException(MistException.sizeTooLarge(msg.length));
@@ -235,7 +179,7 @@ public class ProducerSession extends Session {
         return client;
     }
 
-    protected void deliverMessage(byte[] msg, boolean isGocRef, long ttl, HashMap<String, String> props, List<Exchange> destList) {
+    protected void deliverMessage(byte[] msg, long ttl, HashMap<String, String> props, List<Exchange> destList) {
         for(Exchange dest : destList) {
             if(dest.getName().length() == 0)
                 continue;
@@ -256,8 +200,6 @@ public class ProducerSession extends Session {
 
                     ExchangeMetric metric = ExchangeMetric.getExchangeMetric(dest);
                     metric.increaseMessageOut(msg.length);
-                    if(isGocRef)
-                        metric.increaseGOCRef();
                     break;
                 }
                 catch(Exception e) {
@@ -308,7 +250,7 @@ public class ProducerSession extends Session {
             // Prepare the message to be send
             MessagePrepared mp = null;
             try {
-                mp = new MessagePrepared(packet.getPayload(), getGocClient());
+                mp = new MessagePrepared(packet.getPayload());
             }
             catch(MistException e) {
                 // If any error occurs, acknowledge fail response and reason
@@ -326,27 +268,19 @@ public class ProducerSession extends Session {
             if(destList == null) {
                 // If the message is not routed, use the not routed
                 // destination
+                notRoutedDest.clear();
+                notRoutedDest.add(mp.dest);
                 destList = notRoutedDest;
             }
 
             // deliver the message
             try {
-                deliverMessage(mp.msg, mp.isGocRef, mp.ttl, mp.props, destList);
+                deliverMessage(mp.msg, mp.ttl, mp.props, destList);
             }
             catch(Exception e) {
                 ackClient(packet, false, e.getMessage());
                 logger.error(e.getMessage());
                 continue;
-            }
-
-            // Write TLS message
-            if(mp.tlsMessage != null) {
-                try {
-                    TlsSender.writeTlsMessage(mp.tlsMessage.toByteArray(), mp.tlsExchange, 5000);
-                }
-                catch(Exception e) {
-                    logger.error(Utils.convertStackTrace(e));
-                }
             }
 
             ackClient(packet, true, null);

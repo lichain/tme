@@ -16,7 +16,6 @@ import com.trendmicro.mist.Client;
 import com.trendmicro.mist.MistException;
 import com.trendmicro.mist.proto.GateTalk;
 import com.trendmicro.mist.util.Exchange;
-import com.trendmicro.mist.util.GOCUtils;
 import com.trendmicro.spn.common.util.Utils;
 
 public abstract class Session implements Runnable {
@@ -31,7 +30,6 @@ public abstract class Session implements Runnable {
 
     protected HashMap<Exchange, Client> allClients = new HashMap<Exchange, Client>();
 
-    private GOCUtils gocClient = null;
     protected boolean determinedConnection = false;
 
     protected int sessionId;
@@ -164,7 +162,6 @@ public abstract class Session implements Runnable {
     public void close(boolean isPause) {
         for(Client c : allClients.values())
             c.closeClient(isPause, false);
-        getGocClient().close();
     }
 
     /**
@@ -196,7 +193,6 @@ public abstract class Session implements Runnable {
             throw new MistException(e.getMessage());
         }
         detachNow = false;
-        gocClient = null;
         isReady = false;
         open(false);
         
@@ -277,12 +273,6 @@ public abstract class Session implements Runnable {
 
     public Client findClient(Exchange exchange) {
         return allClients.get(exchange);
-    }
-
-    public GOCUtils getGocClient() {
-        if(gocClient == null)
-            gocClient = new GOCUtils();
-        return gocClient;
     }
 
     public boolean isReady() {

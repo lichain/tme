@@ -133,7 +133,6 @@ public class Daemon {
 
     public static final int DAEMON_PORT = 9498;
     public static final int SERVICE_THREAD_NUM = 4;
-    public static final int GOC_UPLOAD_SIZE = 2 * 1024;
     public static final int MAX_TRANSMIT_MESSAGE_SIZE = 512 * 1024;
     public static final int MAX_MESSAGE_SIZE = 20 * 1024 * 1024;
 
@@ -263,8 +262,6 @@ public class Daemon {
                 tab.addCell(String.valueOf(info.getMessageInBytes()), numberStyle);
                 tab.addCell(String.valueOf(info.getMessageOutCount()), numberStyle);
                 tab.addCell(String.valueOf(info.getMessageOutBytes()), numberStyle);
-                tab.addCell(String.valueOf(info.getGOCReferenceCount()), numberStyle);
-                tab.addCell(String.valueOf(info.getGOCDeReferenceCount()), numberStyle);
             }
             strOut.write(tab.render() + "\n");
         }

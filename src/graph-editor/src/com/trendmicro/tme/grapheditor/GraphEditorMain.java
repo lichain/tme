@@ -42,7 +42,11 @@ public class GraphEditorMain {
             ServletHolder jerseyHolder = new ServletHolder(new ServletContainer());
             
             handler.addServlet(new ServletHolder(new DefaultServlet()), "/static/*");
-            handler.addServlet(new ServletHolder(new JspServlet()), "*.jsp");
+            
+            ServletHolder jspHolder = new ServletHolder(new JspServlet());
+            jspHolder.setInitParameter("scratchdir", prop.getProperty("jasper.scratchdir", "/var/lib/tme/graph-editor/jsp"));
+            jspHolder.setInitParameter("trimSpaces", "true");
+            handler.addServlet(jspHolder, "*.jsp");
             handler.setResourceBase(prop.getProperty("com.trendmicro.tme.grapheditor.webdir"));
             logger.info("Web resource base is set to {}", prop.getProperty("com.trendmicro.tme.grapheditor.webdir"));
             
@@ -68,6 +72,7 @@ public class GraphEditorMain {
             IOUtils.closeQuietly(new URL(String.format("http://localhost:%d/%s?jsp_precompile", port, "graph/index.jsp")).openConnection().getInputStream());
             IOUtils.closeQuietly(new URL(String.format("http://localhost:%d/%s?jsp_precompile", port, "processor/processor.jsp")).openConnection().getInputStream());
             IOUtils.closeQuietly(new URL(String.format("http://localhost:%d/%s?jsp_precompile", port, "processor/index.jsp")).openConnection().getInputStream());
+            IOUtils.closeQuietly(new URL(String.format("http://localhost:%d/%s?jsp_precompile", port, "exchange/exchange.jsp")).openConnection().getInputStream());
             
             server.join();
         }

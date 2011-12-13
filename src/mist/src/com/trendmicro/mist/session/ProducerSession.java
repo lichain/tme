@@ -161,14 +161,10 @@ public class ProducerSession extends Session {
             return;
 
         // Get a copied list from the RouteFarm
-        List<String> destList = RouteFarm.getInstance().getDestList(ex.getName());
+        List<Exchange> destList = RouteFarm.getInstance().getDestList(ex.getName());
+        
         if(destList != null) {
-            // Transform the destination list from List<String> to
-            // List<Exchange>
-            ArrayList<Exchange> destExList = new ArrayList<Exchange>();
-            for(String dest : destList)
-                destExList.add(new Exchange("queue:" + dest));
-            routeCacheMap.put(ex, destExList);
+            routeCacheMap.put(ex, destList);
         }
         else
             routeCacheMap.remove(ex);

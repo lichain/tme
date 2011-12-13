@@ -10,6 +10,7 @@ import junit.framework.TestSuite;
 
 import com.trendmicro.codi.ZKSessionManager;
 import com.trendmicro.codi.ZNode;
+import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.mist.util.ZKTestServer;
 
 public class TestRouteFarm extends TestCase {
@@ -65,9 +66,9 @@ public class TestRouteFarm extends TestCase {
         /**
          * Insert a routing rule with foo.out->bar.in,log.in
          */
-        Vector<String> destVec = new Vector<String>();
-        destVec.add("bar.in");
-        destVec.add("log.in");
+        Vector<Exchange> destVec = new Vector<Exchange>();
+        destVec.add(new Exchange("bar.in"));
+        destVec.add(new Exchange("bar.in"));
         routeFarm.getRouteTable().put("foo.out", destVec);
 
         /**
@@ -75,9 +76,9 @@ public class TestRouteFarm extends TestCase {
          * same object, but their content should be equal
          */
         assertNotSame(destVec, routeFarm.getDestList("foo"));
-        for(String dst : destVec)
+        for(Exchange dst : destVec)
             assertTrue(routeFarm.getDestList("foo.out").contains(dst));
-        for(String dst : routeFarm.getDestList("foo.out"))
+        for(Exchange dst : routeFarm.getDestList("foo.out"))
             assertTrue(destVec.contains(dst));
 
         /**

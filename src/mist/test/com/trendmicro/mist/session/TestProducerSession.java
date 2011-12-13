@@ -142,8 +142,8 @@ public class TestProducerSession extends TestCase {
 
         Exchange fooOutEx = new Exchange("queue:foo.out");
         sess.addClient(clientConfig);
-        Vector<String> destList = new Vector<String>();
-        destList.add("bar.in");
+        Vector<Exchange> destList = new Vector<Exchange>();
+        destList.add(new Exchange("bar.in"));
         RouteFarm.getInstance().getRouteTable().put(fooOutEx.getName(), destList);
         updateRoute.invoke(sess, new Object[] {});
         assertEquals("queue:bar.in", routeCacheMap.get(fooOutEx).get(0).toString());
@@ -152,7 +152,7 @@ public class TestProducerSession extends TestCase {
          * Update the routing table and invoke updateRoute before the cache
          * expires, and the cache should remain the same
          */
-        destList.add("log.in");
+        destList.add(new Exchange("log.in"));
         updateRoute.invoke(sess, new Object[] {});
         assertEquals("queue:bar.in", routeCacheMap.get(fooOutEx).get(0).toString());
         assertEquals(1, routeCacheMap.get(fooOutEx).size());
@@ -482,10 +482,10 @@ public class TestProducerSession extends TestCase {
         /**
          * Test Local Forwarding: foo.out->bar.in, ,log.in
          */
-        Vector<String> destList = new Vector<String>();
-        destList.add("bar.in");
-        destList.add("");
-        destList.add("log.in");
+        Vector<Exchange> destList = new Vector<Exchange>();
+        destList.add(new Exchange("bar.in"));
+        destList.add(new Exchange(""));
+        destList.add(new Exchange("log.in"));
         RouteFarm.getInstance().getRouteTable().put("foo.out", destList);
         // Wait until local routing cache expires
         Utils.justSleep(2000);

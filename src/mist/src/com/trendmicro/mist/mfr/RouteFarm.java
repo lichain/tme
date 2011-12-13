@@ -15,13 +15,14 @@ import org.apache.commons.logging.LogFactory;
 import com.google.gson.Gson;
 import com.trendmicro.codi.DataListener;
 import com.trendmicro.codi.DataObserver;
+import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.spn.common.util.Utils;
 
 public class RouteFarm implements DataListener {
     private static Log logger = LogFactory.getLog(RouteFarm.class);
     private static RouteFarm m_theSingleton = null;
 
-    private HashMap<String, Vector<String>> routeTable = new HashMap<String, Vector<String>>();
+    private HashMap<String, Vector<Exchange>> routeTable = new HashMap<String, Vector<Exchange>>();
     private HashMap<String, HashMap<String, ArrayList<String>>> graphs = new HashMap<String, HashMap<String, ArrayList<String>>>();
     private DataObserver obs = null;
     private ReentrantReadWriteLock rwlock = new ReentrantReadWriteLock();
@@ -56,7 +57,7 @@ public class RouteFarm implements DataListener {
      * 
      * @return The whole route table
      */
-    public HashMap<String, Vector<String>> getRouteTable() {
+    public HashMap<String, Vector<Exchange>> getRouteTable() {
         return routeTable;
     }
 
@@ -80,15 +81,15 @@ public class RouteFarm implements DataListener {
      *         message.
      */
     @SuppressWarnings("unchecked")
-    public List<String> getDestList(String src) {
+    public List<Exchange> getDestList(String src) {
         try {
             rwlock.readLock().lock();
-            Vector<String> destList = routeTable.get(src);
+            Vector<Exchange> destList = routeTable.get(src);
             if(destList == null)
                 return null;
             else
                 // Clone the list
-                return (Vector<String>) (routeTable.get(src).clone());
+                return (Vector<Exchange>) (routeTable.get(src).clone());
         }
         catch(Exception e) {
             logger.error(Utils.convertStackTrace(e));
@@ -108,15 +109,12 @@ public class RouteFarm implements DataListener {
     public String getRouteString() {
         StringBuilder sb = new StringBuilder();
         sb.append("==Route Updated==\n");
-        for(Entry<String, Vector<String>> ent : routeTable.entrySet()) {
+        for(Entry<String, Vector<Exchange>> ent : routeTable.entrySet()) {
             sb.append(ent.getKey());
             sb.append(" -> ");
 
-            for(String dest : ent.getValue()) {
-                if(dest.length() == 0)
-                    sb.append("/dev/null");
-                else
-                    sb.append(dest);
+            for(Exchange dest : ent.getValue()) {
+                sb.append(dest);
                 sb.append(", ");
             }
             sb.delete(sb.length() - 2, sb.length() - 1);
@@ -188,9 +186,9 @@ public class RouteFarm implements DataListener {
             if(newGraph.containsKey(src))
                 deletedDestList.removeAll(newGraph.get(src));
 
-            Vector<String> routeDestList = routeTable.get(src);
+            Vector<Exchange> routeDestList = routeTable.get(src);
             for(String dest : deletedDestList)
-                routeDestList.remove(dest);
+                routeDestList.remove(new Exchange(dest));
 
             if(routeDestList.size() == 0)
                 routeTable.remove(src);
@@ -202,13 +200,13 @@ public class RouteFarm implements DataListener {
             if(oldGraph.containsKey(src))
                 newDestList.removeAll(oldGraph.get(src));
 
-            Vector<String> routeDestList = routeTable.get(src);
+            Vector<Exchange> routeDestList = routeTable.get(src);
             if(routeDestList == null) {
-                routeDestList = new Vector<String>();
+                routeDestList = new Vector<Exchange>();
                 routeTable.put(src, routeDestList);
             }
             for(String dest : newDestList) {
-                routeDestList.add(dest);
+                routeDestList.add(new Exchange(dest));
             }
         }
         rwlock.writeLock().unlock();

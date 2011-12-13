@@ -38,7 +38,7 @@ public class ExchangeManager {
     @Path("/{name}/drop")
     @PUT
     @Consumes(MediaType.TEXT_PLAIN)
-    public void setDrop(@PathParam("name") String name, String policy) throws CODIException {
+    public void setDrop(@PathParam("name") String name, String policy) throws Exception {
         Exchange ex = new Exchange(name);
         String path = "/tme2/global/drop_exchange/" + ex.getName();
         ZooKeeperInfo.DropConfig dropConfig = ZooKeeperInfo.DropConfig.newBuilder().setPolicy(policy.equals("newest") ? DropConfig.Policy.NEWEST: DropConfig.Policy.OLDEST).build();
@@ -53,25 +53,40 @@ public class ExchangeManager {
         
         String broker = ExchangeFarm.getCurrentExchangeHost(ex);
         if(broker != null) {
-            if(dropConfig.getPolicy().equals(ZooKeeperInfo.DropConfig.Policy.NEWEST)) {
-                new BrokerAdmin(broker).setExchangeAttrib(ex, "LimitBehavior", "REJECT_NEWEST");
+            BrokerAdmin brokerAdmin = new BrokerAdmin(broker);
+            brokerAdmin.jmxConnectServer();
+            try {
+                
+                if(dropConfig.getPolicy().equals(ZooKeeperInfo.DropConfig.Policy.NEWEST)) {
+                    brokerAdmin.setExchangeAttrib(ex, "LimitBehavior", "REJECT_NEWEST");
+                }
+                else {
+                    brokerAdmin.setExchangeAttrib(ex, "LimitBehavior", "REMOVE_OLDEST");
+                }
             }
-            else {
-                new BrokerAdmin(broker).setExchangeAttrib(ex, "LimitBehavior", "REMOVE_OLDEST");
+            finally {
+                brokerAdmin.jmxCloseServer();
             }
         }
     }
     
     @Path("/{name}/drop")
     @DELETE
-    public void setBlock(@PathParam("name") String name) throws CODIException {
+    public void setBlock(@PathParam("name") String name) throws Exception {
         Exchange ex = new Exchange(name);
         String path = "/tme2/global/drop_exchange/" + ex.getName();
         
         new ZNode(path).delete();
         String broker = ExchangeFarm.getCurrentExchangeHost(ex);
         if(broker != null) {
-            new BrokerAdmin(broker).setExchangeAttrib(ex, "LimitBehavior", "FLOW_CONTROL");
+            BrokerAdmin brokerAdmin = new BrokerAdmin(broker);
+            brokerAdmin.jmxConnectServer();
+            try {
+                brokerAdmin.setExchangeAttrib(ex, "LimitBehavior", "FLOW_CONTROL");
+            }
+            finally {
+                brokerAdmin.jmxCloseServer();
+            }
         }
     }
 }

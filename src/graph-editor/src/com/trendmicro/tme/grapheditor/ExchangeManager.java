@@ -89,4 +89,62 @@ public class ExchangeManager {
             }
         }
     }
+    
+    @Path("/{name}/size_limit")
+    @PUT
+    @Consumes(MediaType.TEXT_PLAIN)
+    public void setSizeLimit(@PathParam("name") String name, String sizeLimit) throws Exception {
+        Exchange ex = new Exchange(name);
+        String path = "/tme2/global/limit_exchange/" + ex.getName();
+        
+        ZooKeeperInfo.TotalLimit limit = ExchangeFarm.getTotalLimit(ex);
+        ZNode node = new ZNode(path);
+        if(node.exists()) {
+            node.setContent(limit.toBuilder().setSizeBytes(Long.valueOf(sizeLimit)).build().toString().getBytes());
+        }
+        else {
+            node.create(false, limit.toBuilder().setSizeBytes(Long.valueOf(sizeLimit)).build().toString().getBytes());
+        }
+        
+        String broker = ExchangeFarm.getCurrentExchangeHost(ex);
+        if(broker != null) {
+            BrokerAdmin brokerAdmin = new BrokerAdmin(broker);
+            brokerAdmin.jmxConnectServer();
+            try {
+                brokerAdmin.setExchangeAttrib(ex, "MaxTotalMsgBytes", Long.valueOf(sizeLimit));
+            }
+            finally {
+                brokerAdmin.jmxCloseServer();
+            }
+        }
+    }
+    
+    @Path("/{name}/count_limit")
+    @PUT
+    @Consumes(MediaType.TEXT_PLAIN)
+    public void setCountLimit(@PathParam("name") String name, String countLimit) throws Exception {
+        Exchange ex = new Exchange(name);
+        String path = "/tme2/global/limit_exchange/" + ex.getName();
+        
+        ZooKeeperInfo.TotalLimit limit = ExchangeFarm.getTotalLimit(ex);
+        ZNode node = new ZNode(path);
+        if(node.exists()) {
+            node.setContent(limit.toBuilder().setCount(Long.valueOf(countLimit)).build().toString().getBytes());
+        }
+        else {
+            node.create(false, limit.toBuilder().setCount(Long.valueOf(countLimit)).build().toString().getBytes());
+        }
+        
+        String broker = ExchangeFarm.getCurrentExchangeHost(ex);
+        if(broker != null) {
+            BrokerAdmin brokerAdmin = new BrokerAdmin(broker);
+            brokerAdmin.jmxConnectServer();
+            try {
+                brokerAdmin.setExchangeAttrib(ex, "MaxNumMsgs", Long.valueOf(countLimit));
+            }
+            finally {
+                brokerAdmin.jmxCloseServer();
+            }
+        }
+    }
 }

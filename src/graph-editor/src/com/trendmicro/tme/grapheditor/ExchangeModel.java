@@ -8,6 +8,7 @@ import org.graphviz.SWIGTYPE_p_Agnode_t;
 import org.graphviz.SWIGTYPE_p_Agraph_t;
 import org.graphviz.gv;
 
+import com.trendmicro.mist.proto.ZooKeeperInfo.TotalLimit;
 import com.trendmicro.tme.mfr.Exchange;
 import com.trendmicro.tme.mfr.ExchangeFarm;
 
@@ -62,7 +63,16 @@ public class ExchangeModel {
         StringBuilder sb = new StringBuilder();
         sb.append("Drop Policy: ");
         sb.append(ExchangeFarm.getDropPolicy(new Exchange(name)).toString());
-        sb.append("\n");
+        sb.append("; ");
+        
+        TotalLimit limit = ExchangeFarm.getTotalLimit(new Exchange(name));
+        sb.append("Size Limit: ");
+        sb.append(limit.getSizeBytes() + " Bytes");
+        sb.append("; ");
+        sb.append("Count Limit: ");
+        sb.append(limit.getCount());
+        sb.append("; ");
+        
         return sb.toString();
     }
     

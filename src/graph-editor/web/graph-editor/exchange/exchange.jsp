@@ -66,6 +66,40 @@
 		});
 		location.reload();
 	}
+	
+	function change_size(){
+		size = prompt("Enter size limit (bytes):");
+		jQuery.ajax({
+			type: "PUT",
+			async: false,
+			url: "/webapp/graph-editor/exchange/${it.name}/size_limit",
+			contentType: "text/plain",
+			data: size,
+			success: function(){
+			},
+			error: function(xhr,text,err){
+				alert(err);
+			}
+		});
+		location.reload();
+	}
+	
+	function change_count(){
+		count = prompt("Enter count limit:");
+		jQuery.ajax({
+			type: "PUT",
+			async: false,
+			url: "/webapp/graph-editor/exchange/${it.name}/count_limit",
+			contentType: "text/plain",
+			data: count,
+			success: function(){
+			},
+			error: function(xhr,text,err){
+				alert(err);
+			}
+		});
+		location.reload();
+	}
 
 	jQuery(document).ready(function() {
 	});
@@ -79,6 +113,8 @@
 		<input type=button value="Make ${it.name} Blocking" onclick="block();"><br>
 		<input type=button value="Make ${it.name} Drop Newest" onclick="drop_newest();"><br>
 		<input type=button value="Make ${it.name} Drop Oldest" onclick="drop_oldest();"><br>
+		<input type=button value="Change ${it.name} Size Limit" onclick="change_size();"><br>
+		<input type=button value="Change ${it.name} Count Limit" onclick="change_count();"><br>
 	</div>
 </body>
 </html>

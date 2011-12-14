@@ -7,633 +7,6 @@ public final class ZooKeeperInfo {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
   }
-  public static final class GOCReference extends
-      com.google.protobuf.GeneratedMessage {
-    // Use GOCReference.newBuilder() to construct.
-    private GOCReference() {}
-    
-    private static final GOCReference defaultInstance = new GOCReference();
-    public static GOCReference getDefaultInstance() {
-      return defaultInstance;
-    }
-    
-    public GOCReference getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-    
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return com.trendmicro.mist.proto.ZooKeeperInfo.internal_static_com_trendmicro_mist_proto_GOCReference_descriptor;
-    }
-    
-    @Override
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return com.trendmicro.mist.proto.ZooKeeperInfo.internal_static_com_trendmicro_mist_proto_GOCReference_fieldAccessorTable;
-    }
-    
-    @Override
-    public final boolean isInitialized() {
-      return true;
-    }
-    
-    @Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      getUnknownFields().writeTo(output);
-    }
-    
-    private int memoizedSerializedSize = -1;
-    @Override
-    public int getSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-    
-      size = 0;
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
-      return size;
-    }
-    
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data).buildParsed();
-    }
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistry extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data, extensionRegistry)
-               .buildParsed();
-    }
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data).buildParsed();
-    }
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistry extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data, extensionRegistry)
-               .buildParsed();
-    }
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return newBuilder().mergeFrom(input).buildParsed();
-    }
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistry extensionRegistry)
-        throws java.io.IOException {
-      return newBuilder().mergeFrom(input, extensionRegistry)
-               .buildParsed();
-    }
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return newBuilder().mergeDelimitedFrom(input).buildParsed();
-    }
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistry extensionRegistry)
-        throws java.io.IOException {
-      return newBuilder().mergeDelimitedFrom(input, extensionRegistry)
-               .buildParsed();
-    }
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return newBuilder().mergeFrom(input).buildParsed();
-    }
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistry extensionRegistry)
-        throws java.io.IOException {
-      return newBuilder().mergeFrom(input, extensionRegistry)
-               .buildParsed();
-    }
-    
-    public static Builder newBuilder() { return new Builder(); }
-    public Builder newBuilderForType() { return new Builder(); }
-    public static Builder newBuilder(com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference prototype) {
-      return new Builder().mergeFrom(prototype);
-    }
-    public Builder toBuilder() { return newBuilder(this); }
-    
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> {
-      // Construct using com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference.newBuilder()
-      private Builder() {}
-      
-      com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference result = new com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference();
-      
-      @Override
-      protected com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference internalGetResult() {
-        return result;
-      }
-      
-      @Override
-      public Builder clear() {
-        result = new com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference();
-        return this;
-      }
-      
-      @Override
-      public Builder clone() {
-        return new Builder().mergeFrom(result);
-      }
-      
-      @Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference.getDescriptor();
-      }
-      
-      public com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference getDefaultInstanceForType() {
-        return com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference.getDefaultInstance();
-      }
-      
-      public com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference build() {
-        if (result != null && !isInitialized()) {
-          throw new com.google.protobuf.UninitializedMessageException(
-            result);
-        }
-        return buildPartial();
-      }
-      
-      private com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference buildParsed()
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        if (!isInitialized()) {
-          throw new com.google.protobuf.UninitializedMessageException(
-            result).asInvalidProtocolBufferException();
-        }
-        return buildPartial();
-      }
-      
-      public com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference buildPartial() {
-        if (result == null) {
-          throw new IllegalStateException(
-            "build() has already been called on this Builder.");  }
-        com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference returnMe = result;
-        result = null;
-        return returnMe;
-      }
-      
-      @Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference) {
-          return mergeFrom((com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-      
-      public Builder mergeFrom(com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference other) {
-        if (other == com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference.getDefaultInstance()) return this;
-        this.mergeUnknownFields(other.getUnknownFields());
-        return this;
-      }
-      
-      @Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input)
-          throws java.io.IOException {
-        return mergeFrom(input,
-          com.google.protobuf.ExtensionRegistry.getEmptyRegistry());
-      }
-      
-      @Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistry extensionRegistry)
-          throws java.io.IOException {
-        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder(
-            this.getUnknownFields());
-        while (true) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              this.setUnknownFields(unknownFields.build());
-              return this;
-            default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
-                this.setUnknownFields(unknownFields.build());
-                return this;
-              }
-              break;
-            }
-          }
-        }
-      }
-      
-    }
-    
-    static {
-      com.trendmicro.mist.proto.ZooKeeperInfo.getDescriptor();
-    }
-  }
-  
-  public static final class TLSConfig extends
-      com.google.protobuf.GeneratedMessage {
-    // Use TLSConfig.newBuilder() to construct.
-    private TLSConfig() {}
-    
-    private static final TLSConfig defaultInstance = new TLSConfig();
-    public static TLSConfig getDefaultInstance() {
-      return defaultInstance;
-    }
-    
-    public TLSConfig getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-    
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return com.trendmicro.mist.proto.ZooKeeperInfo.internal_static_com_trendmicro_mist_proto_TLSConfig_descriptor;
-    }
-    
-    @Override
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return com.trendmicro.mist.proto.ZooKeeperInfo.internal_static_com_trendmicro_mist_proto_TLSConfig_fieldAccessorTable;
-    }
-    
-    // required string log_channel = 1;
-    public static final int LOG_CHANNEL_FIELD_NUMBER = 1;
-    private boolean hasLogChannel;
-    private java.lang.String logChannel_ = "";
-    public boolean hasLogChannel() { return hasLogChannel; }
-    public java.lang.String getLogChannel() { return logChannel_; }
-    
-    // required string prefix = 2;
-    public static final int PREFIX_FIELD_NUMBER = 2;
-    private boolean hasPrefix;
-    private java.lang.String prefix_ = "";
-    public boolean hasPrefix() { return hasPrefix; }
-    public java.lang.String getPrefix() { return prefix_; }
-    
-    // required string type = 3;
-    public static final int TYPE_FIELD_NUMBER = 3;
-    private boolean hasType;
-    private java.lang.String type_ = "";
-    public boolean hasType() { return hasType; }
-    public java.lang.String getType() { return type_; }
-    
-    // required int32 version = 4;
-    public static final int VERSION_FIELD_NUMBER = 4;
-    private boolean hasVersion;
-    private int version_ = 0;
-    public boolean hasVersion() { return hasVersion; }
-    public int getVersion() { return version_; }
-    
-    @Override
-    public final boolean isInitialized() {
-      if (!hasLogChannel) return false;
-      if (!hasPrefix) return false;
-      if (!hasType) return false;
-      if (!hasVersion) return false;
-      return true;
-    }
-    
-    @Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      if (hasLogChannel()) {
-        output.writeString(1, getLogChannel());
-      }
-      if (hasPrefix()) {
-        output.writeString(2, getPrefix());
-      }
-      if (hasType()) {
-        output.writeString(3, getType());
-      }
-      if (hasVersion()) {
-        output.writeInt32(4, getVersion());
-      }
-      getUnknownFields().writeTo(output);
-    }
-    
-    private int memoizedSerializedSize = -1;
-    @Override
-    public int getSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-    
-      size = 0;
-      if (hasLogChannel()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeStringSize(1, getLogChannel());
-      }
-      if (hasPrefix()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeStringSize(2, getPrefix());
-      }
-      if (hasType()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeStringSize(3, getType());
-      }
-      if (hasVersion()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(4, getVersion());
-      }
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
-      return size;
-    }
-    
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data).buildParsed();
-    }
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistry extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data, extensionRegistry)
-               .buildParsed();
-    }
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data).buildParsed();
-    }
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistry extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return newBuilder().mergeFrom(data, extensionRegistry)
-               .buildParsed();
-    }
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return newBuilder().mergeFrom(input).buildParsed();
-    }
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistry extensionRegistry)
-        throws java.io.IOException {
-      return newBuilder().mergeFrom(input, extensionRegistry)
-               .buildParsed();
-    }
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return newBuilder().mergeDelimitedFrom(input).buildParsed();
-    }
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistry extensionRegistry)
-        throws java.io.IOException {
-      return newBuilder().mergeDelimitedFrom(input, extensionRegistry)
-               .buildParsed();
-    }
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return newBuilder().mergeFrom(input).buildParsed();
-    }
-    public static com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistry extensionRegistry)
-        throws java.io.IOException {
-      return newBuilder().mergeFrom(input, extensionRegistry)
-               .buildParsed();
-    }
-    
-    public static Builder newBuilder() { return new Builder(); }
-    public Builder newBuilderForType() { return new Builder(); }
-    public static Builder newBuilder(com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig prototype) {
-      return new Builder().mergeFrom(prototype);
-    }
-    public Builder toBuilder() { return newBuilder(this); }
-    
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder> {
-      // Construct using com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig.newBuilder()
-      private Builder() {}
-      
-      com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig result = new com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig();
-      
-      @Override
-      protected com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig internalGetResult() {
-        return result;
-      }
-      
-      @Override
-      public Builder clear() {
-        result = new com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig();
-        return this;
-      }
-      
-      @Override
-      public Builder clone() {
-        return new Builder().mergeFrom(result);
-      }
-      
-      @Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig.getDescriptor();
-      }
-      
-      public com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig getDefaultInstanceForType() {
-        return com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig.getDefaultInstance();
-      }
-      
-      public com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig build() {
-        if (result != null && !isInitialized()) {
-          throw new com.google.protobuf.UninitializedMessageException(
-            result);
-        }
-        return buildPartial();
-      }
-      
-      private com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig buildParsed()
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        if (!isInitialized()) {
-          throw new com.google.protobuf.UninitializedMessageException(
-            result).asInvalidProtocolBufferException();
-        }
-        return buildPartial();
-      }
-      
-      public com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig buildPartial() {
-        if (result == null) {
-          throw new IllegalStateException(
-            "build() has already been called on this Builder.");  }
-        com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig returnMe = result;
-        result = null;
-        return returnMe;
-      }
-      
-      @Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig) {
-          return mergeFrom((com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-      
-      public Builder mergeFrom(com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig other) {
-        if (other == com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig.getDefaultInstance()) return this;
-        if (other.hasLogChannel()) {
-          setLogChannel(other.getLogChannel());
-        }
-        if (other.hasPrefix()) {
-          setPrefix(other.getPrefix());
-        }
-        if (other.hasType()) {
-          setType(other.getType());
-        }
-        if (other.hasVersion()) {
-          setVersion(other.getVersion());
-        }
-        this.mergeUnknownFields(other.getUnknownFields());
-        return this;
-      }
-      
-      @Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input)
-          throws java.io.IOException {
-        return mergeFrom(input,
-          com.google.protobuf.ExtensionRegistry.getEmptyRegistry());
-      }
-      
-      @Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistry extensionRegistry)
-          throws java.io.IOException {
-        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder(
-            this.getUnknownFields());
-        while (true) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              this.setUnknownFields(unknownFields.build());
-              return this;
-            default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
-                this.setUnknownFields(unknownFields.build());
-                return this;
-              }
-              break;
-            }
-            case 10: {
-              setLogChannel(input.readString());
-              break;
-            }
-            case 18: {
-              setPrefix(input.readString());
-              break;
-            }
-            case 26: {
-              setType(input.readString());
-              break;
-            }
-            case 32: {
-              setVersion(input.readInt32());
-              break;
-            }
-          }
-        }
-      }
-      
-      
-      // required string log_channel = 1;
-      public boolean hasLogChannel() {
-        return result.hasLogChannel();
-      }
-      public java.lang.String getLogChannel() {
-        return result.getLogChannel();
-      }
-      public Builder setLogChannel(java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  result.hasLogChannel = true;
-        result.logChannel_ = value;
-        return this;
-      }
-      public Builder clearLogChannel() {
-        result.hasLogChannel = false;
-        result.logChannel_ = "";
-        return this;
-      }
-      
-      // required string prefix = 2;
-      public boolean hasPrefix() {
-        return result.hasPrefix();
-      }
-      public java.lang.String getPrefix() {
-        return result.getPrefix();
-      }
-      public Builder setPrefix(java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  result.hasPrefix = true;
-        result.prefix_ = value;
-        return this;
-      }
-      public Builder clearPrefix() {
-        result.hasPrefix = false;
-        result.prefix_ = "";
-        return this;
-      }
-      
-      // required string type = 3;
-      public boolean hasType() {
-        return result.hasType();
-      }
-      public java.lang.String getType() {
-        return result.getType();
-      }
-      public Builder setType(java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  result.hasType = true;
-        result.type_ = value;
-        return this;
-      }
-      public Builder clearType() {
-        result.hasType = false;
-        result.type_ = "";
-        return this;
-      }
-      
-      // required int32 version = 4;
-      public boolean hasVersion() {
-        return result.hasVersion();
-      }
-      public int getVersion() {
-        return result.getVersion();
-      }
-      public Builder setVersion(int value) {
-        result.hasVersion = true;
-        result.version_ = value;
-        return this;
-      }
-      public Builder clearVersion() {
-        result.hasVersion = false;
-        result.version_ = 0;
-        return this;
-      }
-    }
-    
-    static {
-      com.trendmicro.mist.proto.ZooKeeperInfo.getDescriptor();
-    }
-  }
-  
   public static final class PortalDB extends
       com.google.protobuf.GeneratedMessage {
     // Use PortalDB.newBuilder() to construct.
@@ -4632,16 +4005,6 @@ public final class ZooKeeperInfo {
   }
   
   private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_com_trendmicro_mist_proto_GOCReference_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_com_trendmicro_mist_proto_GOCReference_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_com_trendmicro_mist_proto_TLSConfig_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_com_trendmicro_mist_proto_TLSConfig_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_com_trendmicro_mist_proto_PortalDB_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -4706,55 +4069,37 @@ public final class ZooKeeperInfo {
   static {
     java.lang.String descriptorData =
       "\n\023ZooKeeperInfo.proto\022\031com.trendmicro.mi" +
-      "st.proto\"\016\n\014GOCReference\"O\n\tTLSConfig\022\023\n" +
-      "\013log_channel\030\001 \002(\t\022\016\n\006prefix\030\002 \002(\t\022\014\n\004ty" +
-      "pe\030\003 \002(\t\022\017\n\007version\030\004 \002(\005\"T\n\010PortalDB\022\014\n" +
-      "\004host\030\001 \002(\t\022\014\n\004port\030\002 \002(\t\022\014\n\004name\030\003 \001(\t\022" +
-      "\014\n\004user\030\004 \001(\t\022\020\n\010password\030\005 \001(\t\"\240\002\n\006Brok" +
-      "er\022\014\n\004host\030\001 \002(\t\022\014\n\004port\030\002 \002(\t\0228\n\006status" +
-      "\030\003 \002(\0162(.com.trendmicro.mist.proto.Broke" +
-      "r.Status\022:\n\007account\030\004 \003(\0132).com.trendmic" +
-      "ro.mist.proto.Broker.Account\022\023\n\013broker_t" +
-      "ype\030\005 \002(\t\022\017\n\007version\030\006 \002(\t\022\020\n\010reserved\030\007" +
-      " \002(\010\032)\n\007Account\022\014\n\004user\030\001 \002(\t\022\020\n\010passwor" +
-      "d\030\002 \002(\t\"!\n\006Status\022\n\n\006ONLINE\020\000\022\013\n\007OFFLINE" +
-      "\020\001\"X\n\007Loading\022\017\n\007loading\030\001 \002(\005\022\023\n\013last_u" +
-      "pdate\030\002 \002(\003\022\023\n\013free_memory\030\003 \002(\003\022\022\n\nmax_" +
-      "memory\030\004 \002(\003\"6\n\tForwarder\022\014\n\004from\030\001 \002(\t\022" +
-      "\n\n\002to\030\002 \002(\t\022\017\n\007comment\030\003 \001(\t\"\030\n\010Exchange" +
-      "\022\014\n\004host\030\001 \002(\t\"\036\n\016ReservedBroker\022\014\n\004host" +
-      "\030\001 \002(\t\"\031\n\tReference\022\014\n\004host\030\001 \002(\t\"p\n\007Com" +
-      "mand\0225\n\004type\030\001 \002(\0162\'.com.trendmicro.mist" +
-      ".proto.Command.Type\022\020\n\010argument\030\002 \003(\t\"\034\n" +
-      "\004Type\022\024\n\020MIGRATE_EXCHANGE\020\000\"l\n\nDropConfi" +
-      "g\022<\n\006policy\030\001 \002(\0162,.com.trendmicro.mist." +
-      "proto.DropConfig.Policy\" \n\006Policy\022\n\n\006NEW" +
-      "EST\020\000\022\n\n\006OLDEST\020\001\".\n\nTotalLimit\022\021\n\tsizeB" +
-      "ytes\030\001 \002(\003\022\r\n\005count\030\002 \002(\003B*\n\031com.trendmi" +
-      "cro.mist.protoB\rZooKeeperInfo";
+      "st.proto\"T\n\010PortalDB\022\014\n\004host\030\001 \002(\t\022\014\n\004po" +
+      "rt\030\002 \002(\t\022\014\n\004name\030\003 \001(\t\022\014\n\004user\030\004 \001(\t\022\020\n\010" +
+      "password\030\005 \001(\t\"\240\002\n\006Broker\022\014\n\004host\030\001 \002(\t\022" +
+      "\014\n\004port\030\002 \002(\t\0228\n\006status\030\003 \002(\0162(.com.tren" +
+      "dmicro.mist.proto.Broker.Status\022:\n\007accou" +
+      "nt\030\004 \003(\0132).com.trendmicro.mist.proto.Bro" +
+      "ker.Account\022\023\n\013broker_type\030\005 \002(\t\022\017\n\007vers" +
+      "ion\030\006 \002(\t\022\020\n\010reserved\030\007 \002(\010\032)\n\007Account\022\014" +
+      "\n\004user\030\001 \002(\t\022\020\n\010password\030\002 \002(\t\"!\n\006Status" +
+      "\022\n\n\006ONLINE\020\000\022\013\n\007OFFLINE\020\001\"X\n\007Loading\022\017\n\007" +
+      "loading\030\001 \002(\005\022\023\n\013last_update\030\002 \002(\003\022\023\n\013fr" +
+      "ee_memory\030\003 \002(\003\022\022\n\nmax_memory\030\004 \002(\003\"6\n\tF" +
+      "orwarder\022\014\n\004from\030\001 \002(\t\022\n\n\002to\030\002 \002(\t\022\017\n\007co" +
+      "mment\030\003 \001(\t\"\030\n\010Exchange\022\014\n\004host\030\001 \002(\t\"\036\n" +
+      "\016ReservedBroker\022\014\n\004host\030\001 \002(\t\"\031\n\tReferen" +
+      "ce\022\014\n\004host\030\001 \002(\t\"p\n\007Command\0225\n\004type\030\001 \002(" +
+      "\0162\'.com.trendmicro.mist.proto.Command.Ty" +
+      "pe\022\020\n\010argument\030\002 \003(\t\"\034\n\004Type\022\024\n\020MIGRATE_" +
+      "EXCHANGE\020\000\"l\n\nDropConfig\022<\n\006policy\030\001 \002(\016" +
+      "2,.com.trendmicro.mist.proto.DropConfig." +
+      "Policy\" \n\006Policy\022\n\n\006NEWEST\020\000\022\n\n\006OLDEST\020\001" +
+      "\".\n\nTotalLimit\022\021\n\tsizeBytes\030\001 \002(\003\022\r\n\005cou" +
+      "nt\030\002 \002(\003B*\n\031com.trendmicro.mist.protoB\rZ" +
+      "ooKeeperInfo";
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
         public com.google.protobuf.ExtensionRegistry assignDescriptors(
             com.google.protobuf.Descriptors.FileDescriptor root) {
           descriptor = root;
-          internal_static_com_trendmicro_mist_proto_GOCReference_descriptor =
-            getDescriptor().getMessageTypes().get(0);
-          internal_static_com_trendmicro_mist_proto_GOCReference_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_com_trendmicro_mist_proto_GOCReference_descriptor,
-              new java.lang.String[] { },
-              com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference.class,
-              com.trendmicro.mist.proto.ZooKeeperInfo.GOCReference.Builder.class);
-          internal_static_com_trendmicro_mist_proto_TLSConfig_descriptor =
-            getDescriptor().getMessageTypes().get(1);
-          internal_static_com_trendmicro_mist_proto_TLSConfig_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_com_trendmicro_mist_proto_TLSConfig_descriptor,
-              new java.lang.String[] { "LogChannel", "Prefix", "Type", "Version", },
-              com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig.class,
-              com.trendmicro.mist.proto.ZooKeeperInfo.TLSConfig.Builder.class);
           internal_static_com_trendmicro_mist_proto_PortalDB_descriptor =
-            getDescriptor().getMessageTypes().get(2);
+            getDescriptor().getMessageTypes().get(0);
           internal_static_com_trendmicro_mist_proto_PortalDB_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_com_trendmicro_mist_proto_PortalDB_descriptor,
@@ -4762,7 +4107,7 @@ public final class ZooKeeperInfo {
               com.trendmicro.mist.proto.ZooKeeperInfo.PortalDB.class,
               com.trendmicro.mist.proto.ZooKeeperInfo.PortalDB.Builder.class);
           internal_static_com_trendmicro_mist_proto_Broker_descriptor =
-            getDescriptor().getMessageTypes().get(3);
+            getDescriptor().getMessageTypes().get(1);
           internal_static_com_trendmicro_mist_proto_Broker_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_com_trendmicro_mist_proto_Broker_descriptor,
@@ -4778,7 +4123,7 @@ public final class ZooKeeperInfo {
               com.trendmicro.mist.proto.ZooKeeperInfo.Broker.Account.class,
               com.trendmicro.mist.proto.ZooKeeperInfo.Broker.Account.Builder.class);
           internal_static_com_trendmicro_mist_proto_Loading_descriptor =
-            getDescriptor().getMessageTypes().get(4);
+            getDescriptor().getMessageTypes().get(2);
           internal_static_com_trendmicro_mist_proto_Loading_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_com_trendmicro_mist_proto_Loading_descriptor,
@@ -4786,7 +4131,7 @@ public final class ZooKeeperInfo {
               com.trendmicro.mist.proto.ZooKeeperInfo.Loading.class,
               com.trendmicro.mist.proto.ZooKeeperInfo.Loading.Builder.class);
           internal_static_com_trendmicro_mist_proto_Forwarder_descriptor =
-            getDescriptor().getMessageTypes().get(5);
+            getDescriptor().getMessageTypes().get(3);
           internal_static_com_trendmicro_mist_proto_Forwarder_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_com_trendmicro_mist_proto_Forwarder_descriptor,
@@ -4794,7 +4139,7 @@ public final class ZooKeeperInfo {
               com.trendmicro.mist.proto.ZooKeeperInfo.Forwarder.class,
               com.trendmicro.mist.proto.ZooKeeperInfo.Forwarder.Builder.class);
           internal_static_com_trendmicro_mist_proto_Exchange_descriptor =
-            getDescriptor().getMessageTypes().get(6);
+            getDescriptor().getMessageTypes().get(4);
           internal_static_com_trendmicro_mist_proto_Exchange_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_com_trendmicro_mist_proto_Exchange_descriptor,
@@ -4802,7 +4147,7 @@ public final class ZooKeeperInfo {
               com.trendmicro.mist.proto.ZooKeeperInfo.Exchange.class,
               com.trendmicro.mist.proto.ZooKeeperInfo.Exchange.Builder.class);
           internal_static_com_trendmicro_mist_proto_ReservedBroker_descriptor =
-            getDescriptor().getMessageTypes().get(7);
+            getDescriptor().getMessageTypes().get(5);
           internal_static_com_trendmicro_mist_proto_ReservedBroker_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_com_trendmicro_mist_proto_ReservedBroker_descriptor,
@@ -4810,7 +4155,7 @@ public final class ZooKeeperInfo {
               com.trendmicro.mist.proto.ZooKeeperInfo.ReservedBroker.class,
               com.trendmicro.mist.proto.ZooKeeperInfo.ReservedBroker.Builder.class);
           internal_static_com_trendmicro_mist_proto_Reference_descriptor =
-            getDescriptor().getMessageTypes().get(8);
+            getDescriptor().getMessageTypes().get(6);
           internal_static_com_trendmicro_mist_proto_Reference_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_com_trendmicro_mist_proto_Reference_descriptor,
@@ -4818,7 +4163,7 @@ public final class ZooKeeperInfo {
               com.trendmicro.mist.proto.ZooKeeperInfo.Reference.class,
               com.trendmicro.mist.proto.ZooKeeperInfo.Reference.Builder.class);
           internal_static_com_trendmicro_mist_proto_Command_descriptor =
-            getDescriptor().getMessageTypes().get(9);
+            getDescriptor().getMessageTypes().get(7);
           internal_static_com_trendmicro_mist_proto_Command_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_com_trendmicro_mist_proto_Command_descriptor,
@@ -4826,7 +4171,7 @@ public final class ZooKeeperInfo {
               com.trendmicro.mist.proto.ZooKeeperInfo.Command.class,
               com.trendmicro.mist.proto.ZooKeeperInfo.Command.Builder.class);
           internal_static_com_trendmicro_mist_proto_DropConfig_descriptor =
-            getDescriptor().getMessageTypes().get(10);
+            getDescriptor().getMessageTypes().get(8);
           internal_static_com_trendmicro_mist_proto_DropConfig_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_com_trendmicro_mist_proto_DropConfig_descriptor,
@@ -4834,7 +4179,7 @@ public final class ZooKeeperInfo {
               com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.class,
               com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig.Builder.class);
           internal_static_com_trendmicro_mist_proto_TotalLimit_descriptor =
-            getDescriptor().getMessageTypes().get(11);
+            getDescriptor().getMessageTypes().get(9);
           internal_static_com_trendmicro_mist_proto_TotalLimit_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_com_trendmicro_mist_proto_TotalLimit_descriptor,

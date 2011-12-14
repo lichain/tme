@@ -3,18 +3,6 @@ package com.trendmicro.mist.proto;
 option java_package = "com.trendmicro.mist.proto";
 option java_outer_classname = "ZooKeeperInfo";
 
-// /tme2/global/goc_exchange/exchange_name
-message GOCReference {
-}
-
-// /tme2/global/tls_exchange/exchange_name
-message TLSConfig {
-    required string log_channel = 1;
-    required string prefix = 2;
-    required string type = 3;
-    required int32 version = 4;
-}
-
 // /tme2/global/portal_db
 message PortalDB {
     required string host = 1;

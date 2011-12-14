@@ -53,8 +53,6 @@ install -m755 usr/bin/mist-forwarder $RPM_BUILD_ROOT/usr/bin
 install -m755 usr/bin/mist-line-gen $RPM_BUILD_ROOT/usr/bin
 install -m755 usr/bin/mist-broker $RPM_BUILD_ROOT/usr/bin
 install -m755 usr/share/mist/bin/test_mistd $RPM_BUILD_ROOT/usr/share/mist/bin
-install -m755 usr/share/mist/bin/test_autogoc $RPM_BUILD_ROOT/usr/share/mist/bin
-install -m755 usr/share/mist/bin/test_tls $RPM_BUILD_ROOT/usr/share/mist/bin
 install -m755 usr/share/mist/bin/mon_mistd $RPM_BUILD_ROOT/usr/share/mist/bin
 install -m755 usr/share/mist/bin/watchdog-mistd $RPM_BUILD_ROOT/usr/share/mist/bin
 install -m755 usr/share/mist/bin/install_mistd.sh $RPM_BUILD_ROOT/usr/share/mist/bin
@@ -84,8 +82,6 @@ rm -rf $RPM_BUILD_ROOT
 /usr/bin/mist-line-gen 
 /usr/bin/mist-broker
 /usr/share/mist/bin/test_mistd
-/usr/share/mist/bin/test_autogoc
-/usr/share/mist/bin/test_tls
 /usr/share/mist/bin/mon_mistd
 /usr/share/mist/bin/alert-spyd
 /usr/share/mist/bin/watchdog-mistd

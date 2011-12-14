@@ -16,11 +16,6 @@ import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.mist.util.Packet;
 import com.trendmicro.mist.proto.MistMessage;
 import com.trendmicro.mist.proto.MistMessage.KeyValuePair;
-import com.trendmicro.spn.proto.SpnMessage.Container;
-import com.trendmicro.spn.proto.SpnMessage.ContainerBase;
-import com.trendmicro.spn.proto.SpnMessage.Message;
-import com.trendmicro.spn.proto.SpnMessage.MessageBase;
-import com.trendmicro.spn.proto.SpnMessage.MessageList;
 
 import com.google.protobuf.ByteString;
 
@@ -61,23 +56,7 @@ public class MistEncode {
         System.out.printf("        display help messages %n%n");
     }
     
-    private MistMessage.MessageBlock packMessage(byte [] messageContent) {
-        MessageBase.Builder mbase_builder = MessageBase.newBuilder();
-        mbase_builder.setSubject(ByteString.copyFrom("".getBytes()));
-        
-        Message.Builder msg_builder = Message.newBuilder();
-        msg_builder.setMsgBase(mbase_builder.build());
-        msg_builder.setDerived(ByteString.copyFrom(messageContent));
-        
-        MessageList.Builder mlist_builder = MessageList.newBuilder();
-        mlist_builder.addMessages(msg_builder.build());
-        
-        ContainerBase.Builder cbase_builder = ContainerBase.newBuilder();
-        cbase_builder.setMessageList(mlist_builder.build());
-        
-        Container.Builder cont_builder = Container.newBuilder();
-        cont_builder.setContainerBase(cbase_builder.build());
-        
+    private MistMessage.MessageBlock packMessage(byte [] messageContent) {        
         MistMessage.MessageBlock.Builder mblock_builder = MistMessage.MessageBlock.newBuilder();
         if(hasProperties) {
             Iterator<Map.Entry<String, String>> iter = messageProperties.entrySet().iterator();
@@ -87,7 +66,7 @@ public class MistEncode {
             }
         }
         mblock_builder.setId(new Exchange(messageId).toString());
-        mblock_builder.setMessage(ByteString.copyFrom(cont_builder.build().toByteArray()));
+        mblock_builder.setMessage(ByteString.copyFrom(messageContent));
         if(messageTTL != -1)
             mblock_builder.setTtl(messageTTL);
         return mblock_builder.build();

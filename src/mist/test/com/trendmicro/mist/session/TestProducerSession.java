@@ -34,11 +34,6 @@ import com.trendmicro.mist.util.OpenMQTestBroker;
 import com.trendmicro.mist.util.Packet;
 import com.trendmicro.mist.util.ZKTestServer;
 import com.trendmicro.spn.common.util.Utils;
-import com.trendmicro.spn.proto.SpnMessage;
-import com.trendmicro.spn.proto.SpnMessage.Container;
-import com.trendmicro.spn.proto.SpnMessage.ContainerBase;
-import com.trendmicro.spn.proto.SpnMessage.MessageBase;
-import com.trendmicro.spn.proto.SpnMessage.MessageList;
 
 public class TestProducerSession extends TestCase {
     private ZKTestServer zkTestServer;
@@ -61,25 +56,6 @@ public class TestProducerSession extends TestCase {
         builder.setType(GateTalk.Client.Type.PRODUCER);
 
         return builder.build();
-    }
-
-    private Container genSPNMessage(byte[] msg) {
-        MessageBase.Builder mbase_builder = MessageBase.newBuilder();
-        mbase_builder.setSubject(ByteString.copyFrom("".getBytes()));
-
-        SpnMessage.Message.Builder msg_builder = SpnMessage.Message.newBuilder();
-        msg_builder.setMsgBase(mbase_builder.build());
-        msg_builder.setDerived(ByteString.copyFrom(msg));
-
-        MessageList.Builder mlist_builder = MessageList.newBuilder();
-        mlist_builder.addMessages(msg_builder.build());
-
-        ContainerBase.Builder cbase_builder = ContainerBase.newBuilder();
-        cbase_builder.setMessageList(mlist_builder.build());
-
-        Container.Builder cont_builder = Container.newBuilder();
-        cont_builder.setContainerBase(cbase_builder.build());
-        return cont_builder.build();
     }
 
     @Override
@@ -320,25 +296,6 @@ public class TestProducerSession extends TestCase {
         assertEquals("test-route", new String(recvMsg));
         recvMsg = brk.getMessage(true, "log.in");
         assertEquals("test-route", new String(recvMsg));
-
-        msg = MistMessage.MessageBlock.newBuilder().setId("queue:foo.out").setMessage(genSPNMessage("test-tls".getBytes()).toByteString()).build();
-        packet.setPayload(msg.toByteArray());
-        packet.write(socketOutput);
-        packet.read(socketInput);
-        assertTrue(GateTalk.Response.newBuilder().mergeFrom(packet.getPayload()).build().getSuccess());
-        recvMsg = brk.getMessage(true, "bar.in");
-        assertNotNull(recvMsg);
-        recvMsg = brk.getMessage(true, "log.in");
-        assertNotNull(recvMsg);
-        recvMsg = brk.getMessage(true, "tlsEx");
-        assertNotNull(recvMsg);
-        Container tlsMsg = Container.newBuilder().mergeFrom(recvMsg).build();
-        assertEquals("pre", tlsMsg.getLogInfo().getPrefix());
-        assertEquals("type", tlsMsg.getLogInfo().getType());
-        assertEquals(0, tlsMsg.getLogInfo().getVersion());
-        assertEquals("send", tlsMsg.getLogInfo().getEvent());
-        assertEquals("test-tls", new String(tlsMsg.getContainerBase().getMessageList().getMessages(0).getDerived().toByteArray()));
-
         brk.stop();
     }
 

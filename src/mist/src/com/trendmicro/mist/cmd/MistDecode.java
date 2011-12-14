@@ -13,7 +13,6 @@ import gnu.getopt.LongOpt;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.trendmicro.mist.proto.MistMessage;
-import com.trendmicro.spn.proto.SpnMessage.Container;
 
 public class MistDecode {
     enum CmdType {
@@ -45,10 +44,7 @@ public class MistDecode {
             MistMessage.MessageBlock.Builder mblock_builder = MistMessage.MessageBlock.newBuilder();
             mblock_builder.mergeFrom(binary);
             MistMessage.MessageBlock msg_block = mblock_builder.build();
-            Container.Builder cont_builder = Container.newBuilder();
-            cont_builder.mergeFrom(msg_block.getMessage().toByteArray());
-            Container cont = cont_builder.build();
-            return cont.getContainerBase().getMessageList().getMessages(0).getDerived().toByteArray();
+            return msg_block.getMessage().toByteArray();
         }
         catch(Exception e) {
             return binary;

@@ -38,7 +38,6 @@ mkdir -p $RPM_BUILD_ROOT
 %install
 
 cp -rf * $RPM_BUILD_ROOT/
-mkdir -p $RPM_BUILD_ROOT/var/lib/tme/portal-collector
 
 %clean
 
@@ -50,7 +49,6 @@ rm -rf $RPM_BUILD_ROOT
 %dir 
 /opt/trend/tme/bin
 /opt/trend/tme/lib
-/var/lib/tme/portal-collector
 
 %config /opt/trend/tme/conf/portal-collector/tme-portal-collector.monit
 %config /opt/trend/tme/conf/portal-collector/portal-collector.properties
@@ -69,10 +67,11 @@ fi
 
 %post
 
+
 if [ "$1" = "1" ]; then
-    chown TME:TME /var/lib/tme/portal-collector
     # install
-    usleep 1
+	mkdir -p /var/lib/tme/portal-collector
+	chown TME:TME /var/lib/tme/portal-collector
 elif [ "$1" = "2" ]; then
     # upgrade
     usleep 1

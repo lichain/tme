@@ -214,6 +214,34 @@
 		}
 	}
 	
+	function refresh_metric(exchange){
+		idx = exchange.innerHTML.indexOf('<');
+		if(idx > 0){
+			exchange.innerHTML = exchange.innerHTML.substr(0, idx);
+		}
+        jQuery.ajax({
+            type: "GET",
+            async: true,
+            url: "/proxy/<%= getServletConfig().getInitParameter("portalhost") %>/exchanges/" + exchange.innerHTML.replace(":","-"),
+                headers: {
+                Accept : "application/json",
+            },
+            success: function(metric){
+                exchange.innerHTML = exchange.innerHTML + '<br>' + metric.Pending;
+                setTimeout("refresh_metric(document.getElementById('" + exchange.id + "'));", 5000);                    
+            },
+            error: function(xhr,text,err){
+                //alert(err);
+            }
+        });
+	}
+	
+	function start_query(){
+        jQuery('a[id^="input-"]').each(function(){
+        	refresh_metric(this);
+        });
+    }	
+	
 	jQuery(document).ready(function() {
 		canviz = new Canviz('graph_container');
 		
@@ -233,6 +261,10 @@
    			 	make_dragNdrop();
     			
     			render_processors();
+    			
+    			if("<%= getServletConfig().getInitParameter("portalhost") %>" != ""){ 
+    				start_query();
+    			}
   			},
 			error: function(xhr,text,err){
 				alert(err);					

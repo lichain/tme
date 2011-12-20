@@ -43,9 +43,12 @@ public class GraphEditorMain {
             
             handler.addServlet(new ServletHolder(new DefaultServlet()), "/static/*");
             
+            handler.addServlet(new ServletHolder(new Proxy()), "/proxy/*");
+            
             ServletHolder jspHolder = new ServletHolder(new JspServlet());
             jspHolder.setInitParameter("scratchdir", prop.getProperty("jasper.scratchdir", "/var/lib/tme/graph-editor/jsp"));
             jspHolder.setInitParameter("trimSpaces", "true");
+            jspHolder.setInitParameter("portalhost", prop.getProperty("com.trendmicro.tme.grapheditor.portalhost", ""));
             handler.addServlet(jspHolder, "*.jsp");
             handler.setResourceBase(prop.getProperty("com.trendmicro.tme.grapheditor.webdir"));
             logger.info("Web resource base is set to {}", prop.getProperty("com.trendmicro.tme.grapheditor.webdir"));

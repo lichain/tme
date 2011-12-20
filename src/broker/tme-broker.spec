@@ -8,10 +8,9 @@
 %{nil}
 
 %define name tme-broker
-%define ver	#MAJOR_VER#
-%define debug_package %{nil}
+%define ver #MAJOR_VER#
 
-Summary: TME Broker Package
+Summary: TME Graph Editor
 Name: %{name}
 Version: %{ver}
 Release: #RELEASE_VER#
@@ -19,91 +18,67 @@ License: Trend Micro Inc.
 Group: System Environment/Daemons
 Source: %{name}-%{ver}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{ver}-root
-Requires: jdk, tme-mist
-Requires(pre): /usr/bin/unzip
+Requires: jdk, tme-common >= 1.0-20111220Z, monit
 Requires(post): /sbin/chkconfig, /sbin/service
 Requires(preun): /sbin/chkconfig, /sbin/service
 
 %description
 
-TME broker package.
+TME Broker
 
 %prep
 
+rm -rf $RPM_BUILD_ROOT
+mkdir -p $RPM_BUILD_ROOT
+
 %setup -q
-
-%{__mkdir} -p $RPM_BUILD_ROOT/usr/share/mist/bin
-%{__mkdir} -p $RPM_BUILD_ROOT/etc/init.d
-%{__mkdir} -p $RPM_BUILD_ROOT/usr/share/tme-broker
-%{__mkdir} -p $RPM_BUILD_ROOT/usr/share/tme-broker/etc
-
-cp -rf MessageQueue4_5_1/mq $RPM_BUILD_ROOT/usr/share/tme-broker
-%{__mkdir} -p $RPM_BUILD_ROOT/usr/share/tme-broker/mq/var/instances/imqbroker/props
-cp -f config.properties $RPM_BUILD_ROOT/usr/share/tme-broker/mq/var/instances/imqbroker/props/
 
 %build
 
 %install
 
-install -m755 etc/init.d/tme-brokerd $RPM_BUILD_ROOT/etc/init.d
-install -m755 etc/init.d/tme-spyd $RPM_BUILD_ROOT/etc/init.d
-install -m755 usr/share/mist/bin/watchdog-spyd $RPM_BUILD_ROOT/usr/share/mist/bin
-install -m755 usr/share/tme-broker/install_brokerd.sh $RPM_BUILD_ROOT/usr/share/tme-broker
-install -m755 usr/share/tme-broker/remove_brokerd.sh $RPM_BUILD_ROOT/usr/share/tme-broker
-install -m755 usr/share/tme-broker/change_broker_mem.sh $RPM_BUILD_ROOT/usr/share/tme-broker
-install -m600 usr/share/tme-broker/jmxremote.* $RPM_BUILD_ROOT/usr/share/tme-broker/etc
-install -m644 usr/share/tme-broker/tme-spyd.cron $RPM_BUILD_ROOT/usr/share/tme-broker/etc
+cp -rf * $RPM_BUILD_ROOT/
 
 %clean
 
 rm -rf $RPM_BUILD_ROOT
-rm -rf /tmp/tme-broker
 
 %files
+/etc/init.d/tme-broker
 
-/etc/init.d/tme-brokerd
-/etc/init.d/tme-spyd
-/usr/share/mist/bin/watchdog-spyd
+%dir 
+/opt/trend/tme/bin
+/opt/trend/tme/lib
 
-%dir
-
-/usr/share/tme-broker
+%config /opt/trend/tme/conf/broker/tme-broker.monit
+%config /opt/trend/tme/conf/broker/config.properties
+%config /opt/trend/tme/conf/broker/logback.xml
+%attr(400, TME, TME) %config /opt/trend/tme/conf/broker/jmxremote.password
+%config /opt/trend/tme/conf/broker/jmxremote.access
 
 %pre
 
-myip=`hostname -i`
-if [ "$myip" = "" ]; then
-    echo "Unable to determine local IP, please make sure \"hostname -i\" works normally"
-    exit 1
-elif [ "$myip" = "127.0.0.1" ]; then
-    echo "Local IP: $myip is not acceptable, please configure a physical IP"
-    exit 1
+if [ "`getent passwd TME`" == "" ]; then
+	echo "Error: must create user TME first!"
+	exit 1
 fi
 
 if [ "$1" = "1" ]; then
     # install
-    installed=`rpm -qa | grep tme-broker | wc -l`
-    if [ "$installed" = "1" ]; then
-        echo `rpm -qa | grep tme-broker` already installed
-        exit 1
-    fi
+	usleep 1
 elif [ "$1" = "2" ]; then
     # upgrade
-    /usr/share/tme-broker/remove_brokerd.sh
-    cp -f /usr/share/tme-broker/mq/var/instances/imqbroker/props/config.properties{,.old}
-    echo backup configuration to /usr/share/tme-broker/mq/var/instances/imqbroker/props/config.properties.old
+	usleep 1
 fi
 
 %post
 
-chown -R TME.TME /usr/share/tme-broker
-
 if [ "$1" = "1" ]; then
     # install
-    echo done. please configure and execute install_brokerd.sh to install service
+    usleep 1
 elif [ "$1" = "2" ]; then
     # upgrade
-    echo service tme-brokerd removed. please re-configure and execute install_brokerd.sh again
+    usleep 1
 fi
 
 %preun
@@ -113,7 +88,7 @@ if [ "$1" = "1" ]; then
     usleep 1
 elif [ "$1" = "0" ]; then
     # uninstall
-    /usr/share/tme-broker/remove_brokerd.sh
+    usleep 1
 fi
 
 %postun
@@ -127,8 +102,5 @@ elif [ "$1" = "0" ]; then
 fi
 
 %changelog
-* Mon Sep 19 2011 Scott Wang 20110919
-- Upgrade OpenMQ to 4.5.1 
-* Mon Feb 14 2011 Chris Huang 20110214
-- Use fixed port 5567 of JMX to broker (http://wiki.spn.tw.trendnet.org/mediawiki/index.php/TME20_Installation_Guide#Firewall_Requirements)
- 
+* Tue Nov 29 2011 Scott Wang
+- Initial

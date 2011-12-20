@@ -1,0 +1,5 @@
+set daemon 20
+check process tme-broker
+   with pidfile "/var/run/tme/tme-broker.pid"
+   start program = "/etc/init.d/tme-broker start"
+   stop program = "/etc/init.d/tme-broker stop"

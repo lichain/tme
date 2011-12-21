@@ -54,6 +54,7 @@ rpm: mist
 	cp -f $(CFGPATH)/tme-mist.cron $(RPMPATH)/usr/share/mist/etc
 	cp -f $(OUTPATH)/tme-bridge $(RPMPATH)/etc/init.d
 	cp -f $(OUTPATH)/bridge-console $(RPMPATH)/usr/bin
+	cp -f $(OUTPATH)/tme-console $(RPMPATH)/usr/bin
 	cp -f $(OUTPATH)/install_bridge.sh $(RPMPATH)/usr/share/mist/bin
 	cp -f $(OUTPATH)/remove_bridge.sh $(RPMPATH)/usr/share/mist/bin
 	cp -f $(OUTPATH)/watchdog-bridge $(RPMPATH)/usr/share/mist/bin

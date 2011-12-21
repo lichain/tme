@@ -62,6 +62,7 @@ install -m644 usr/share/mist/lib/*.jar $RPM_BUILD_ROOT/usr/share/mist/lib
 install -m644 usr/share/mist/etc/* $RPM_BUILD_ROOT/usr/share/mist/etc
 install -m755 etc/init.d/tme-bridge $RPM_BUILD_ROOT/etc/init.d
 install -m755 usr/bin/bridge-console $RPM_BUILD_ROOT/usr/bin
+install -m755 usr/bin/tme-console $RPM_BUILD_ROOT/usr/bin
 install -m755 usr/share/mist/bin/install_bridge.sh $RPM_BUILD_ROOT/usr/share/mist/bin
 install -m755 usr/share/mist/bin/remove_bridge.sh $RPM_BUILD_ROOT/usr/share/mist/bin
 install -m755 usr/share/mist/bin/watchdog-bridge $RPM_BUILD_ROOT/usr/share/mist/bin
@@ -81,6 +82,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/bin/mist-forwarder 
 /usr/bin/mist-line-gen 
 /usr/bin/mist-broker
+/usr/bin/tme-console
 /usr/share/mist/bin/test_mistd
 /usr/share/mist/bin/mon_mistd
 /usr/share/mist/bin/alert-spyd

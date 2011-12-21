@@ -197,8 +197,6 @@ public class BrokerFarm implements DataListener {
         for(Entry<String, byte[]> ent : changeMap.entrySet()) {
             if(ent.getKey().length() == 0)
                 continue;
-            else if(ent.getKey().endsWith(".lock"))
-                continue;
             
             String host = ent.getKey();
             boolean isLoading = ent.getKey().endsWith("loading");
@@ -224,6 +222,7 @@ public class BrokerFarm implements DataListener {
                     }
                 }
                 catch(Exception e) {
+                    logger.error(String.format("parent: %s, key: %s, value: %s", parentPath, ent.getKey(), new String(ent.getValue())));
                     logger.error(Utils.convertStackTrace(e));
                 }
             }

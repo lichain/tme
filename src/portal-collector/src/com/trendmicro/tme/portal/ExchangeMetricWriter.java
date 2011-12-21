@@ -65,6 +65,10 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
         }
         boolean isQueue = m.group(1).equals("q");
         
+        if(exchangeName.equals("mq.sys.dmq")) {
+            return;
+        }
+        
         RRDToolWriter writer = getWriter(q.getServer().getHost(), exchangeName, isQueue);
         ExchangeMetric metric = new ExchangeMetric(q.getServer().getHost(), isQueue ? "queue": "topic", exchangeName, String.format("%s/%s-%s.rrd", outputPath, isQueue ? "queue": "topic", exchangeName));
         

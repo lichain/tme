@@ -70,6 +70,7 @@ rpm: default
 	cp -f $(BINPATH)/mist-decode $(RPMPATH)/usr/bin
 	cp -f $(BINPATH)/mist-line-gen $(RPMPATH)/usr/bin
 	cp -f $(BINPATH)/mist-session $(RPMPATH)/usr/bin
+	cp -f $(BINPATH)/tme-console $(RPMPATH)/usr/bin
 	cp -f $(BINPATH)/mistd.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
 	cp -f $(BINPATH)/install_tme-mistd.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
 	cp -f $(BINPATH)/remove_tme-mistd.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)

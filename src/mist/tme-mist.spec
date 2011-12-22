@@ -51,6 +51,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/bin/mist-decode
 /usr/bin/mist-encode
 /usr/bin/mist-line-gen
+/usr/bin/tme-console
 
 %dir 
 /opt/trend/tme/bin

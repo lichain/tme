@@ -60,7 +60,7 @@ start_daemon() {
     if [ $running -eq 0 ]; then
         echo "already started"
     else
-        su TME -c "nohup $javacmd -cp \"/usr/share/mist/lib/*:/usr/share/spn-infra-common/lib/*\" $classname >> $errfile 2>&1 &"
+        su TME -c "nohup $javacmd -cp '/opt/trend/tme/lib/*' $classname >> $errfile 2>&1 &"
         check_process $classname 60 1
         ready=$?
         if [ $ready -eq 0 ]; then

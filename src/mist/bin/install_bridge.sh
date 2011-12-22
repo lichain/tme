@@ -5,7 +5,6 @@ if [ `whoami` != "root" ]; then
     exit 1;
 fi
 
-rm -f /etc/cron.d/tme-mist.cron
-/sbin/service mistd stop
+/sbin/service tme-bridge start
 
 exit 0

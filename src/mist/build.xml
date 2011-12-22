@@ -40,8 +40,7 @@
         <javac includeantruntime="false" srcdir="${dir.test}" destdir="${dir.class}" debug="true">
             <classpath refid="class.path"/>
         </javac>
-        <copy file="${dir.cfg}/log4j.properties" todir="${dir.class}"/>
-        <jar destfile="${dir.lib}/${file.jar}" basedir="${dir.class}"/>
+        <jar destfile="build/${file.jar}" basedir="${dir.class}"/>
     </target>
 	
     <target name="mistClient" depends="mist">
@@ -63,7 +62,7 @@
     <target name="clean">
         <delete dir="${dir.class}"/>
         <delete dir="${dir.doc}"/>
-        <delete file="${dir.lib}/${file.jar}"/>
+        <delete file="build/${file.jar}"/>
         <delete file="${dir.lib}/${mistClient.jar}"/>
     </target>
 

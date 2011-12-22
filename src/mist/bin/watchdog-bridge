@@ -8,7 +8,7 @@ fi
 DAEMON_SCRIPT='tme-bridge'
 CLASSNAME='com.trendmicro.mist.cmd.TmeBridge'
 
-export ZK_SERVER=`grep mistd.zookeeper= /usr/share/mist/etc/mistd.properties | cut -d '=' -f 2`
+export ZK_SERVER=`grep mistd.zookeeper= /opt/trend/tme/conf/mist/mistd.properties | cut -d '=' -f 2`
 
 pid=`ps -C java -o pid,args |grep $CLASSNAME | sed -e 's/^ *//' | cut -d ' ' -f 1`
 if [ -z "$pid" ]; then

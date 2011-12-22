@@ -122,6 +122,7 @@ public class Daemon {
 
     public static String nameTempDir;
     public static String nameConfigDir;
+    public static String nameLogDir;
     public static String namePidfile;
     public static String nameLogfile;
     public static String nameMISTConfig;
@@ -141,9 +142,10 @@ public class Daemon {
 
     static {
         nameTempDir = "/var/run/tme";
-        nameConfigDir = "/usr/share/mist/etc";
+        nameLogDir = "/var/log/tme";
+        nameConfigDir = "/opt/trend/tme/conf/mist";
         namePidfile = nameTempDir + "/mistd.pid";
-        nameLogfile = nameTempDir + "/mistd.log";
+        nameLogfile = nameLogDir + "/mistd.log";
         nameMISTConfig = nameConfigDir + "/mistd.properties";
         nameLog4jConfig = nameConfigDir + "/mistd.log4j";
 

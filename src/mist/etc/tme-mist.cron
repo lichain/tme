@@ -1,1 +1,0 @@
-*/5 * * * * root /usr/share/mist/bin/watchdog-mistd >> /var/run/tme/mistd.watch

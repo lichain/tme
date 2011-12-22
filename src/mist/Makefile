@@ -1,81 +1,93 @@
+# ----------------------------------------------------------------------------
+# Global/shared directories that should inherit from top-level makefile.
+# In case nothing is inherit from, we still have our defaults that follow O2
+# convention.
+# ----------------------------------------------------------------------------
 
+TOP_DIR        ?= $(abspath ../..)
+TOP_OUTPUT_DIR ?= $(TOP_DIR)/output
+ARTIFACTS_DIR  ?= $(TOP_OUTPUT_DIR)/artifacts
+RPMBUILD_DIR   ?= $(TOP_OUTPUT_DIR)/rpmbuild
+
+
+# ----------------------------------------------------------------------------
+# Module specific variables
+# ----------------------------------------------------------------------------
+
+CODE        = tme-mist
 NAME        = tme-mist
 VERSION     = 2.5
 PKGNAME     = ${NAME}-${VERSION}
 
-OUTPATH     = build
-OUT_W32     = windows
+BINPATH     = bin
+BUILDPATH   = build
 LIBPATH     = lib
-CFGPATH     = etc
-RPMPATH     = $(OUTPATH)/$(PKGNAME)
-
-RPMBUILD_DIR = ../../output/rpmbuild
-ARTIFACTS_DIR = ../../output/artifacts
+CONFPATH    = conf
+WEBPATH		= web
+RPMPATH     = $(BUILDPATH)/$(PKGNAME)
+INSTALLPATH	= /opt/trend/tme
 
 SRCDIR      = src
 
-ifndef BUILD_TAG
-BUILD_TAG=`date +%Y%m%d`
+ifndef CI_TAG
+CI_TAG        = $(shell date -u "+%Y%m%dZ")
+ifdef JOB_NAME
+CI_TAG       += _$(JOB_NAME)
+endif
+ifdef BUILD_NUMBER
+CI_TAG       += _build$(BUILD_NUMBER)
+endif
 endif
 
-mist: 
-	@export STAMP_VER=${VERSION}-${BUILD_TAG}; echo 'package com.trendmicro.mist; public class Version { public static String getVersion() { return "MIST_VERSION"; } }' | sed -e "s/MIST_VERSION/$$STAMP_VER/" > $(SRCDIR)/com/trendmicro/mist/Version.java
+# ----------------------------------------------------------------------------
+# Main targets
+# ----------------------------------------------------------------------------
+
+.PHONY: default
+default: 
 	@ant
-	@ant mistClient 
 
-unit_test:
-	@ant test
+.PHONY: rebuild
+rebuild: clean default
 
-doc:
-	@ant doc
+.PHONY: release
+release: rebuild upload
 
-rpm: mist
-	mkdir -p $(RPMBUILD_DIR)/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+.PHONY: rpm
+rpm: default
+	mkdir -p $(RPMBUILD_DIR)/{RPMS,SOURCES,BUILD,SPECS,SRPMS}
+	# Create source tarball
 	mkdir -p $(RPMPATH)/etc/init.d
 	mkdir -p $(RPMPATH)/usr/bin
-	mkdir -p $(RPMPATH)/usr/share/mist/bin
-	mkdir -p $(RPMPATH)/usr/share/mist/etc
-	mkdir -p $(RPMPATH)/usr/share/mist/lib
-	cp -f $(OUTPATH)/mistd  $(RPMPATH)/etc/init.d
-	cp -f $(OUTPATH)/mist-session $(RPMPATH)/usr/bin
-	cp -f $(OUTPATH)/mist-source $(RPMPATH)/usr/bin
-	cp -f $(OUTPATH)/mist-sink $(RPMPATH)/usr/bin
-	cp -f $(OUTPATH)/mist-decode $(RPMPATH)/usr/bin
-	cp -f $(OUTPATH)/mist-encode $(RPMPATH)/usr/bin
-	cp -f $(OUTPATH)/mist-forwarder $(RPMPATH)/usr/bin
-	cp -f $(OUTPATH)/mist-line-gen $(RPMPATH)/usr/bin
-	cp -f $(OUTPATH)/mist-broker $(RPMPATH)/usr/bin
-	cp -f $(OUTPATH)/test_mistd $(RPMPATH)/usr/share/mist/bin
-	cp -f $(OUTPATH)/alert-spyd $(RPMPATH)/usr/share/mist/bin
-	cp -f $(OUTPATH)/mon_mistd $(RPMPATH)/usr/share/mist/bin
-	cp -f $(OUTPATH)/watchdog-mistd $(RPMPATH)/usr/share/mist/bin
-	cp -f $(OUTPATH)/install_mistd.sh $(RPMPATH)/usr/share/mist/bin
-	cp -f $(OUTPATH)/remove_mistd.sh $(RPMPATH)/usr/share/mist/bin
-	cp -f $(CFGPATH)/tme-mist.cron $(RPMPATH)/usr/share/mist/etc
-	cp -f $(OUTPATH)/tme-bridge $(RPMPATH)/etc/init.d
-	cp -f $(OUTPATH)/bridge-console $(RPMPATH)/usr/bin
-	cp -f $(OUTPATH)/tme-console $(RPMPATH)/usr/bin
-	cp -f $(OUTPATH)/install_bridge.sh $(RPMPATH)/usr/share/mist/bin
-	cp -f $(OUTPATH)/remove_bridge.sh $(RPMPATH)/usr/share/mist/bin
-	cp -f $(OUTPATH)/watchdog-bridge $(RPMPATH)/usr/share/mist/bin
-	cp -f $(CFGPATH)/tme-bridge.cron $(RPMPATH)/usr/share/mist/etc
-	cp -f $(CFGPATH)/mistd.log4j $(RPMPATH)/usr/share/mist/etc
-	cp -f $(CFGPATH)/mistd.properties $(RPMPATH)/usr/share/mist/etc
-	cp -rf $(LIBPATH)/* $(RPMPATH)/usr/share/mist/lib
-	cd $(OUTPATH); tar cfz ../../../output/rpmbuild/SOURCES/$(PKGNAME).tar.gz $(PKGNAME)
+	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
+	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
+	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(CONFPATH)
+	cp -f $(BINPATH)/tme-mistd $(RPMPATH)/etc/init.d
+	cp -f $(BINPATH)/mist-session $(RPMPATH)/usr/bin
+	cp -f $(BINPATH)/mist-sink $(RPMPATH)/usr/bin
+	cp -f $(BINPATH)/mist-source $(RPMPATH)/usr/bin
+	cp -f $(BINPATH)/mist-encode $(RPMPATH)/usr/bin
+	cp -f $(BINPATH)/mist-decode $(RPMPATH)/usr/bin
+	cp -f $(BINPATH)/mist-line-gen $(RPMPATH)/usr/bin
+	cp -f $(BINPATH)/mist-session $(RPMPATH)/usr/bin
+	cp -f $(BINPATH)/mistd.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BINPATH)/install_tme-mistd.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BINPATH)/remove_tme-mistd.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BUILDPATH)/*.jar $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
+	cp -rf $(LIBPATH)/* $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
+	cp -rf $(CONFPATH)/* $(RPMPATH)/$(INSTALLPATH)/$(CONFPATH)
+	cd $(BUILDPATH); tar cfz $(PKGNAME).tar.gz $(PKGNAME)
+	mv $(BUILDPATH)/$(PKGNAME).tar.gz $(RPMBUILD_DIR)/SOURCES
 	rm -rf $(RPMPATH) 
-	export STAMP_VER=$(BUILD_TAG); cat $(NAME).spec | sed -e "s/#RELEASE_VER#/$$STAMP_VER/" -e "s/#MAJOR_VER#/$(VERSION)/" > $(NAME)-tmp.spec
-	rpmbuild --target noarch --define="_topdir `pwd`/../../output/rpmbuild" -ba $(NAME)-tmp.spec
-	rm -f $(NAME)-tmp.spec
+	# Create SPEC file with changelog, and build RPM files.
+	export STAMP_VER=$(CI_TAG); cat $(NAME).spec | sed -e "s/#RELEASE_VER#/$$STAMP_VER/" -e "s/#MAJOR_VER#/$(VERSION)/" > $(NAME)-tmp.spec
+	rpmbuild --quiet --target noarch --define="_topdir $(RPMBUILD_DIR)" -ba $(NAME)-tmp.spec ; rm -f $(NAME)-tmp.spec
+	# Copy RPM files to artifacts directory
 	mkdir -p $(ARTIFACTS_DIR);
 	cp -f $(RPMBUILD_DIR)/RPMS/*/$(NAME)-*.rpm $(ARTIFACTS_DIR)/;
 	cp -f $(RPMBUILD_DIR)/SRPMS/$(NAME)-*.rpm  $(ARTIFACTS_DIR)/;
 
-upload:
-	export STAMP_VER=$(BUILD_TAG); curl -T "../../output/rpmbuild/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm" -u anonymous:anonymous ftp://wiki.spn.tw.trendnet.org/dailybuild/TME/TME-2.5/
-
-install:
-	export STAMP_VER=$(BUILD_TAG); rpm -ivh ../../output/rpmbuild/RPMS/noarch/$(NAME)-$(VERSION)-$$STAMP_VER.noarch.rpm
-
+.PHONY: clean
 clean:
 	@ant clean
+

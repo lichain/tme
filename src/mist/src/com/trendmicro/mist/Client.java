@@ -10,8 +10,8 @@ import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.trendmicro.codi.CODIException;
 import com.trendmicro.codi.ZNode;
@@ -21,7 +21,6 @@ import com.trendmicro.mist.mfr.ExchangeFarm;
 import com.trendmicro.mist.proto.GateTalk;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
 import com.trendmicro.mist.util.Exchange;
-import com.trendmicro.spn.common.util.Utils;
 
 public class Client {
     private GateTalk.Client clientConfig;
@@ -29,7 +28,7 @@ public class Client {
     private int myId = -1;
     private static int clientIdCnt = 0;
     private Connection connection;
-    private static Log logger = LogFactory.getLog(Client.class);
+    private final static Logger logger = LoggerFactory.getLogger(Client.class);
 
     private boolean opened = false;
     private javax.jms.Session jms_session;
@@ -172,15 +171,15 @@ public class Client {
             opened = true;
         }
         catch(JMSException e) {
-            logger.error("fail to create session level objects: " + e.getMessage() + "\nStackTrace: " + Utils.convertStackTrace(e));
+            logger.error("fail to create session level objects: " + e.getMessage(), e);
             throw new MistException(e.getMessage());
         }
         catch(CODIException e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
             throw new MistException(e.getMessage());
         }
         catch(InterruptedException e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
             throw new MistException(e.getMessage());
         }
         finally {
@@ -233,13 +232,13 @@ public class Client {
             }
         }
         catch(JMSException e) {
-            logger.error("fail to close session level objects: " + e.getMessage() + "\nStackTrace: " + Utils.convertStackTrace(e));
+            logger.error("fail to close session level objects: " + e.getMessage(), e);
         }
         catch(CODIException e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
         }
         catch(InterruptedException e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
         }
         finally {
             if(!brokerDetermined) {
@@ -270,7 +269,8 @@ public class Client {
             getProducer().send(message);
         }
         catch(JMSException e) {
-            throw new MistException(String.format("producer (%d): %s; \nStackTrace: %s", getSessionId(), e.getMessage(), Utils.convertStackTrace(e)));
+            logger.error(e.getMessage(), e);
+            throw new MistException(String.format("producer (%d): %s", getSessionId(), e.getMessage()));
         }
     }
 
@@ -281,7 +281,8 @@ public class Client {
             getProducer().send(message);
         }
         catch(JMSException e) {
-            throw new MistException(String.format("producer (%d): %s; \nStackTrace: %s", getSessionId(), e.getMessage(), Utils.convertStackTrace(e)));
+            logger.error(e.getMessage(), e);
+            throw new MistException(String.format("producer (%d): %s", getSessionId(), e.getMessage()));
         }
     }
 }

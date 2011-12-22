@@ -9,8 +9,8 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.TextFormat;
 import com.google.protobuf.TextFormat.ParseException;
@@ -29,7 +29,7 @@ import com.trendmicro.mist.util.ParallelExecutor;
 import com.trendmicro.spn.common.util.Utils;
 
 public class ExchangeFarm extends Thread implements DataListener {
-    private static Log logger = LogFactory.getLog(ExchangeFarm.class);
+    private final static Logger logger = LoggerFactory.getLogger(ExchangeFarm.class);
     private static ExchangeFarm m_theSingleton = null;
     private static final String FIXED_NODE = "/tme2/global/fixed_exchange";
     private static final ZooKeeperInfo.Reference refdata = ZooKeeperInfo.Reference.newBuilder().setHost(Utils.getHostIP()).build();
@@ -98,7 +98,7 @@ public class ExchangeFarm extends Thread implements DataListener {
                 exchangeEventQueue.put(this);
             }
             catch(InterruptedException e) {
-                logger.error(Utils.convertStackTrace(e));
+                logger.error(e.getMessage(), e);
             }
             return false;
         }
@@ -135,7 +135,7 @@ public class ExchangeFarm extends Thread implements DataListener {
                 logger.info("new ref node created: " + newRefPath);
             }
             catch(Exception e) {
-                logger.error(Utils.convertStackTrace(e));
+                logger.error(e.getMessage(), e);
             }
             finally {
                 try {
@@ -200,7 +200,7 @@ public class ExchangeFarm extends Thread implements DataListener {
                 return false;
         }
         catch(Exception e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
             return true;
         }
         finally {
@@ -335,7 +335,7 @@ public class ExchangeFarm extends Thread implements DataListener {
             return !no_ref;
         }
         catch(Exception e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
             return true;
         }
     }
@@ -347,7 +347,7 @@ public class ExchangeFarm extends Thread implements DataListener {
             }
             catch(CODIException e) {
                 logger.error("cannot generate reference node under " + refRoot);
-                logger.fatal(Utils.convertStackTrace(e));
+                logger.error(e.getMessage(), e);
                 logger.info("retrying...");
                 Utils.justSleep(1000);
             }
@@ -408,7 +408,7 @@ public class ExchangeFarm extends Thread implements DataListener {
                 break;
             }
             catch(Exception e) {
-                logger.warn(Utils.convertStackTrace(e));
+                logger.error(e.getMessage(), e);
                 Utils.justSleep(1000);
             }
         }
@@ -448,7 +448,7 @@ public class ExchangeFarm extends Thread implements DataListener {
             logger.info("refNode " + refPath + " disappeared, ignore it");
         }
         catch(Exception e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
         }
         refList.remove(0);
 
@@ -467,7 +467,7 @@ public class ExchangeFarm extends Thread implements DataListener {
             }
         }
         catch(Exception e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -508,7 +508,7 @@ public class ExchangeFarm extends Thread implements DataListener {
             }
         }
         catch(Exception e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
         }
         return hostname;
     }
@@ -560,7 +560,7 @@ public class ExchangeFarm extends Thread implements DataListener {
             host = ex.getHost();
         }
         catch(Exception e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
         }
         return host;
     }
@@ -582,7 +582,7 @@ public class ExchangeFarm extends Thread implements DataListener {
                 return FlowControlBehavior.BLOCK;
         }
         catch(Exception e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
             return FlowControlBehavior.BLOCK;
         }
     }

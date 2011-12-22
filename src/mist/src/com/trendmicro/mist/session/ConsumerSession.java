@@ -84,7 +84,7 @@ public class ConsumerSession extends Session implements MessageListener {
                 c.getConsumer().setMessageListener(this);
             }
             catch(Exception e) {
-                logger.error(Utils.convertStackTrace(e));
+                logger.error(e.getMessage(), e);
             }
         }
     }
@@ -95,7 +95,7 @@ public class ConsumerSession extends Session implements MessageListener {
             c.getConsumer().setMessageListener(this);
         }
         catch(Exception e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
         }
     }
     
@@ -123,7 +123,7 @@ public class ConsumerSession extends Session implements MessageListener {
             mp = new MessagePrepared((BytesMessage) msg);
         }
         catch(Exception e) {
-            logger.error(e.getMessage());
+            logger.error(e.getMessage(), e);
             try {
                 msg.acknowledge();
             }
@@ -148,7 +148,7 @@ public class ConsumerSession extends Session implements MessageListener {
             unack = false;
         }
         catch(Exception e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
         }
     }
     
@@ -160,7 +160,7 @@ public class ConsumerSession extends Session implements MessageListener {
             onMessageProcess(msg);
         }
         catch(IOException e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
             detach();
         }
         Thread.currentThread().setName(imqThreadName);

@@ -13,8 +13,8 @@ import java.util.Map.Entry;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.TextFormat;
 import com.trendmicro.codi.CODIException;
@@ -27,7 +27,7 @@ import com.trendmicro.mist.util.ConnectionList;
 import com.trendmicro.spn.common.util.Utils;
 
 public class BrokerFarm implements DataListener {
-    private static Log logger = LogFactory.getLog(BrokerFarm.class);
+    private final static Logger logger = LoggerFactory.getLogger(BrokerFarm.class);
     private static BrokerFarm m_theSingleton = null;
 
     private HashMap<String, ZooKeeperInfo.Broker> allBrokers = new HashMap<String, ZooKeeperInfo.Broker>();
@@ -49,7 +49,7 @@ public class BrokerFarm implements DataListener {
                 catch(CODIException.NodeExist e) {
                 }
                 catch(Exception e) {
-                    logger.error(Utils.convertStackTrace(e));
+                    logger.error(e.getMessage(), e);
                 }
             }
         }
@@ -214,7 +214,7 @@ public class BrokerFarm implements DataListener {
                 }
                 catch(Exception e) {
                     logger.error(String.format("parent: %s, key: %s, value: %s", parentPath, ent.getKey(), new String(ent.getValue())));
-                    logger.error(Utils.convertStackTrace(e));
+                    logger.error(e.getMessage(), e);
                 }
             }
         }

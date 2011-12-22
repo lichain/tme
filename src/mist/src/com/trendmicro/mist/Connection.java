@@ -6,8 +6,8 @@ import java.util.concurrent.TimeoutException;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.trendmicro.mist.mfr.BrokerFarm;
 import com.trendmicro.mist.proto.GateTalk;
@@ -18,7 +18,6 @@ import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.spn.common.FixedReconnect;
 import com.trendmicro.spn.common.InfiniteReconnect;
 import com.trendmicro.spn.common.ReconnectCounter;
-import com.trendmicro.spn.common.util.Utils;
 
 public class Connection implements ExceptionListener {
     private GateTalk.Connection connectionConfig;
@@ -26,7 +25,7 @@ public class Connection implements ExceptionListener {
     private ConnectionList connList = new ConnectionList();
     private int myId = -1;
     private static int connectionIdCnt = 0;
-    private static Log logger = LogFactory.getLog(Connection.class);
+    private final static Logger logger = LoggerFactory.getLogger(Connection.class);
     private boolean connected = false;
     private int referenceCount = 0;
     private boolean isOpenMQCluster = false;
@@ -94,8 +93,8 @@ public class Connection implements ExceptionListener {
             tryConnect(new InfiniteReconnect());
         }
         catch(Exception e) {
-            logger.fatal(Utils.convertStackTrace(e));
-            logger.fatal("connection %d: fail to reconnect");
+            logger.error(e.getMessage(), e);
+            logger.error("connection %d: fail to reconnect", myId);
             return;
         }
 
@@ -184,7 +183,7 @@ public class Connection implements ExceptionListener {
     }
 
     public void onException(JMSException e) {
-        logger.error(String.format("connection %d: received JMSException; stacktrace: %s", getId(), Utils.convertStackTrace(e)));
+        logger.error(String.format("connection %d: received JMSException", getId()), e);
         reconnect();
     }
 

@@ -9,17 +9,16 @@ import java.util.Vector;
 import java.util.Map.Entry;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.trendmicro.codi.DataListener;
 import com.trendmicro.codi.DataObserver;
 import com.trendmicro.mist.util.Exchange;
-import com.trendmicro.spn.common.util.Utils;
 
 public class RouteFarm implements DataListener {
-    private static Log logger = LogFactory.getLog(RouteFarm.class);
+    private final static Logger logger = LoggerFactory.getLogger(RouteFarm.class);
     private static RouteFarm m_theSingleton = null;
 
     private HashMap<String, Vector<Exchange>> routeTable = new HashMap<String, Vector<Exchange>>();
@@ -92,7 +91,7 @@ public class RouteFarm implements DataListener {
                 return (Vector<Exchange>) (routeTable.get(src).clone());
         }
         catch(Exception e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
         }
         finally {
             rwlock.readLock().unlock();
@@ -143,7 +142,7 @@ public class RouteFarm implements DataListener {
                     graph = gson.fromJson(new String(raw), GraphModel.class);
                 }
                 catch(Exception e) {
-                    logger.error(Utils.convertStackTrace(e));
+                    logger.error(e.getMessage(), e);
                     return;
                 }
        

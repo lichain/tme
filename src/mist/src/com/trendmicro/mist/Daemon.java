@@ -17,12 +17,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.PropertyConfigurator;
 import org.nocrala.tools.texttablefmt.CellStyle;
 import org.nocrala.tools.texttablefmt.CellStyle.HorizontalAlign;
 import org.nocrala.tools.texttablefmt.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.trendmicro.codi.ZKSessionManager;
 import com.trendmicro.mist.mfr.BrokerFarm;
@@ -39,7 +38,7 @@ import com.trendmicro.spn.common.util.Utils;
 
 public class Daemon {
     private static boolean shutdownRequested = false;
-    private static Log logger = LogFactory.getLog(Daemon.class);
+    private static final Logger logger = LoggerFactory.getLogger(Daemon.class);
     private ServerSocket server;
     private ArrayList<ServiceProvider> services = new ArrayList<ServiceProvider>();
     private CellStyle numberStyle = new CellStyle(HorizontalAlign.right);
@@ -63,7 +62,7 @@ public class Daemon {
                         sess.detach(GateTalk.Request.Role.SINK);
                 }
                 catch(Exception e) {
-                    logger.error(Utils.convertStackTrace(e));
+                    logger.error(e.getMessage(), e);
                 }
             }
         }
@@ -82,8 +81,8 @@ public class Daemon {
             new File(namePidfile).deleteOnExit();
         }
         catch(IOException e) {
-            logger.fatal(String.format("can not create `%s'", namePidfile));
-            logger.fatal(e.getMessage());
+            logger.error(String.format("can not create `%s'", namePidfile));
+            logger.error(e.getMessage(), e);
             System.exit(-1);
         }
 
@@ -157,26 +156,6 @@ public class Daemon {
         }
         catch(IOException e) {
             System.err.printf("can not load config file `%s'%n", cfg_name);
-        }
-    }
-
-    public Daemon() {
-        new File(nameTempDir).mkdirs();
-        try {
-            Properties prop = new Properties();
-            prop.load(new FileInputStream(System.getProperty("mistd.log.log4j", nameLog4jConfig)));
-            String logStdout = System.getProperty("mistd.log.stdout");
-            if(logStdout == null)
-                logStdout = propMIST.getProperty("mistd.log.stdout", "false");
-            if(logStdout.equals("true"))
-                prop.setProperty("log4j.rootLogger", prop.getProperty("log4j.rootLogger") + ", stdout");
-            prop.setProperty("log4j.logger.org.apache.zookeeper", "ERROR, R");
-            prop.setProperty("log4j.appender.R.File", nameLogfile);
-            PropertyConfigurator.configure(prop);
-            logger.info(nameLogfile);
-        }
-        catch(IOException e) {
-            System.err.println(e.getMessage());
         }
     }
 
@@ -356,7 +335,7 @@ public class Daemon {
             } while(!isShutdownRequested());
         }
         catch(Exception e) {
-            logger.fatal(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
         }
     }
 

@@ -1,14 +1,10 @@
 package com.trendmicro.spn.common.util;
 
+import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.net.Socket;
-import java.lang.management.ManagementFactory;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.io.PrintWriter;
-
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 public class Utils {
@@ -98,13 +94,6 @@ public class Utils {
             return false;
         }
         return true;
-    }
-    
-    public static String convertStackTrace(Throwable e) {
-        final Writer result = new StringWriter();
-        final PrintWriter printWriter = new PrintWriter(result);
-        e.printStackTrace(printWriter);
-        return result.toString();
     }
     
     public static void justSleep(long milliSecond) {

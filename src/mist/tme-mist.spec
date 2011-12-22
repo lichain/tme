@@ -59,8 +59,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %config /opt/trend/tme/conf/mist/mistd.properties
 %config /opt/trend/tme/conf/mist/tme-mistd.monit
-%config /opt/trend/tme/conf/mist/log4j.properties
-%config /opt/trend/tme/conf/mist/mistd.log4j
+%config /opt/trend/tme/conf/mist/logback.xml
 
 %pre
 
@@ -88,6 +87,7 @@ elif [ "$1" = "2" ]; then
 fi
 
 %preun
+/opt/trend/tme/bin/remove_tme-mistd.sh
 
 if [ "$1" = "1" ]; then
     # upgrade

@@ -24,13 +24,13 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.PropertyConfigurator;
 
 import org.nocrala.tools.texttablefmt.Table;
 import org.nocrala.tools.texttablefmt.CellStyle;
 import org.nocrala.tools.texttablefmt.CellStyle.HorizontalAlign;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
@@ -61,7 +61,7 @@ import com.trendmicro.mist.ThreadInvoker;
 public class TmeBridge implements Runnable {
     private StringWriter responseWriter = new StringWriter();
     private static TmeBridge myApp;
-    private static Log logger = LogFactory.getLog(TmeBridge.class);
+    private static Logger logger = LoggerFactory.getLogger(TmeBridge.class);
     private ServerSocket server;
     private HashMap<String, CommandExecutable> commandTable = new HashMap<String, CommandExecutable>();
     private String BRIDGE_PATH = "/tme2/bridge/" + Daemon.propMIST.getProperty("bridge.name");
@@ -246,7 +246,7 @@ public class TmeBridge implements Runnable {
             logger.info(String.format("load %d broker(s), %d forwarder(s)", config.getBrokersCount(), config.getForwardersCount()));
         }
         catch(Exception e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -770,7 +770,7 @@ public class TmeBridge implements Runnable {
                 outputResponse(String.format("%s, invalid number format", e.getMessage()));
             }
             catch(Exception e) {
-                outputResponse(Utils.convertStackTrace(e));
+                logger.error(e.getMessage(), e);
             }
         }
 
@@ -968,7 +968,7 @@ public class TmeBridge implements Runnable {
             slaveChild.create(true, "".getBytes());
         }
         catch(CODIException e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
         }
 
         bridgeLock = new ZLock(BRIDGE_PATH + "/lock");
@@ -998,7 +998,7 @@ public class TmeBridge implements Runnable {
             masterChild.create(true, "".getBytes());
         }
         catch(CODIException e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
         }
 
         loadConfig();

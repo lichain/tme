@@ -8,8 +8,8 @@ import java.net.Socket;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.trendmicro.mist.proto.GateTalk;
 import com.trendmicro.mist.session.ConsumerSession;
@@ -19,10 +19,9 @@ import com.trendmicro.mist.session.SessionPool;
 import com.trendmicro.mist.session.UniqueSessionId;
 import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.mist.util.Packet;
-import com.trendmicro.spn.common.util.Utils;
 
 public class ServiceProvider implements Runnable {
-    private static Log logger = LogFactory.getLog(ServiceProvider.class);
+    private final static Logger logger = LoggerFactory.getLogger(ServiceProvider.class);
     private ServerSocket server;
     private static Integer serviceIdCnt = 0;
     private int myId = -1;
@@ -208,11 +207,8 @@ public class ServiceProvider implements Runnable {
                 cmd = cmd_builder.build();
             }
         }
-        catch(IOException e) {
-            logger.error(e.getMessage());
-        }
         catch(Exception e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
         }
         return cmd;
     }

@@ -9,18 +9,17 @@ import java.net.SocketTimeoutException;
 import java.util.Collection;
 import java.util.HashMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.trendmicro.mist.Client;
 import com.trendmicro.mist.MistException;
 import com.trendmicro.mist.proto.GateTalk;
 import com.trendmicro.mist.util.Exchange;
-import com.trendmicro.spn.common.util.Utils;
 
 public abstract class Session implements Runnable {
     public static final String MIST_MESSAGE_TTL = "MIST_TTL";
-    protected static Log logger = LogFactory.getLog(Session.class);
+    protected final static Logger logger = LoggerFactory.getLogger(Session.class);
     private ServerSocket localServer;
 
     protected Socket socket;
@@ -267,7 +266,7 @@ public abstract class Session implements Runnable {
             addClient(clientConfig);
         }
         catch(Exception e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
         }
     }
 

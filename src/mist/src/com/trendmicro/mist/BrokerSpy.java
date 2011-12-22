@@ -17,6 +17,10 @@ import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.QueryExp;
 import javax.management.remote.JMXConnector;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sun.messaging.AdminConnectionConfiguration;
 import com.sun.messaging.AdminConnectionFactory;
 import com.trendmicro.mist.mfr.ExchangeFarm;
@@ -25,11 +29,8 @@ import com.trendmicro.mist.proto.ZooKeeperInfo;
 import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.spn.common.util.Utils;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 public class BrokerSpy {
-    private static Log logger = LogFactory.getLog(BrokerSpy.class);
+    private final static Logger logger = LoggerFactory.getLogger(BrokerSpy.class);
     private String brokerHost;
     private JMXConnector connector;
     private MBeanServerConnection connection;
@@ -68,7 +69,7 @@ public class BrokerSpy {
             connection.setAttribute(name, new Attribute(attribName, attribValue));
         }
         catch(Exception e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
         }
     }
 	
@@ -249,7 +250,7 @@ public class BrokerSpy {
             }
         }
         catch(Exception e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
         }
         finally {
             try {
@@ -273,7 +274,7 @@ public class BrokerSpy {
             spy.setExchangeAttrib(exchange, "MaxNumMsgs", count);
         }
         catch(Exception e) {
-            logger.error(Utils.convertStackTrace(e));
+            logger.error(e.getMessage(), e);
         }
         finally {
             try {

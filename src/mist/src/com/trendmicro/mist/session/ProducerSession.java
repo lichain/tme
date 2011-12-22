@@ -203,7 +203,7 @@ public class ProducerSession extends Session {
                     break;
                 }
                 catch(Exception e) {
-                    logger.warn("problem in deliverMessage(): " + Utils.convertStackTrace(e));
+                    logger.warn("problem in deliverMessage(): ", e);
                     Utils.justSleep(1000);
                 }
             }
@@ -241,7 +241,7 @@ public class ProducerSession extends Session {
                 // Socket exception happens, if it is not caused by detach, log
                 // the error
                 if(!detachNow)
-                    logger.error(Utils.convertStackTrace(e));
+                    logger.error(e.getMessage(), e);
                 return;
             }
 

@@ -4,8 +4,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.TextFormat;
 import com.trendmicro.codi.CODIException;
@@ -21,7 +21,7 @@ import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.spn.common.util.Utils;
 
 public class CommandHandler extends Thread implements DataListener {
-    private static Log logger = LogFactory.getLog(CommandHandler.class);
+    private final static Logger logger = LoggerFactory.getLogger(CommandHandler.class);
     private static CommandHandler m_theSingleton = null;
     private static final String NODE_PATH = "/tme2/local/mist_client/" + Utils.getHostIP();
     private ZNode commandNode = null;
@@ -58,7 +58,7 @@ public class CommandHandler extends Thread implements DataListener {
             commandNode.create(false, "".getBytes());
         }
         catch(CODIException e) {
-            logger.fatal("cannot create command node!");
+            logger.error("cannot create command node!");
         }
         obs = new DataObserver(NODE_PATH, this, true, 1000);
         obs.start();

@@ -52,7 +52,6 @@ import com.trendmicro.mist.proto.ZooKeeperInfo;
 import com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig;
 import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.mist.util.Packet;
-import com.trendmicro.spn.common.util.LdapAdaptor;
 import com.trendmicro.spn.common.util.Utils;
 
 public class TmeConsole {
@@ -1391,7 +1390,7 @@ public class TmeConsole {
 
             ZNode authNode = new ZNode(node);
             if(authNode.exists()) {
-                loggedUser = checkUser(new String(authNode.getContent()).split("\n"));
+                //TODO: needs a new authenticator here
                 if(loggedUser == null)
                     throw new Exception("You are not authorized to console, please contact with operation");
             }
@@ -1428,21 +1427,6 @@ public class TmeConsole {
             return 1;
         }
         return 0;
-    }
-    
-    private static String checkUser(String[] users) {
-    	myConsole.logResponseNL("--- Please login with your NT domain account ---");
-    	String ldap_server = Daemon.propMIST.getProperty("console.ldap");
-    	LdapAdaptor la = new LdapAdaptor(ldap_server);
-    	if (users != null && la.isLegalUser()) {
-    		for (String user : users) {
-    			if (user.equals(la.getUserName())) {
-    				System.out.print(la.getUserName()+", ");
-    				return la.getUserName();
-    			}
-    		}
-    	}
-    	return null;
     }
 
     private static String askPassword(String prompt) {

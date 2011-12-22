@@ -13,7 +13,6 @@ import java.util.Map.Entry;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -64,15 +63,7 @@ public class BrokerFarm implements DataListener {
 
         javax.jms.Connection theConn = null;
         try {            
-            if(broker_type.equals("activemq")) {
-                String broker_uri = "tcp://" + connList.get(0).toString();                 
-                for(int i = 1; i < connList.size(); i++)
-                    broker_uri += (",tcp://" + connList.get(i).toString());
-                if(connList.size() > 1)
-                    broker_uri = String.format("failover:(%s)", broker_uri);
-                theConn = new ActiveMQConnectionFactory(broker_uri).createConnection(username, password);
-            }
-            else if(broker_type.equals("openmq")) {
+            if(broker_type.equals("openmq")) {
                 ConnectionFactory conn_fact = new com.sun.messaging.ConnectionFactory();
                 if(connList.size() == 1) {
                     ((com.sun.messaging.ConnectionFactory) conn_fact).setProperty(com.sun.messaging.ConnectionConfiguration.imqBrokerHostName, connList.get(0).getHost());

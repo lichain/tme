@@ -12,8 +12,17 @@
         <fileset dir="${dir.lib}">
             <include name="**/*.jar" />
         </fileset>
-        <fileset dir="/usr/share/spn-infra-common/lib">
+        <fileset dir="../common/lib">
             <include name="**/*.jar" />
+        </fileset>
+        <fileset dir="../broker/lib">
+            <include name="**/*.jar" />
+        </fileset>
+        <fileset dir="../common/build">
+            <include name="tme-common.jar" />
+        </fileset>
+        <fileset dir="test">
+            <include name="junit-4.8.2.jar" />
         </fileset>
     </path>
 
@@ -21,6 +30,7 @@
         <tstamp/>
         <mkdir dir="${dir.class}"/>
         <mkdir dir="${dir.doc}"/>
+		<ant antfile="../common/build.xml" target="build" dir="../common/" inheritAll="false"/>
     </target>
 
     <target name="mist" depends="init">

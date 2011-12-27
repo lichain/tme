@@ -9,6 +9,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
+import javax.management.remote.JMXConnector;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,9 +24,17 @@ import com.googlecode.jmxtrans.model.output.RRDToolWriter;
 import com.googlecode.jmxtrans.util.BaseOutputWriter;
 import com.googlecode.jmxtrans.util.LifecycleException;
 import com.googlecode.jmxtrans.util.ValidationException;
+import com.sun.messaging.AdminConnectionConfiguration;
+import com.sun.messaging.AdminConnectionFactory;
 
 public class ExchangeMetricWriter extends BaseOutputWriter {
     private static final Logger logger = LoggerFactory.getLogger(ExchangeMetricWriter.class);
+    private static final String[] MBEAN_INVOKE_SIG = new String[] {
+        String.class.getName()
+    };
+    private static final ObjectName consumerManagerName;
+    private static final ObjectName producerManagerName;
+    
     private String templateFile = "";
     private String outputPath = "";
     private Pattern namePattern = Pattern.compile(".*,name=\"([^\"]*)\",.*");
@@ -29,6 +42,16 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
     private ObjectMapper mapper = new ObjectMapper();
     
     private Map<String, RRDToolWriter> writerMap = new HashMap<String, RRDToolWriter>();
+    
+    static {
+        try {
+            consumerManagerName = new ObjectName("com.sun.messaging.jms.server:type=ConsumerManager,subtype=Monitor");
+            producerManagerName = new ObjectName("com.sun.messaging.jms.server:type=ProducerManager,subtype=Monitor");
+        }
+        catch(Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
     
     private RRDToolWriter getWriter(String broker, String exchangeName, boolean isQueue) throws LifecycleException {
         String key = broker + exchangeName + (isQueue ? "queue": "topic");
@@ -42,6 +65,42 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
             writerMap.put(key, writer);
         }
         return writerMap.get(key);
+    }
+    
+    private void queryClients(String broker, String typeName, ExchangeMetric metric) throws Exception {
+        JMXConnector connector;
+        MBeanServerConnection connection;
+        AdminConnectionFactory acf;
+        acf = new AdminConnectionFactory();
+        acf.setProperty(AdminConnectionConfiguration.imqAddress, broker);
+        connector = acf.createConnection();
+        
+        try {
+            connection = connector.getMBeanServerConnection();
+            ObjectName exchangeManagerName = new ObjectName("com.sun.messaging.jms.server:" + typeName);
+            String[] consumerIDs = (String[]) connection.invoke(exchangeManagerName, "getConsumerIDs", null, null);
+            if(consumerIDs != null) {
+                for(String consumerID : consumerIDs) {
+                    CompositeData info = (CompositeData) connection.invoke(consumerManagerName, "getConsumerInfoByID", new Object[] {
+                        consumerID
+                    }, MBEAN_INVOKE_SIG);
+                    metric.addConsumer(info.get("Host").toString());
+                }
+            }
+            
+            String[] producerIDs = (String[]) connection.invoke(exchangeManagerName, "getProducerIDs", null, null);
+            if(producerIDs != null) {
+                for(String producerID : producerIDs) {
+                    CompositeData info = (CompositeData) connection.invoke(producerManagerName, "getProducerInfoByID", new Object[] {
+                        producerID
+                    }, MBEAN_INVOKE_SIG);
+                    metric.addProducer(info.get("Host").toString());
+                }
+            }
+        }
+        finally {
+            connector.close();
+        }
     }
     
     @Override
@@ -71,6 +130,8 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
         
         RRDToolWriter writer = getWriter(q.getServer().getHost(), exchangeName, isQueue);
         ExchangeMetric metric = new ExchangeMetric(q.getServer().getHost(), isQueue ? "queue": "topic", exchangeName, String.format("%s/%s-%s.rrd", outputPath, isQueue ? "queue": "topic", exchangeName));
+        
+        queryClients(q.getServer().getHost(), q.getResults().get(0).getTypeName(), metric);
         
         long numMsgs = 0;
         long numMsgsIn = 0;

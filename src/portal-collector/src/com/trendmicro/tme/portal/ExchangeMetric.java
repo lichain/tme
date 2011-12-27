@@ -1,6 +1,8 @@
 package com.trendmicro.tme.portal;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ExchangeMetric {
@@ -10,6 +12,8 @@ public class ExchangeMetric {
     private String rrd;
     private long timestamp = System.currentTimeMillis();
     private Map<String, String> metrics = new HashMap<String, String>();
+    private List<String> consumers = new ArrayList<String>();
+    private List<String> producers = new ArrayList<String>();
     
     public ExchangeMetric() {
     }
@@ -43,6 +47,22 @@ public class ExchangeMetric {
     
     public Map<String, String> getMetrics() {
         return metrics;
+    }
+    
+    public List<String> getConsumers() {
+        return consumers;
+    }
+    
+    public void addConsumer(String host) {
+        consumers.add(host);
+    }
+    
+    public List<String> getProducers() {
+        return producers;
+    }
+    
+    public void addProducer(String host) {
+        producers.add(host);
     }
     
     public void addMetric(String key, String value) {

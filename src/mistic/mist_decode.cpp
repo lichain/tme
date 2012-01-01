@@ -5,39 +5,22 @@
  *      Author: Scott Wang <scott_wang@trend.com.tw>
  */
 
-#include <mist_proto/MistMessage.pb.h>
+#include "mist_core.h"
 
 #include<iostream>
 
 #include<arpa/inet.h>
 #include<boost/program_options.hpp>
 
-using namespace com::trendmicro::mist::proto;
 using namespace std;
-
-void process_line() {
-	uint32_t payload_length;
-
-	while (cin.read((char*) &payload_length, 4)) {
-		payload_length = ntohl(payload_length);
-		char* buf = new char[payload_length];
-		cin.read(buf, payload_length);
-
-		MessageBlock msg;
-		msg.ParseFromArray(buf, payload_length);
-		cout << msg.message() << endl;
-		cout.flush();
-
-		delete[] buf;
-	}
-}
 
 int main(int argc, char* argv[]) {
 	namespace program_opt = boost::program_options;
 
 	program_opt::options_description opt_desc("Allowed options");
 	opt_desc.add_options()("help", "Display help messages")("line,l",
-			"Decode message stream into line text file");
+			"Decode message stream into line text file")("stream,s",
+			"Decode message stream into [length][payload] format, length is 4 byte big endian integer");
 
 	program_opt::variables_map var_map;
 	program_opt::store(program_opt::parse_command_line(argc, argv, opt_desc),
@@ -45,7 +28,11 @@ int main(int argc, char* argv[]) {
 	program_opt::notify(var_map);
 
 	if (var_map.count("line")) {
-		process_line();
+		Processor<Block_Policy_MessageBlock, Block_Policy_Line, Read_Stdin_Policy, Write_Stdout_Policy> processor;
+	    processor.run();
+	} else if (var_map.count("stream")){
+		Processor<Block_Policy_MessageBlock, Block_Policy_Length, Read_Stdin_Policy, Write_Stdout_Policy> processor;
+	    processor.run();
 	} else {
 		cerr << opt_desc << endl;
 		return 1;

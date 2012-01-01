@@ -5,7 +5,7 @@
  *      Author: Scott Wang <scott_wang@trend.com.tw>
  */
 
-#include <mist_proto/MistMessage.pb.h>
+#include "mist_core.h"
 
 #include<string>
 #include<iostream>
@@ -13,27 +13,15 @@
 #include<arpa/inet.h>
 #include<boost/program_options.hpp>
 
-using namespace com::trendmicro::mist::proto;
 using namespace std;
-
-void process_line(const string& message_id) {
-	string line;
-	while (getline(cin, line)) {
-		MessageBlock msg;
-		msg.set_id(message_id);
-		msg.set_message(line);
-		uint32_t payload_length = htonl(msg.ByteSize());
-		cout.write((char*) &payload_length, 4);
-		msg.SerializeToOstream(&cout);
-	}
-}
 
 int main(int argc, char* argv[]) {
 	namespace program_opt = boost::program_options;
 
 	program_opt::options_description opt_desc("Allowed options");
 	opt_desc.add_options()("help", "Display help messages")("line,l",
-			"Encode each text line as a message")(
+			"Encode each text line as a message")("stream,s",
+			"Process message in [length][payload] format, length is 4 byte big endian integer")(
 			"wrap,w",
 			program_opt::value<string>(),
 			"wrap as message block of MESSAGEID\nMESSAGEID={queue|topic}:EXCHANGENAME\nif exchange type prefix is not given, default to queue");
@@ -53,7 +41,13 @@ int main(int argc, char* argv[]) {
 	message_id = var_map["wrap"].as<string> ();
 
 	if (var_map.count("line")) {
-		process_line(message_id);
+		Processor<Block_Policy_Line, Block_Policy_MessageBlock, Read_Stdin_Policy, Write_Stdout_Policy> processor;
+		processor.set_id(message_id);
+		processor.run();
+	}
+	else if (var_map.count("stream")) {
+		Processor<Block_Policy_Length, Block_Policy_MessageBlock, Read_Stdin_Policy, Write_Stdout_Policy> processor;
+		processor.run();
 	} else {
 		cout << opt_desc << endl;
 		return 1;

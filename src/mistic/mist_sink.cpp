@@ -1,5 +1,4 @@
-#include <mist_proto/MistMessage.pb.h>
-#include <mist_proto/GateTalk.pb.h>
+#include "mist_core.h"
 
 #include<iostream>
 #include<fstream>
@@ -15,64 +14,15 @@
 #include<unistd.h>
 #include<boost/program_options.hpp>
 
-#define MISTD_PORT 9498
-
-using namespace com::trendmicro::mist::proto;
 using namespace std;
+using namespace com::trendmicro::mist::proto;
 
 const uint32_t ACK_HEADER = ntohl(*((uint32_t*) &"ACK\n"));
 
 string ack_session_id;
 
-int connectTo(int port) {
-	int sock = socket(AF_INET, SOCK_STREAM, 0);
-	struct sockaddr_in sa;
-	sa.sin_family = AF_INET;
-	inet_aton("127.0.0.1", (struct in_addr *) &sa.sin_addr.s_addr);
-	sa.sin_port = htons(port);
-
-	if (connect(sock, (struct sockaddr*) &sa, sizeof(sa)) < 0) {
-		close(sock);
-		return -1;
-	} else
-		return sock;
-}
-
-int sendRequest(const Command& req, Command& res) {
-	int sock;
-	if ((sock = connectTo(MISTD_PORT)) < 0)
-		return -1;
-
-	uint32_t byteSize = htonl(req.ByteSize());
-	write(sock, &byteSize, 4);
-	req.SerializeToFileDescriptor(sock);
-
-	read(sock, &byteSize, 4);
-	if (res.ParseFromFileDescriptor(sock)) {
-		close(sock);
-		return 0;
-	} else {
-		close(sock);
-		return -1;
-	}
-}
-
-int read_all(int blocking_fd, char* buf, size_t size) {
-	size_t size_read = 0;
-	while (size_read < size) {
-		int n = read(blocking_fd, buf + size_read, size - size_read);
-		if (n <= 0)
-			return n;
-		size_read += n;
-	}
-
-	return size_read;
-}
-
 void manual_ack_loop(istream& is, int sock){
 	int pid = -1;
-	int cnt = 0;
-	time_t t = time(NULL);
 	for (;;) {
 		uint32_t besize;
 		if (!cin.read((char*) &besize, 4)) {
@@ -85,20 +35,10 @@ void manual_ack_loop(istream& is, int sock){
 			ifstream ifs(filename.c_str());
 			ifs>>pid;
 			ifs.close();
-			cout<<"pid="<<pid<<endl;
-
+			cerr<<"pid="<<pid<<endl;
+			cerr.flush();
 		}
 
-		if(cnt % 10000 == 0){
-					cout<<"forwarded count: "<<cnt++<<endl;
-					cout<<"sec: "<<(float)10000/(time(NULL) - t)<<endl;
-					cout.flush();
-					t = time(NULL);
-					//cout<<"avg: "
-				}
-
-		cnt++;
-		cout.flush();
 		if(ntohl(besize) == ACK_HEADER){
 			cout.flush();
 			kill(pid, SIGUSR1);
@@ -135,50 +75,6 @@ void manual_ack_loop(istream& is, int sock){
 	}
 }
 
-void auto_ack_loop(istream& is, int sock){
-	int cnt = 0;
-		time_t t = time(NULL);
-		for (;;) {
-			uint32_t besize;
-			if (!cin.read((char*) &besize, 4)) {
-				break;
-			}
-
-			char buf[1024];
-			ssize_t total = ntohl(besize);
-			ssize_t nwrite = 0;
-			write(sock, (char*) &besize, 4);
-			while (nwrite != total) {
-				ssize_t size_to_read = (total - nwrite) < 1024 ? total - nwrite : 1024;
-				cin.read(buf, size_to_read);
-				write(sock, buf, size_to_read);
-				nwrite += size_to_read;
-				//cerr<<"n: "<<n<<" nw:"<<nw<<" nread:"<<nread<<endl;
-			}
-
-			if (read(sock, &besize, 4) <= 0){
-				break;
-			}
-			total = ntohl(besize);
-			ssize_t nread = 0;
-			while (nread != total) {
-				ssize_t n = read(sock, buf,
-						(total - nread) < 1024 ? total - nread : 1024);
-				nread += n;
-				//cerr<<"n: "<<n<<" nw:"<<nw<<" nread:"<<nread<<endl;
-			}
-
-			cnt++;
-			if(cnt % 10000 == 0){
-				cout<<"forwarded count: "<<cnt++<<endl;
-				cout<<"sec: "<<(float)10000/(time(NULL) - t)<<endl;
-				cout.flush();
-				t = time(NULL);
-				//cout<<"avg: "
-			}
-		}
-}
-
 void attach(const string& session_id, bool ack) {
 	Command req_cmd;
 	Command res;
@@ -190,26 +86,26 @@ void attach(const string& session_id, bool ack) {
 	Response ackResponse;
 	ackResponse.set_success(true);
 	uint32_t ackSize = htonl(ackResponse.ByteSize());
-	//char* buf=NULL;
 	if (sendRequest(req_cmd, res) == 0) {
 		if (res.response(0).success()) {
 
 			int sock = connectTo(atoi(res.response(0).context().c_str()));
-			cerr << "port: " << atoi(res.response(0).context().c_str())
-					<< " ; sock = " << sock << endl;
 			int trueflag = 1;
 			setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &trueflag, sizeof(int));
-
-
 
 			if(ack){
 				manual_ack_loop(cin, sock);
 			}
 			else{
-				auto_ack_loop(cin, sock);
+				Processor<Block_Policy_Length, Block_Policy_Length, Read_Stdin_Policy, Write_Socket_Policy> processor;
+				Processor<Block_Policy_Skip, Block_Policy_Length, Read_Socket_Policy, Write_Stdout_Policy> response_processor;
+				processor.set_sock_fd(sock);
+				response_processor.set_sock_fd(sock);
+				while(processor.process_one()){
+					response_processor.process_one();
+				}
 			}
 			close(sock);
-
 		}
 	}
 

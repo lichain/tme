@@ -5,74 +5,15 @@
  *      Author: Scott Wang <scott_wang@trend.com.tw>
  */
 
-#include <mist_proto/GateTalk.pb.h>
+
+#include "mist_core.h"
 
 #include<iostream>
 #include<fstream>
-#include<stdlib.h>
-
-#include<arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/tcp.h>
-#include<signal.h>
-#include<unistd.h>
 #include<boost/program_options.hpp>
-
-#define MISTD_PORT 9498
 
 using namespace com::trendmicro::mist::proto;
 using namespace std;
-
-int connectTo(int port){
-    int sock=socket(AF_INET,SOCK_STREAM,0);
-    struct sockaddr_in sa;
-    sa.sin_family=AF_INET;
-    inet_aton("127.0.0.1",(struct in_addr *)&sa.sin_addr.s_addr);
-    sa.sin_port=htons(port);
-
-    if(connect(sock,(struct sockaddr*)&sa,sizeof(sa))<0){
-        close(sock);
-        return -1;
-    }
-    else
-        return sock;
-}
-
-int sendRequest(const Command& req, Command& res){
-    int sock;
-    if((sock=connectTo(MISTD_PORT))<0)
-        return -1;
-
-    uint32_t byteSize=htonl(req.ByteSize());
-    write(sock,&byteSize,4);
-    req.SerializeToFileDescriptor(sock);
-
-    read(sock,&byteSize,4);
-    if(res.ParseFromFileDescriptor(sock)){
-        close(sock);
-        return 0;
-    }
-    else{
-        close(sock);
-        return -1;
-    }
-}
-
-int read_all(int blocking_fd, char* buf, size_t size)
-{
-    size_t size_read = 0;
-    while(size_read < size)
-    {
-        int n = read(blocking_fd, buf + size_read, size - size_read);
-        if(n <= 0)
-            return n;
-        size_read += n;
-    }
-
-    return size_read;
-}
 
 int create_session() {
 	int session_id = -1;

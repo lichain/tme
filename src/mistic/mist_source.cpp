@@ -5,78 +5,21 @@
  *      Author: Scott Wang <scott_wang@trend.com.tw>
  */
 
-#include <mist_proto/MistMessage.pb.h>
-#include <mist_proto/GateTalk.pb.h>
+#include "mist_core.h"
 
 #include<iostream>
 #include<fstream>
-#include<stdlib.h>
-
-#include<arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/tcp.h>
-#include <sys/file.h>
+#include<netinet/tcp.h>
 #include<signal.h>
 #include<unistd.h>
 #include<boost/program_options.hpp>
 
-#define MISTD_PORT 9498
-
-using namespace com::trendmicro::mist::proto;
 using namespace std;
+using namespace com::trendmicro::mist::proto;
 
 bool on_close = false;
 
-int connectTo(int port){
-    int sock=socket(AF_INET,SOCK_STREAM,0);
-    struct sockaddr_in sa;
-    sa.sin_family=AF_INET;
-    inet_aton("127.0.0.1",(struct in_addr *)&sa.sin_addr.s_addr);
-    sa.sin_port=htons(port);
-
-    if(connect(sock,(struct sockaddr*)&sa,sizeof(sa))<0){
-        close(sock);
-        return -1;
-    }
-    else
-        return sock;
-}
-
-int sendRequest(const Command& req, Command& res){
-    int sock;
-    if((sock=connectTo(MISTD_PORT))<0)
-        return -1;
-
-    uint32_t byteSize=htonl(req.ByteSize());
-    write(sock,&byteSize,4);
-    req.SerializeToFileDescriptor(sock);
-
-    read(sock,&byteSize,4);
-    if(res.ParseFromFileDescriptor(sock)){
-        close(sock);
-        return 0;
-    }
-    else{
-        close(sock);
-        return -1;
-    }
-}
-
-int read_all(int blocking_fd, char* buf, size_t size)
-{
-    size_t size_read = 0;
-    while(size_read < size)
-    {
-        int n = read(blocking_fd, buf + size_read, size - size_read);
-        if(n <= 0)
-            return n;
-        size_read += n;
-    }
-
-    return size_read;
-}
+int sock;
 
 void attach(const string& session_id, bool ack){
 	string filename = string("/var/run/tme/pid/") + session_id + string(".pid");
@@ -95,67 +38,32 @@ void attach(const string& session_id, bool ack){
 	Response ackResponse;
 	ackResponse.set_success(true);
 	uint32_t ackSize=htonl(ackResponse.ByteSize());
-	//char* buf=NULL;
 	if (sendRequest(req_cmd, res) == 0) {
 		if (res.response(0).success()) {
 
-			int sock = connectTo(atoi(res.response(0).context().c_str()));
-			cerr << "port: " << atoi(res.response(0).context().c_str())
-					<< " ; sock = " << sock << endl;
+			sock = connectTo(atoi(res.response(0).context().c_str()));
 			int trueflag = 1;
 			setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &trueflag, sizeof(int));
 
-			for (;;) {
-				MessageBlock msg;
-				uint32_t besize;
-				if (on_close || read(sock, &besize, 4) <= 0){
-					break;
-				}
-
-/*				buf = (char*) malloc(ntohl(besize) + 200);
-				read_all(sock, buf, ntohl(besize));
-				msg.ParseFromArray(buf, ntohl(besize));
-
-				cout.write((char*)&besize, 4);
-				msg.SerializeToOstream(&cout);*/
-
-				//cout.write((char*)&besize, 4);
-
-				char buf[1024];
-				ssize_t total = ntohl(besize);
-				ssize_t nread = 0;
-				write(fileno(stdout), (char*)&besize, 4);
-				while (nread != total) {
-					ssize_t n = read(sock, buf, (total - nread) < 1024 ? total - nread : 1024);
-					int nw = write(fileno(stdout), buf, n);
-					nread += n;
-					//cerr<<"n: "<<n<<" nw:"<<nw<<" nread:"<<nread<<endl;
-				}
-
-				//while()
-				//cout.rdbuf();
-				cout.flush();
-
+			Processor<Block_Policy_Length, Block_Policy_Length, Read_Socket_Policy, Write_Stdout_Policy> processor;
+			processor.set_sock_fd(sock);
+			
+			while(!on_close && processor.process_one()){
 				if(ack){
-								sigset_t waitset;
-								int sig;
-								int result;
-								sigemptyset(&waitset);
-								sigaddset(&waitset, SIGUSR1);
-								sigprocmask(SIG_BLOCK, &waitset, NULL);
-								result = sigwait(&waitset, &sig);
+					sigset_t waitset;
+					int sig;
+					int result;
+					sigemptyset(&waitset);
+					sigaddset(&waitset, SIGUSR1);
+					sigprocmask(SIG_BLOCK, &waitset, NULL);
+					result = sigwait(&waitset, &sig);
 				}
-
 				write(sock,&ackSize,4);
 				ackResponse.SerializeToFileDescriptor(sock);
-
-				//free(buf);
 			}
 			close(sock);
-
 		}
 	}
-
 }
 
 void mount(const string& session_id, const string& exName) {
@@ -184,22 +92,10 @@ void cleanup() {
 	unlink((string("/var/run/tme/pid/") + session_id + string(".pid")).c_str());
 }
 
-
-
-
 void handler(int signo){
+	close(sock);
 	on_close = true;
-	/*cerr<<"handler"<<endl;
-	Command req_cmd;
-	Command res;
-	Request* req_ptr = req_cmd.add_request();
-	req_ptr->set_type(Request::CLIENT_DETACH);
-	req_ptr->set_argument(session_id);
-	req_ptr->set_role(Request::SOURCE);
-	sendRequest(req_cmd, res);*/
 }
-
-
 
 int main(int argc, char* argv[]) {
 	atexit(cleanup);
@@ -228,7 +124,6 @@ int main(int argc, char* argv[]) {
 
 	if (var_map.count("attach")) {
 		attach(var_map["session-id"].as<string>(), var_map.count("ack")>0);
-		//process_line(var_map.count("raw") > 0, var_map.count("ack") > 0);
 	}
 	else if (var_map.count("mount")) {
 		mount(var_map["session-id"].as<string>(), var_map["mount"].as<string>());

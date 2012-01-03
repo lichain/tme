@@ -17,11 +17,11 @@
 using namespace std;
 using namespace com::trendmicro::mist::proto;
 
-const uint32_t ACK_HEADER = ntohl(*((uint32_t*) &"ACK\n"));
 
 string ack_session_id;
 
 void manual_ack_loop(istream& is, int sock){
+	const uint32_t ACK_HEADER = ntohl(*((uint32_t*) &"ACK\n"));
 	int pid = -1;
 	for (;;) {
 		uint32_t besize;

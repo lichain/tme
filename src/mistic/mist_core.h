@@ -159,24 +159,44 @@ class Write_Stdout_Policy : public block_policy
 
 class Block_Policy_Line : public Block_Base
 {
+	public:
+		Block_Policy_Line():_linebuf_ptr(_linebuf), _linebuf_end(_linebuf){}
+
 	protected:
 		message_payload Read(const int fd){
 			char* ptr = _buf;
 			size_t size = 0;
-			while(read_all(fd, ptr , 1) == 1 && *ptr != '\n'){
+			
+			int c;
+			while((c = get(fd)) != -1 && c != '\n'){
 				if((size = ptr - _buf + 1) == MAX_MSG_SIZE){
 					throw "Maximum message size exceeded";
 				}
-				ptr++;
+				*ptr++ = c;
 			}
 			*ptr = '\0';
-
 			return message_payload(_buf, size);
 		}
 
 		void Write(const int fd, const char* buf, const size_t count){
 			write(fd, buf, count);
 			write(fd, "\n", 1);
+		}
+	private:
+		char _linebuf[1024];
+		char* _linebuf_ptr;
+		char* _linebuf_end;
+
+		int get(const int fd){
+			if(_linebuf_ptr == _linebuf_end){
+				size_t nread = read(fd, _linebuf, 1024);
+				if(nread <= 0){
+					return -1;
+				}
+				_linebuf_end = _linebuf + nread;
+				_linebuf_ptr = _linebuf;
+			}
+			return *_linebuf_ptr++;
 		}
 };
 
@@ -219,7 +239,7 @@ class Block_Policy_MessageBlock
 		message_payload Read(const int fd){
 			using namespace google::protobuf::io;
 			static FileInputStream fis(fd);
-			static CodedInputStream cis(&fis);
+			CodedInputStream cis(&fis);
 
 			const char* msgbuf;
 			size_t len = 0;

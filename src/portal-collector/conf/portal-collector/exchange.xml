@@ -1,6 +1,6 @@
 <rrd_def>
      <path>${database}</path>
-     <step>10</step>
+     <step>30</step>
 	 <datasource><name>NumMsgs82ff1e7ab6ff</name><type>GAUGE</type><heartbeat>400</heartbeat><min>0</min><max>U</max></datasource>
 	 <datasource><name>NumMsgsInd604c03a7d</name><type>COUNTER</type><heartbeat>400</heartbeat><min>U</min><max>U</max></datasource>
 	 <datasource><name>NumMsgsOut352e0a04c</name><type>COUNTER</type><heartbeat>400</heartbeat><min>U</min><max>U</max></datasource>
@@ -16,12 +16,12 @@
          <cf>AVERAGE</cf>
          <xff>0.5</xff>
          <steps>30</steps>
-         <rows>7000</rows>
+         <rows>4000</rows>
      </archive>
      <archive>
          <cf>LAST</cf>
          <xff>0.5</xff>
          <steps>1</steps>
-         <rows>7000</rows>
+         <rows>120000</rows>
      </archive>
  </rrd_def>

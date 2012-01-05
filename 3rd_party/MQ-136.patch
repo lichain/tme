@@ -1,0 +1,29 @@
+--- NFLPriorityFifoSet.java.old	2012-01-05 16:51:17.000000000 +0800
++++ NFLPriorityFifoSet.java	2012-01-05 16:54:28.000000000 +0800
+@@ -85,7 +85,7 @@
+     protected long maxBytePerObject = UNLIMITED_BYTES;
+     protected boolean orderMaintained = true;
+ 
+-    private int queuePosition = 0;
++    private long queuePosition = 0L;
+ 
+     public NFLPriorityFifoSet() {
+         this(10, false);
+@@ -717,7 +717,7 @@
+                 long ordernum = oo.getOrder();
+ 
+                 // First calculate the priority from the id
+-                pri = (int)((long)ordernum >> 28);
++                pri = (int)((long)ordernum >> 60);
+ 
+                 // make sure we dont have a dup entry
+                 // if it is, remove it so we replace it
+@@ -1065,7 +1065,7 @@
+             // priority + long value
+             // 
+             if (o instanceof Ordered && ((Ordered)o).getOrder() == 0 ) {
+-                long id = (long)pri << 28;
++                long id = (long)pri << 60;
+                 id +=  queuePosition;
+                 queuePosition ++;
+                 ((Ordered)o).setOrder(id);

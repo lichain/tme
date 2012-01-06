@@ -2,7 +2,8 @@ openmq:
 	mkdir -p build
 	cp openmq4_5-source.zip build
 	cd build ; unzip openmq4_5-source.zip
-	patch build/mq/src/share/java/com/sun/messaging/jmq/util/lists/NFLPriorityFifoSet.java < MQ-136.patch
+	cp MQ-*.patch build
+	cd build ; for patch in `ls MQ-*.patch` ; do patch -p0 < $$patch ; done
 	cd build/mq ; ant bootstrap
 	cd build/mq ; ant
 	mv -f build/mq/dist/mq/lib/imq.jar ../src/common/lib/imq.jar

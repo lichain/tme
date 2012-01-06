@@ -1,4 +1,4 @@
---- NFLPriorityFifoSet.java.old	2012-01-05 16:51:17.000000000 +0800
+--- mq/src/share/java/com/sun/messaging/jmq/util/lists/NFLPriorityFifoSet.java	2012-01-05 16:51:17.000000000 +0800
 +++ NFLPriorityFifoSet.java	2012-01-05 16:54:28.000000000 +0800
 @@ -85,7 +85,7 @@
      protected long maxBytePerObject = UNLIMITED_BYTES;

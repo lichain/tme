@@ -1,0 +1,102 @@
+--- mq/src/share/java/com/sun/messaging/jmq/admin/apps/broker/CmdRunner.java	2011-01-18 10:15:55.000000000 +0800
++++ CmdRunner.java	2012-01-06 14:56:28.000000000 +0800
+@@ -4978,8 +4978,8 @@
+ 	if (metricType == METRICS_TOTALS)  {
+ 	    metricRow = new String[11];
+ 
+-	    metricRow[0] = Integer.toString(latestDest.getMessagesIn());
+-	    metricRow[1] = Integer.toString(latestDest.getMessagesOut());
++	    metricRow[0] = Long.toString(latestDest.getMessagesIn());
++	    metricRow[1] = Long.toString(latestDest.getMessagesOut());
+ 	    metricRow[2] = Long.toString(latestDest.getMessageBytesIn());
+ 	    metricRow[3] = Long.toString(latestDest.getMessageBytesOut());
+ 
+--- mq/src/share/java/com/sun/messaging/jmq/io/DestMetricsCounters.java	2010-09-10 06:20:31.000000000 +0800
++++ DestMetricsCounters.java	2012-01-06 14:49:51.000000000 +0800
+@@ -98,8 +98,8 @@
+ 
+     public DestMetricsCounters() {
+         super();
+-        setIntProperty(MESSAGES_IN, 0); //int
+-        setIntProperty(MESSAGES_OUT, 0); //int
++        setLongProperty(MESSAGES_IN, 0); //long
++        setLongProperty(MESSAGES_OUT, 0); //long
+         setIntProperty(HIGH_WATER_MESSAGES, 0); //int
+         setLongProperty(HIGH_WATER_MESSAGE_BYTES, 0); //long
+         setLongProperty(HIGH_WATER_LARGEST_MSG_BYTES, 0); //long
+@@ -160,11 +160,11 @@
+         put(propName, l);
+     }
+ 
+-    public int getMessagesIn() {
+-        return getIntProperty(MESSAGES_IN);
++    public long getMessagesIn() {
++        return getLongProperty(MESSAGES_IN);
+     }
+-    public int getMessagesOut() {
+-        return getIntProperty(MESSAGES_OUT);
++    public long getMessagesOut() {
++        return getLongProperty(MESSAGES_OUT);
+     }
+ 
+     public int getHighWaterMessages() {
+@@ -255,11 +255,11 @@
+         return getIntProperty(ROLLBACK_CNT);
+     }
+ 
+-    public void setMessagesIn(int cnt) {
+-         setIntProperty(MESSAGES_IN, cnt);
++    public void setMessagesIn(long cnt) {
++         setLongProperty(MESSAGES_IN, cnt);
+     }
+-    public void setMessagesOut(int cnt) {
+-         setIntProperty(MESSAGES_OUT, cnt);
++    public void setMessagesOut(long cnt) {
++         setLongProperty(MESSAGES_OUT, cnt);
+     }
+     public void setHighWaterMessages(int cnt) {
+          setIntProperty(HIGH_WATER_MESSAGES, cnt);
+--- mq/src/share/java/com/sun/messaging/jmq/jmsserver/core/Destination.java	2012-01-06 15:18:26.000000000 +0800
++++ Destination.java	2012-01-06 15:24:26.000000000 +0800
+@@ -1767,17 +1767,17 @@
+     }
+ 
+     transient long lastMetricsTime;
+-    transient int msgsIn = 0;
+-    transient int msgsOut = 0;
+-    transient int lastMsgsIn = 0;
+-    transient int lastMsgsOut = 0;
++    transient long msgsIn = 0;
++    transient long msgsOut = 0;
++    transient long lastMsgsIn = 0;
++    transient long lastMsgsOut = 0;
+     transient long msgBytesIn = 0;
+     transient long msgBytesOut = 0;
+     transient long lastMsgBytesIn = 0;
+     transient long lastMsgBytesOut = 0;
+ 
+-    transient int msgsInInternal = 0;
+-    transient int msgsOutInternal = 0;
++    transient long msgsInInternal = 0;
++    transient long msgsOutInternal = 0;
+     transient long msgsInOutLastResetTime = 0;
+ 
+ 
+@@ -3095,7 +3095,7 @@
+             msgsIn +=1;
+             msgBytesIn += pkt.byteSize();
+             msgsInInternal +=1;
+-            if (msgsInInternal >= Integer.MAX_VALUE) {
++            if (msgsInInternal >= Long.MAX_VALUE) {
+                 msgsInOutLastResetTime = System.currentTimeMillis(); 
+                 msgsInInternal = 0;
+                 msgsOutInternal = 0;
+@@ -3460,7 +3460,7 @@
+                 msgsOut += 1;
+                 msgBytesOut += ref.byteSize();
+                 msgsOutInternal += 1;
+-                if (msgsOutInternal >= Integer.MAX_VALUE) { 
++                if (msgsOutInternal >= Long.MAX_VALUE) { 
+                     msgsInOutLastResetTime = System.currentTimeMillis();
+                     msgsInInternal = 0;
+                     msgsOutInternal = 0;

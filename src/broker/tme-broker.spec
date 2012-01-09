@@ -83,6 +83,7 @@ fi
 
 %preun
 
+/opt/trend/tme/bin/remove_tme-broker.sh
 if [ "$1" = "1" ]; then
     # upgrade
     usleep 1

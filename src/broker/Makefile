@@ -63,6 +63,7 @@ rpm: default
 	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(CONFPATH)
 	cp -f $(BINPATH)/tme-broker $(RPMPATH)/etc/init.d
 	cp -f $(BINPATH)/broker.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BINPATH)/imqcmd $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
 	cp -f $(BINPATH)/install_tme-broker.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
 	cp -f $(BINPATH)/remove_tme-broker.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
 	cp -f $(BUILDPATH)/*.jar $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)

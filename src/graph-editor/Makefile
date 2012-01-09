@@ -16,7 +16,7 @@ RPMBUILD_DIR   ?= $(TOP_OUTPUT_DIR)/rpmbuild
 
 CODE        = tme-graph-editor
 NAME        = tme-graph-editor
-VERSION     = 1.0
+VERSION     = 2.5
 PKGNAME     = ${NAME}-${VERSION}
 
 BINPATH     = bin

@@ -45,6 +45,7 @@ endif
 
 .PHONY: default
 default: 
+	echo "package com.trendmicro.mist; public class Version { public static String getVersion() { return \"${VERSION}-${CI_TAG}\"; } }" > src/com/trendmicro/mist/Version.java
 	@ant
 
 .PHONY: rebuild

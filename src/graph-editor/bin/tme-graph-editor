@@ -2,52 +2,17 @@
 # chkconfig: 345 99 1
 # description: TME Graph Editor
 
-source /etc/init.d/functions
+source /opt/trend/tme/bin/daemon.sh
 
 RETVAL=0
-prog="tme-graph-editor"
-grapheditor=/opt/trend/tme/bin/graph-editor.sh
+progname="tme-graph-editor"
+progpath=/opt/trend/tme/bin/graph-editor.sh
+user="TME"
 
 piddir="/var/run/tme"
 logdir="/var/log/tme"
-pidfile="$piddir/$prog.pid"
-lockfile="/var/lock/subsys/$prog"
-
-start() {
-	checkpid `cat $pidfile 2>/dev/null`
-	if [ $? == 0 ]
-	then
-		echo "$prog (`cat $pidfile`) is running, stop it first"
-		exit 1
-	fi
-
-    echo -n $"Starting $prog: "
-    daemon --user=TME ${grapheditor} daemon
-	checkpid `cat $pidfile`
-    RETVAL=$?
-    echo
-    [ $RETVAL = 0 ] && touch $lockfile
-}
-
-stop() {
-    echo -n $"Stopping $prog: "
-    killproc -p $pidfile
-    RETVAL=$?
-    echo
-    rm -f $lockfile
-    rm -f $pidfile
-}
-
-status() {
-    checkpid `cat $pidfile 2>/dev/null`
-    RETVAL=$?
-    if [ $RETVAL == 0 ]
-    then
-        echo "$prog (`cat $pidfile`) is running"
-    else
-        echo "$prog does not exist!"
-    fi
-}
+pidfile="$piddir/$progname.pid"
+lockfile="/var/lock/subsys/$progname"
 
 case "$1" in
 start)

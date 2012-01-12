@@ -18,7 +18,7 @@ License: Trend Micro Inc.
 Group: System Environment/Daemons
 Source: %{name}-%{ver}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{ver}-root
-Requires: jdk, graphviz-java, tme-common >= 1.0-20111222Z, monit
+Requires: jdk, graphviz-java, tme-common >= 2.5-20120112Z, monit
 Requires(post): /sbin/chkconfig, /sbin/service
 Requires(preun): /sbin/chkconfig, /sbin/service
 

@@ -228,14 +228,12 @@ public class Daemon {
         }
         strOut.write(String.format("%d exchanges transmitted%n", ExchangeMetric.exchangeStat.size()));
         if(ExchangeMetric.exchangeStat.size() > 0) {
-            Table tab = new Table(7);
+            Table tab = new Table(5);
             tab.addCell("Exchange");
             tab.addCell("In-Count");
             tab.addCell("In-Bytes");
             tab.addCell("Out-Count");
             tab.addCell("Out-Bytes");
-            tab.addCell("Ref-Count");
-            tab.addCell("De-Ref-Count");
             for(Map.Entry<String, ExchangeMetric> e : ExchangeMetric.exchangeStat.entrySet()) {
                 ExchangeMetric info = e.getValue();
                 tab.addCell(e.getKey());

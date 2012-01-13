@@ -24,7 +24,8 @@ int main(int argc, char* argv[]) {
 			"Process message in [length][payload] format, length is 4 byte big endian integer")(
 			"wrap,w",
 			program_opt::value<string>(),
-			"wrap as message block of MESSAGEID\nMESSAGEID={queue|topic}:EXCHANGENAME\nif exchange type prefix is not given, default to queue");
+			"wrap as message block of MESSAGEID\nMESSAGEID={queue|topic}:EXCHANGENAME\nif exchange type prefix is not given, default to queue")
+			("ttl,t", program_opt::value<int>(), "set message TTL, in seconds");
 
 	program_opt::variables_map var_map;
 	program_opt::store(program_opt::parse_command_line(argc, argv, opt_desc),
@@ -43,6 +44,9 @@ int main(int argc, char* argv[]) {
 	if (var_map.count("line")) {
 		Processor<Block_Policy_Line, Block_Policy_MessageBlock, Read_Stdin_Policy, Write_Stdout_Policy> processor;
 		processor.set_id(message_id);
+		if(var_map.count("ttl")){
+		    processor.set_ttl(var_map["ttl"].as<int>());
+		}
 		processor.run();
 	}
 	else if (var_map.count("stream")) {

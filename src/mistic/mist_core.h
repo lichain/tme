@@ -231,8 +231,14 @@ class Block_Policy_Skip : public Block_Policy_Length
 class Block_Policy_MessageBlock
 {
 	public:
-		void set_id(std::string id){
+		Block_Policy_MessageBlock() : _ttl(-1), _id("") {}
+
+		void set_id(const std::string id){
 			_id = id;
+		}
+
+		void set_ttl(const int ttl){
+			_ttl = ttl;
 		}
 		
 	protected:
@@ -257,6 +263,9 @@ class Block_Policy_MessageBlock
 
 		void Write(const int fd, const char* buf, const size_t count){
 			_msg.set_id(_id);
+			if(_ttl > 0){
+			    _msg.set_ttl(_ttl);
+			}
 			_msg.set_message(buf, count);
 			uint32_t len = htonl(_msg.ByteSize());
 			write(fd, &len, 4);
@@ -265,6 +274,7 @@ class Block_Policy_MessageBlock
 
 	private:
 		std::string _id;
+		int _ttl;
 		com::trendmicro::mist::proto::MessageBlock _msg;
 };
 

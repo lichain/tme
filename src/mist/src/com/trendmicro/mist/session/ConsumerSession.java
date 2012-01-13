@@ -154,14 +154,22 @@ public class ConsumerSession extends Session implements MessageListener {
     
     @Override
     public synchronized void onMessage(Message msg) {
+        if(detachNow){
+            return;
+        }
         String imqThreadName = Thread.currentThread().getName();
         Thread.currentThread().setName(prefixThreadName + imqThreadName);
         try {
             onMessageProcess(msg);
         }
-        catch(IOException e) {
-            logger.error(e.getMessage(), e);
-            detach();
+        catch(Exception e) {
+            logger.error("Encounter error during delivering message, detaching the session", e);
+            try {
+                detach(GateTalk.Request.Role.SOURCE);
+            }
+            catch(MistException e1) {
+                logger.error(e1.getMessage(), e1);
+            }
         }
         Thread.currentThread().setName(imqThreadName);
     }

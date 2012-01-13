@@ -25,7 +25,7 @@ public abstract class Session implements Runnable {
     protected Socket socket;
     protected BufferedInputStream socketInput;
     protected BufferedOutputStream socketOutput;
-    protected boolean detachNow = false;
+    protected volatile boolean detachNow = false;
 
     protected HashMap<Exchange, Client> allClients = new HashMap<Exchange, Client>();
 
@@ -158,9 +158,18 @@ public abstract class Session implements Runnable {
      * 
      * @param isPause
      */
-    public void close(boolean isPause) {
-        for(Client c : allClients.values())
-            c.closeClient(isPause, false);
+    public void close(final boolean isPause) {
+        // A consumer thread is not allowed to close jms session, so fork a
+        // thread here to close them
+        new Thread() {
+            @Override
+            public void run() {
+                for(Client c : allClients.values()) {
+                    c.closeClient(isPause, false);
+                }
+                detachNow = false;
+            }
+        }.start();
     }
 
     /**
@@ -170,33 +179,43 @@ public abstract class Session implements Runnable {
      *            Whether it is a SOURCE or a SINK
      * @throws MistException
      */
-    public synchronized void attach(GateTalk.Request.Role role) throws MistException {
+    public void attach(GateTalk.Request.Role role) throws MistException {
         checkRole(role);
-
-        if(isAttached())
-            throw new MistException(MistException.ALREADY_ATTACHED);
-
-        try {
-            localServer = new ServerSocket();
-            localServer.setReuseAddress(true);
-            localServer.setSoTimeout(1000);
-            localServer.bind(null);
-        }
-        catch(IOException e) {
-            logger.error(e.getMessage());
+        while(detachNow) {
             try {
-                localServer.close();
+                Thread.sleep(100);
             }
-            catch(Exception e2) {
+            catch(InterruptedException e) {
+                return;
             }
-            throw new MistException(e.getMessage());
         }
-        detachNow = false;
-        isReady = false;
-        open(false);
-        
-        sessionThread = new Thread(this);
-        sessionThread.start();
+
+        synchronized(this) {
+            if(isAttached())
+                throw new MistException(MistException.ALREADY_ATTACHED);
+            
+            try {
+                localServer = new ServerSocket();
+                localServer.setReuseAddress(true);
+                localServer.setSoTimeout(1000);
+                localServer.bind(null);
+            }
+            catch(IOException e) {
+                logger.error(e.getMessage());
+                try {
+                    localServer.close();
+                }
+                catch(Exception e2) {
+                }
+                throw new MistException(e.getMessage());
+            }
+            detachNow = false;
+            isReady = false;
+            open(false);
+            
+            sessionThread = new Thread(this);
+            sessionThread.start();
+        }
     }
 
     protected abstract void detach();

@@ -7,10 +7,10 @@
     /usr/lib/rpm/brp-python-bytecompile \
 %{nil}
 
-%define name tme-mist
+%define name tme-mist-tools
 %define ver #MAJOR_VER#
 
-Summary: TME MIST Daemon
+Summary: TME MIST Toolkits
 Name: %{name}
 Version: %{ver}
 Release: #RELEASE_VER#
@@ -18,13 +18,10 @@ License: Trend Micro Inc.
 Group: System Environment/Daemons
 Source: %{name}-%{ver}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{ver}-root
-Requires: jdk, tme-common >= 2.5-20120112Z, monit, tme-mist-tools
-Requires(post): /sbin/chkconfig, /sbin/service
-Requires(preun): /sbin/chkconfig, /sbin/service
 
 %description
 
-TME MIST Daemon
+TME MIST Toolkits
 
 %prep
 
@@ -44,17 +41,11 @@ cp -rf * $RPM_BUILD_ROOT/
 rm -rf $RPM_BUILD_ROOT
 
 %files
-/etc/init.d/tme-mistd
-/usr/bin/mist-line-gen
-/usr/bin/tme-console
-
-%dir 
-/opt/trend/tme/bin
-/opt/trend/tme/lib
-
-%config /opt/trend/tme/conf/mist/mistd.properties
-%config /opt/trend/tme/conf/mist/tme-mistd.monit
-%config /opt/trend/tme/conf/mist/logback.xml
+/usr/bin/mist-session
+/usr/bin/mist-sink
+/usr/bin/mist-source
+/usr/bin/mist-decode
+/usr/bin/mist-encode
 
 %pre
 
@@ -82,8 +73,6 @@ elif [ "$1" = "2" ]; then
 fi
 
 %preun
-/opt/trend/tme/bin/remove_tme-mistd.sh
-
 if [ "$1" = "1" ]; then
     # upgrade
     usleep 1

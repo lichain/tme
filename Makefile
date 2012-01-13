@@ -29,6 +29,7 @@ SUB_MODULE_DIRS += src/broker
 SUB_MODULE_DIRS += src/mist
 SUB_MODULE_DIRS += src/portal-collector
 SUB_MODULE_DIRS += src/graph-editor
+SUB_MODULE_DIRS += src/mistic
 
 
 # ----------------------------------------------------------------------------

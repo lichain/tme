@@ -51,11 +51,28 @@ void destroy_session(const string& session_id) {
 	}
 }
 
+void list_session() {
+	Command cmd;
+	Request* reqPtr = cmd.add_request();
+	reqPtr->set_type(Request::SESSION_LIST);
+
+	Command res;
+	if (sendRequest(cmd, res) == 0) {
+		if (res.response(0).success()) {
+			cerr<<res.response(0).context()<<endl;
+		}
+		else{
+			cerr<<res.response(0).exception()<<endl;
+		}
+	}
+}
+
 int main(int argc, char* argv[]) {
 	namespace program_opt = boost::program_options;
 
 	program_opt::options_description opt_desc("Allowed options");
-	opt_desc.add_options()("help", "Display help messages")("destroy,d", program_opt::value<string>(),"Destroy session");
+	opt_desc.add_options()("help", "Display help messages")("destroy,d", program_opt::value<string>(),"Destroy session")
+	("list,l", "List all sessions");
 
 	program_opt::variables_map var_map;
 	program_opt::store(program_opt::parse_command_line(argc, argv, opt_desc),
@@ -68,6 +85,9 @@ int main(int argc, char* argv[]) {
 	}
 	else if(var_map.count("destroy")){
 		destroy_session(var_map["destroy"].as<string>());
+	}
+	else if(var_map.count("list")){
+		list_session();
 	}
 	else{
 		cout<<create_session()<<endl;

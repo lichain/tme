@@ -44,10 +44,13 @@ endif
 # Main targets
 # ----------------------------------------------------------------------------
 
-.PHONY: default
-default: 
+#.PHONY: default
+default: $(WORKS_DIR)/../protobuf-2.1.0/src/protoc
 	mkdir -p $(WORKS_DIR)/
 	cd $(WORKS_DIR) ; cmake $(TOP_DIR)/src ; make
+
+$(WORKS_DIR)/../protobuf-2.1.0/src/protoc:
+	cd $(TOP_DIR)/3rd_party ; make protobuf
 
 .PHONY: rebuild
 rebuild: clean default
@@ -60,11 +63,13 @@ rpm: default
 	mkdir -p $(RPMBUILD_DIR)/{RPMS,SOURCES,BUILD,SPECS,SRPMS}
 	# Create source tarball
 	mkdir -p $(RPMPATH)/usr/bin
+	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
 	cp -f $(BINPATH)/mist-session $(RPMPATH)/usr/bin
 	cp -f $(BINPATH)/mist-sink $(RPMPATH)/usr/bin
 	cp -f $(BINPATH)/mist-source $(RPMPATH)/usr/bin
 	cp -f $(BINPATH)/mist-encode $(RPMPATH)/usr/bin
 	cp -f $(BINPATH)/mist-decode $(RPMPATH)/usr/bin
+	cp -f $(WORKS_DIR)/../protobuf-2.1.0/src/.libs/libprotobuf.so.4 $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
 	cd $(BUILDPATH); tar cfz $(PKGNAME).tar.gz $(PKGNAME)
 	mv $(BUILDPATH)/$(PKGNAME).tar.gz $(RPMBUILD_DIR)/SOURCES
 	rm -rf $(RPMPATH) 

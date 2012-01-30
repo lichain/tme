@@ -4,9 +4,10 @@
 #define MAX_MSG_SIZE 512000
 #define MISTD_PORT 9498
 
-#include <mist_proto/MistMessage.pb.h>
-#include <mist_proto/GateTalk.pb.h>
+#include <MistMessage.pb.h>
+#include <GateTalk.pb.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/io/coded_stream.h>
 #include <iostream>
 #include <arpa/inet.h>
 

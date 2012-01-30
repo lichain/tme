@@ -234,66 +234,12 @@ FUNCTION(PROTOBUF_GENERATE_CPP SRCS HDRS)
     
 ENDFUNCTION()
 
-IF (PROTOBUF_LIBRARIES AND PROTOBUF_INCLUDE_DIR)
-    SET(PROTOBUF_FIND_QUIETLY TRUE) # Already in cache, be silent
-ENDIF (PROTOBUF_LIBRARIES AND PROTOBUF_INCLUDE_DIR)
-
-FIND_PATH(PROTOBUF_INCLUDE_DIR google/protobuf/service.h 
-          PATHS "/usr/include"
-                "/usr/local/include"
-                "/usr/include/google"
-                "/usr/local/include/google"
-)
-
-# Google's provided vcproj files generate libraries with a "lib"
-# prefix on Windows
-IF(WIN32)
-    SET(PROTOBUF_ORIG_FIND_LIBRARY_PREFIXES "${CMAKE_FIND_LIBRARY_PREFIXES}")
-    SET(CMAKE_FIND_LIBRARY_PREFIXES "lib" "")
-ENDIF()
-
-FIND_LIBRARY(PROTOBUF_LIBRARY NAMES protobuf
-             PATHS "/usr/lib"
-                   "/usr/local/lib"
-                   "/usr/local/lib/google"
-             DOC "The Google Protocol Buffers Library"
-)
-FIND_LIBRARY(PROTOBUF_PROTOC_LIBRARY NAMES protoc
-             PATHS "/usr/lib"
-                   "/usr/local/lib"
-                   "/usr/local/lib/google"
-             DOC "The Google Protocol Buffers Compiler Library"
-)
-FIND_PROGRAM(PROTOBUF_PROTOC_EXECUTABLE NAMES protoc
-             PATHS "/bin"
-                   "/usr/bin"
-                   "/usr/local/bin"
-             DOC "The Google Protocol Buffers Compiler"
-)
-
-IF (PROTOBUF_INCLUDE_DIR AND PROTOBUF_LIBRARY)
-	SET(PROTOBUF_FOUND 1)
-	SET(PROTOBUF_LIBRARIES ${PROTOBUF_LIBRARY})
-	SET(PROTOBUF_INCLUDE_DIRS ${PROTOBUF_INCLUDE_DIR})
-	
-	MESSAGE(STATUS "Found these protobuf libs: ${PROTOBUF_LIBRARIES}")
-ELSE (PROTOBUF_INCLUDE_DIR AND PROTOBUF_LIBRARY)
-	SET(PROTOBUF_FOUND 0)
-	SET(PROTOBUF_LIBRARIES)
-	SET(PROTOBUF_INCLUDE_DIRS)
-ENDIF (PROTOBUF_INCLUDE_DIR AND PROTOBUF_LIBRARY)
-
-# Report the results.
-IF (NOT PROTOBUF_FOUND)
-    SET(PROTOBUF_DIR_MESSAGE "Protobuf was not found. Make sure PROTOBUF_LIBRARY and PROTOBUF_INCLUDE_DIR are set.")
-	IF (NOT PROTOBUF_FIND_QUIETLY)
-		MESSAGE(STATUS "${PROTOBUF_DIR_MESSAGE}")
-	ELSE (NOT PROTOBUF_FIND_QUIETLY)
-		IF (PROTOBUF_FIND_REQUIRED)
-			MESSAGE(FATAL_ERROR "${PROTOBUF_DIR_MESSAGE}")
-		ENDIF (PROTOBUF_FIND_REQUIRED)
-	ENDIF (NOT PROTOBUF_FIND_QUIETLY)
-ENDIF (NOT PROTOBUF_FOUND)
+SET(PROTOBUF_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/../../output/works/protobuf-2.1.0/src/.libs/libprotobuf.so.4")
+SET(PROTOBUF_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../output/works/protobuf-2.1.0/src")
+SET(PROTOBUF_PROTOC_EXECUTABLE "${CMAKE_CURRENT_SOURCE_DIR}/../../output/works/protobuf-2.1.0/src/protoc")
+SET(PROTOBUF_FOUND 1)
+SET(PROTOBUF_LIBRARIES ${PROTOBUF_LIBRARY})
+SET(PROTOBUF_INCLUDE_DIRS ${PROTOBUF_INCLUDE_DIR})
 
 # Restore original find library prefixes
 IF(WIN32)

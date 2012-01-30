@@ -1,3 +1,5 @@
+all:
+
 openmq:
 	mkdir -p build
 	cp openmq4_5-source.zip build
@@ -15,6 +17,12 @@ openmq:
 	sed -i "s/\$$_classes/\'\/opt\/trend\/tme\/lib\/*\'/g" build/mq/dist/mq/bin/imqcmd
 	mv -f build/mq/dist/mq/bin/imqcmd ../src/broker/bin/imqcmd
 	mv -f build/mq/dist/mq/lib/imqinit ../src/broker/lib/imqinit
+
+protobuf:
+	mkdir -p ../output/works/
+	cp protobuf-2.1.0.tar.gz ../output/works
+	cd ../output/works ; tar -zxvf protobuf-2.1.0.tar.gz
+	cd ../output/works/protobuf-2.1.0 ; ./configure ; make
 	
 clean:
 	rm -rf build

@@ -33,13 +33,15 @@ public class EmbeddedOpenMQ implements DataListener {
     private DataObserver obs;
     private String mqHome;
     private String mqVar;
+    private String tmeRoot;
     
     public EmbeddedOpenMQ(String mqHome, String mqVar, Properties config) throws Exception {
         host = InetAddress.getLocalHost().getHostAddress();
         this.mqHome = mqHome;
         this.mqVar = mqVar;
         this.config = config;
-        obs = new DataObserver("/tme2/broker/" + host, this, false, 0);
+        tmeRoot = config.getProperty("com.trendmicro.tme.broker.zookeeper.tmeroot");
+        obs = new DataObserver(tmeRoot + "/broker/" + host, this, false, 0);
     }
     
     public void start() throws Exception {
@@ -76,7 +78,7 @@ public class EmbeddedOpenMQ implements DataListener {
         brkBuilder.setVersion("4.5.1");
         brkBuilder.setReserved(false);
         
-        ZNode brkNode = new ZNode("/tme2/broker/" + host);
+        ZNode brkNode = new ZNode(tmeRoot + "/broker/" + host);
         try {
             brkNode.deleteRecursively();
         }
@@ -84,20 +86,20 @@ public class EmbeddedOpenMQ implements DataListener {
         }
         brkNode.create(false, brkBuilder.build().toString());
         
-        ZNode loadingNode = new ZNode("/tme2/broker/" + host + "/loading");
+        ZNode loadingNode = new ZNode(tmeRoot + "/broker/" + host + "/loading");
         loadingNode.create(false, ZooKeeperInfo.Loading.newBuilder().setLoading(0).setLastUpdate(0).setFreeMemory(0).setMaxMemory(0).build().toString());
         obs.start();
     }
     
     public void unregisterOnZk() throws CODIException {
         obs.stop();
-        ZNode brkNode = new ZNode("/tme2/broker/" + host);
+        ZNode brkNode = new ZNode(tmeRoot + "/broker/" + host);
         brkNode.deleteRecursively();
     }
     
     private ZooKeeperInfo.Broker.Status getNewStatus() {
         try {
-            byte[] data = new ZNode("/tme2/broker/" + host).getContent();
+            byte[] data = new ZNode(tmeRoot + "/broker/" + host).getContent();
             ZooKeeperInfo.Broker.Builder builder = ZooKeeperInfo.Broker.newBuilder();
             TextFormat.merge(new String(data), builder);
             return builder.build().getStatus();
@@ -110,7 +112,7 @@ public class EmbeddedOpenMQ implements DataListener {
     
     private synchronized boolean checkOnlineStatus() {
         if(statusChanged) {
-            String lockPath = "/tme2/locks/brk_" + host;
+            String lockPath = tmeRoot + "/locks/brk_" + host;
             ZLock lock = new ZLock(lockPath);
             try {
                 logger.info("Waiting for broker lock...");
@@ -149,7 +151,7 @@ public class EmbeddedOpenMQ implements DataListener {
     }
     
     public void reportLoadingForever() throws InterruptedException {
-        ZNode loadingNode = new ZNode("/tme2/broker/" + host + "/loading");
+        ZNode loadingNode = new ZNode(tmeRoot + "/broker/" + host + "/loading");
         while(true) {
             if(checkOnlineStatus()) {
                 long free = Runtime.getRuntime().freeMemory();

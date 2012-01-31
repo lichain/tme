@@ -23,9 +23,6 @@ public class ProcessorModel {
     private Set<ExchangeModel> inputs = new HashSet<ExchangeModel>();
     private Set<String> outputs = new HashSet<String>();
     
-    public ProcessorModel() {
-    }
-    
     public ProcessorModel(String name) {
         this.name = name;
     }

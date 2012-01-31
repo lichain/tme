@@ -2,6 +2,8 @@ package com.trendmicro.tme.grapheditor;
 
 import java.io.FileInputStream;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
@@ -15,8 +17,8 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.jersey.spi.container.servlet.ServletContainer;
 import com.trendmicro.codi.ZKSessionManager;
+import com.trendmicro.tme.mfr.ExchangeFarm;
 
 public class GraphEditorMain {
     private static final String CONFIG_PATH = System.getProperty("com.trendmicro.tme.grapheditor.conf", "/opt/trend/tme/conf/graph-editor/graph-editor.properties");
@@ -38,8 +40,10 @@ public class GraphEditorMain {
             
             HandlerList handlers = new HandlerList();
             
+            Map<Class<?>, Object> classMap = new HashMap<Class<?>, Object>();
+            classMap.put(ExchangeFarm.class, new ExchangeFarm(prop.getProperty("com.trendmicro.tme.grapheditor.zookeeper.tmeroot")));
             ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SECURITY | ServletContextHandler.SESSIONS);
-            ServletHolder jerseyHolder = new ServletHolder(new ServletContainer());
+            ServletHolder jerseyHolder = new ServletHolder(new GraphEditorContainer(classMap));
             
             handler.addServlet(new ServletHolder(new DefaultServlet()), "/static/*");
             

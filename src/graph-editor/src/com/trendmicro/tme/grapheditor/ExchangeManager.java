@@ -12,6 +12,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBException;
 
+import com.sun.jersey.api.core.InjectParam;
 import com.sun.jersey.api.view.Viewable;
 import com.trendmicro.codi.CODIException;
 import com.trendmicro.codi.ZNode;
@@ -23,6 +24,7 @@ import com.trendmicro.tme.mfr.ExchangeFarm;
 
 @Path("/exchange")
 public class ExchangeManager {
+    @InjectParam ExchangeFarm exchangeFarm;
     
     public ExchangeModel getExchange(@PathParam("name") String name) {
         return new ExchangeModel(name);
@@ -51,7 +53,7 @@ public class ExchangeManager {
             node.create(false, dropConfig.toString().getBytes());
         }
         
-        String broker = ExchangeFarm.getCurrentExchangeHost(ex);
+        String broker = exchangeFarm.getCurrentExchangeHost(ex);
         if(broker != null) {
             BrokerAdmin brokerAdmin = new BrokerAdmin(broker);
             brokerAdmin.jmxConnectServer();
@@ -77,7 +79,7 @@ public class ExchangeManager {
         String path = "/tme2/global/drop_exchange/" + ex.getName();
         
         new ZNode(path).delete();
-        String broker = ExchangeFarm.getCurrentExchangeHost(ex);
+        String broker = exchangeFarm.getCurrentExchangeHost(ex);
         if(broker != null) {
             BrokerAdmin brokerAdmin = new BrokerAdmin(broker);
             brokerAdmin.jmxConnectServer();
@@ -97,7 +99,7 @@ public class ExchangeManager {
         Exchange ex = new Exchange(name);
         String path = "/tme2/global/limit_exchange/" + ex.getName();
         
-        ZooKeeperInfo.TotalLimit limit = ExchangeFarm.getTotalLimit(ex);
+        ZooKeeperInfo.TotalLimit limit = exchangeFarm.getTotalLimit(ex);
         ZNode node = new ZNode(path);
         if(node.exists()) {
             node.setContent(limit.toBuilder().setSizeBytes(Long.valueOf(sizeLimit)).build().toString().getBytes());
@@ -106,7 +108,7 @@ public class ExchangeManager {
             node.create(false, limit.toBuilder().setSizeBytes(Long.valueOf(sizeLimit)).build().toString().getBytes());
         }
         
-        String broker = ExchangeFarm.getCurrentExchangeHost(ex);
+        String broker = exchangeFarm.getCurrentExchangeHost(ex);
         if(broker != null) {
             BrokerAdmin brokerAdmin = new BrokerAdmin(broker);
             brokerAdmin.jmxConnectServer();
@@ -126,7 +128,7 @@ public class ExchangeManager {
         Exchange ex = new Exchange(name);
         String path = "/tme2/global/limit_exchange/" + ex.getName();
         
-        ZooKeeperInfo.TotalLimit limit = ExchangeFarm.getTotalLimit(ex);
+        ZooKeeperInfo.TotalLimit limit = exchangeFarm.getTotalLimit(ex);
         ZNode node = new ZNode(path);
         if(node.exists()) {
             node.setContent(limit.toBuilder().setCount(Long.valueOf(countLimit)).build().toString().getBytes());
@@ -135,7 +137,7 @@ public class ExchangeManager {
             node.create(false, limit.toBuilder().setCount(Long.valueOf(countLimit)).build().toString().getBytes());
         }
         
-        String broker = ExchangeFarm.getCurrentExchangeHost(ex);
+        String broker = exchangeFarm.getCurrentExchangeHost(ex);
         if(broker != null) {
             BrokerAdmin brokerAdmin = new BrokerAdmin(broker);
             brokerAdmin.jmxConnectServer();

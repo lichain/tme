@@ -8,16 +8,22 @@ import com.trendmicro.codi.ZNode;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
 
 public class ExchangeFarm {
-    private static Logger logger = LoggerFactory.getLogger(ExchangeFarm.class);
+    private final static Logger logger = LoggerFactory.getLogger(ExchangeFarm.class);
+
+    private String tmeRoot;
     
     public static enum FlowControlBehavior {
         BLOCK, DROP_NEWEST, DROP_OLDEST,
     }
     
-    public static String getCurrentExchangeHost(Exchange exchange) {
+    public ExchangeFarm(String tmeRoot) {
+        this.tmeRoot = tmeRoot;
+    }
+
+    public String getCurrentExchangeHost(Exchange exchange) {
         String host = null;
         String exchangeFullName = exchange.toString();
-        String exchangeNodePath = "/tme2/exchange/" + exchangeFullName;
+        String exchangeNodePath = tmeRoot + "/exchange/" + exchangeFullName;
         
         ZNode exchangeNode = new ZNode(exchangeNodePath);
         ZooKeeperInfo.Exchange.Builder exBuilder = ZooKeeperInfo.Exchange.newBuilder();
@@ -32,8 +38,8 @@ public class ExchangeFarm {
         return host;
     }
     
-    public static FlowControlBehavior getDropPolicy(Exchange exchange) {
-        String path = "/tme2/global/drop_exchange" + "/" + exchange.getName();
+    public FlowControlBehavior getDropPolicy(Exchange exchange) {
+        String path = tmeRoot + "/global/drop_exchange" + "/" + exchange.getName();
         ZNode dropNode = new ZNode(path);
         try {
             if(dropNode.exists()) {
@@ -54,8 +60,8 @@ public class ExchangeFarm {
         }
     }
     
-    public static ZooKeeperInfo.TotalLimit getTotalLimit(Exchange exchange) {
-        String path = "/tme2/global/limit_exchange" + "/" + exchange.getName();
+    public ZooKeeperInfo.TotalLimit getTotalLimit(Exchange exchange) {
+        String path = tmeRoot + "/global/limit_exchange" + "/" + exchange.getName();
         ZNode limitNode = new ZNode(path);
         try {
             ZooKeeperInfo.TotalLimit.Builder limitBuilder = ZooKeeperInfo.TotalLimit.newBuilder();

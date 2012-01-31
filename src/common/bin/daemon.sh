@@ -1,0 +1,74 @@
+
+if [ -e /etc/redhat-release ]
+then
+    source /etc/init.d/functions
+
+    start() {
+        checkpid `cat $pidfile 2>/dev/null`
+        if [ $? == 0 ]
+        then
+            echo "$progname (`cat $pidfile`) is running, stop it first"
+            exit 1
+        fi
+
+        echo -n $"Starting $progname: "
+        daemon --user=$user $progpath daemon
+        checkpid `cat $pidfile`
+        RETVAL=$?
+        echo
+        [ $RETVAL = 0 ] && touch $lockfile
+    }
+
+    stop() {
+        echo -n $"Stopping $progname: "
+        killproc -p $pidfile
+        RETVAL=$?
+        echo
+        rm -f $lockfile
+        rm -f $pidfile
+    }
+
+    status() {
+        checkpid `cat $pidfile 2>/dev/null`
+        RETVAL=$?
+        if [ $RETVAL == 0 ]
+        then
+            echo "$progname (`cat $pidfile`) is running"
+        else
+            echo "$progname does not exist!"
+        fi
+    }
+elif [ -e /etc/lsb-release ]
+then
+    source /etc/lsb-release
+    if [ "$DISTRIB_ID" == "Ubuntu" ]
+    then
+        start() {
+            start-stop-daemon -v -c $user -p $pidfile -S --exec $progpath daemon
+            kill -0 `cat $pidfile`
+            RETVAL=$?
+            if [ $RETVAL == 0 ]
+            then
+                echo "DONE"
+            else
+                echo "FAILED"
+            fi
+        }
+
+        stop() {
+            start-stop-daemon -v -p $pidfile -K
+            RETVAL=$?
+            if [ $RETVAL == 0 ]
+            then
+                echo "DONE"
+            else
+                echo "FAILED"
+            fi
+        }
+
+        status() {
+            RETVAL=$?
+        }
+    fi
+fi
+

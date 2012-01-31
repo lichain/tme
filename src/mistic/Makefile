@@ -8,7 +8,7 @@ TOP_DIR        ?= $(abspath ../..)
 TOP_OUTPUT_DIR ?= $(TOP_DIR)/output
 ARTIFACTS_DIR  ?= $(TOP_OUTPUT_DIR)/artifacts
 RPMBUILD_DIR   ?= $(TOP_OUTPUT_DIR)/rpmbuild
-WORKS_DIR      ?= $(TOP_OUTPUT_DIR)/works/mistic
+WORKS_DIR      ?= $(TOP_OUTPUT_DIR)/works
 
 
 # ----------------------------------------------------------------------------
@@ -44,12 +44,12 @@ endif
 # Main targets
 # ----------------------------------------------------------------------------
 
-#.PHONY: default
-default: $(WORKS_DIR)/../protobuf-2.1.0/src/protoc
-	mkdir -p $(WORKS_DIR)/
-	cd $(WORKS_DIR) ; cmake $(TOP_DIR)/src ; make
+.PHONY: default
+default: $(WORKS_DIR)/protobuf-2.1.0/src/protoc
+	mkdir -p $(BINPATH)
+	cd $(BINPATH) ; cmake $(TOP_DIR)/src ; make
 
-$(WORKS_DIR)/../protobuf-2.1.0/src/protoc:
+$(WORKS_DIR)/protobuf-2.1.0/src/protoc:
 	cd $(TOP_DIR)/3rd_party ; make protobuf
 
 .PHONY: rebuild
@@ -64,12 +64,12 @@ rpm: default
 	# Create source tarball
 	mkdir -p $(RPMPATH)/usr/bin
 	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
-	cp -f $(BINPATH)/mist-session $(RPMPATH)/usr/bin
-	cp -f $(BINPATH)/mist-sink $(RPMPATH)/usr/bin
-	cp -f $(BINPATH)/mist-source $(RPMPATH)/usr/bin
-	cp -f $(BINPATH)/mist-encode $(RPMPATH)/usr/bin
-	cp -f $(BINPATH)/mist-decode $(RPMPATH)/usr/bin
-	cp -f $(WORKS_DIR)/../protobuf-2.1.0/src/.libs/libprotobuf.so.4 $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
+	cp -f $(BINPATH)/mistic/mist-session $(RPMPATH)/usr/bin
+	cp -f $(BINPATH)/mistic/mist-sink $(RPMPATH)/usr/bin
+	cp -f $(BINPATH)/mistic/mist-source $(RPMPATH)/usr/bin
+	cp -f $(BINPATH)/mistic/mist-encode $(RPMPATH)/usr/bin
+	cp -f $(BINPATH)/mistic/mist-decode $(RPMPATH)/usr/bin
+	cp -f $(WORKS_DIR)/protobuf-2.1.0/src/.libs/libprotobuf.so.4 $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
 	cd $(BUILDPATH); tar cfz $(PKGNAME).tar.gz $(PKGNAME)
 	mv $(BUILDPATH)/$(PKGNAME).tar.gz $(RPMBUILD_DIR)/SOURCES
 	rm -rf $(RPMPATH) 
@@ -83,5 +83,5 @@ rpm: default
 
 .PHONY: clean
 clean:
-	rm -rf $(WORKS_DIR)
+	rm -rf $(BINPATH)
 

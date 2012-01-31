@@ -81,6 +81,7 @@ public class ExchangeMetricCollector {
             
             String zkQuorum = prop.getProperty("com.trendmicro.tme.portal.collector.zookeeper.quorum");
             int zkTimeout = Integer.valueOf(prop.getProperty("com.trendmicro.tme.portal.collector.zookeeper.timeout"));
+            String tmeRoot = prop.getProperty("com.trendmicro.tme.portal.collector.zookeeper.tmeroot");
             
             ZKSessionManager.initialize(zkQuorum, zkTimeout);
             if(!ZKSessionManager.instance().waitConnected(zkTimeout)) {
@@ -90,7 +91,7 @@ public class ExchangeMetricCollector {
             ExchangeMetricWriter writer = new ExchangeMetricWriter();
             writer.addSetting("templateFile", prop.getProperty("com.trendmicro.tme.portal.collector.template"));
             writer.addSetting("outputPath", prop.getProperty("com.trendmicro.tme.portal.collector.outputdir"));
-            ExchangeMetricCollector collector = new ExchangeMetricCollector(new BrokerFarm(), writer);
+            ExchangeMetricCollector collector = new ExchangeMetricCollector(new BrokerFarm(tmeRoot), writer);
             collector.run();
         }
         catch(Exception e) {

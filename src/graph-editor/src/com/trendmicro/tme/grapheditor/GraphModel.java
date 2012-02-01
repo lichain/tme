@@ -70,7 +70,7 @@ public class GraphModel {
     
     public void addToGraph(SWIGTYPE_p_Agraph_t graph) throws JAXBException, CODIException {
         for(String processorName : processors) {
-            ZNode node = new ZNode("/tme2/global/graph/processor/" + processorName);
+            ZNode node = new ZNode("/global/graph/processor/" + processorName);
             ProcessorModel processor = new Gson().fromJson(node.getContentString(), ProcessorModel.class);
             processor.addToGraph(graph, RenderView.GRAPH_EDITOR);
         }

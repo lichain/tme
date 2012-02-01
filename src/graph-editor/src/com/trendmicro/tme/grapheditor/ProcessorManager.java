@@ -30,7 +30,7 @@ public class ProcessorManager {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> getProcessorList() throws CODIException {
-        return new ZNode("/tme2/global/graph/processor").getChildren();
+        return new ZNode("/global/graph/processor").getChildren();
     }
     
     @GET
@@ -47,14 +47,14 @@ public class ProcessorManager {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public ProcessorModel getProcessor(@PathParam("name") String name) throws JAXBException, CODIException {
-        ZNode node = new ZNode("/tme2/global/graph/processor/" + name);
+        ZNode node = new ZNode("/global/graph/processor/" + name);
         return new Gson().fromJson(node.getContentString(), ProcessorModel.class);
     }
     
     @Path("/{name}")
     @PUT
     public void createProcessor(@PathParam("name") String name) throws CODIException, JAXBException {
-        ZNode node = new ZNode("/tme2/global/graph/processor/" + name);
+        ZNode node = new ZNode("/global/graph/processor/" + name);
         ProcessorModel processor = new ProcessorModel(name);
         processor.addInput(name + ".in");
         processor.addOutput(name + ".out");
@@ -64,12 +64,12 @@ public class ProcessorManager {
     @Path("/{name}")
     @DELETE
     public void removeProcessor(@PathParam("name") String name) throws CODIException, JAXBException {
-        ZNode node = new ZNode("/tme2/global/graph/processor/" + name);
+        ZNode node = new ZNode("/global/graph/processor/" + name);
         node.delete();
     }
     
     private void setProcessor(ProcessorModel processor) throws CODIException, JAXBException {
-        ZNode node = new ZNode("/tme2/global/graph/processor/" + processor.getName());
+        ZNode node = new ZNode("/global/graph/processor/" + processor.getName());
         node.setContent(new Gson().toJson(processor));
     }
     

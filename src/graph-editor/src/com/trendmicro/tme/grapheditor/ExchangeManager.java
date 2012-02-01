@@ -42,7 +42,7 @@ public class ExchangeManager {
     @Consumes(MediaType.TEXT_PLAIN)
     public void setDrop(@PathParam("name") String name, String policy) throws Exception {
         Exchange ex = new Exchange(name);
-        String path = "/tme2/global/drop_exchange/" + ex.getName();
+        String path = "/global/drop_exchange/" + ex.getName();
         ZooKeeperInfo.DropConfig dropConfig = ZooKeeperInfo.DropConfig.newBuilder().setPolicy(policy.equals("newest") ? DropConfig.Policy.NEWEST: DropConfig.Policy.OLDEST).build();
         
         ZNode node = new ZNode(path);
@@ -76,7 +76,7 @@ public class ExchangeManager {
     @DELETE
     public void setBlock(@PathParam("name") String name) throws Exception {
         Exchange ex = new Exchange(name);
-        String path = "/tme2/global/drop_exchange/" + ex.getName();
+        String path = "/global/drop_exchange/" + ex.getName();
         
         new ZNode(path).delete();
         String broker = exchangeFarm.getCurrentExchangeHost(ex);
@@ -97,7 +97,7 @@ public class ExchangeManager {
     @Consumes(MediaType.TEXT_PLAIN)
     public void setSizeLimit(@PathParam("name") String name, String sizeLimit) throws Exception {
         Exchange ex = new Exchange(name);
-        String path = "/tme2/global/limit_exchange/" + ex.getName();
+        String path = "/global/limit_exchange/" + ex.getName();
         
         ZooKeeperInfo.TotalLimit limit = exchangeFarm.getTotalLimit(ex);
         ZNode node = new ZNode(path);
@@ -126,7 +126,7 @@ public class ExchangeManager {
     @Consumes(MediaType.TEXT_PLAIN)
     public void setCountLimit(@PathParam("name") String name, String countLimit) throws Exception {
         Exchange ex = new Exchange(name);
-        String path = "/tme2/global/limit_exchange/" + ex.getName();
+        String path = "/global/limit_exchange/" + ex.getName();
         
         ZooKeeperInfo.TotalLimit limit = exchangeFarm.getTotalLimit(ex);
         ZNode node = new ZNode(path);

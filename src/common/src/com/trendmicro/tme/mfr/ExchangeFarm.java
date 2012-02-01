@@ -10,20 +10,14 @@ import com.trendmicro.mist.proto.ZooKeeperInfo;
 public class ExchangeFarm {
     private final static Logger logger = LoggerFactory.getLogger(ExchangeFarm.class);
 
-    private String tmeRoot;
-    
     public static enum FlowControlBehavior {
         BLOCK, DROP_NEWEST, DROP_OLDEST,
     }
     
-    public ExchangeFarm(String tmeRoot) {
-        this.tmeRoot = tmeRoot;
-    }
-
     public String getCurrentExchangeHost(Exchange exchange) {
         String host = null;
         String exchangeFullName = exchange.toString();
-        String exchangeNodePath = tmeRoot + "/exchange/" + exchangeFullName;
+        String exchangeNodePath = "/exchange/" + exchangeFullName;
         
         ZNode exchangeNode = new ZNode(exchangeNodePath);
         ZooKeeperInfo.Exchange.Builder exBuilder = ZooKeeperInfo.Exchange.newBuilder();
@@ -39,7 +33,7 @@ public class ExchangeFarm {
     }
     
     public FlowControlBehavior getDropPolicy(Exchange exchange) {
-        String path = tmeRoot + "/global/drop_exchange" + "/" + exchange.getName();
+        String path = "/global/drop_exchange" + "/" + exchange.getName();
         ZNode dropNode = new ZNode(path);
         try {
             if(dropNode.exists()) {
@@ -61,7 +55,7 @@ public class ExchangeFarm {
     }
     
     public ZooKeeperInfo.TotalLimit getTotalLimit(Exchange exchange) {
-        String path = tmeRoot + "/global/limit_exchange" + "/" + exchange.getName();
+        String path = "/global/limit_exchange" + "/" + exchange.getName();
         ZNode limitNode = new ZNode(path);
         try {
             ZooKeeperInfo.TotalLimit.Builder limitBuilder = ZooKeeperInfo.TotalLimit.newBuilder();

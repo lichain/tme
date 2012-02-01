@@ -35,13 +35,14 @@ public class GraphEditorMain {
             // Let the system properties override the ones in the config file
             prop.putAll(System.getProperties());
             
-            ZKSessionManager.initialize(prop.getProperty("com.trendmicro.tme.grapheditor.zookeeper.quorum"), Integer.valueOf(prop.getProperty("com.trendmicro.tme.grapheditor.zookeeper.timeout")));
+            String connectString = prop.getProperty("com.trendmicro.tme.grapheditor.zookeeper.quorum") + prop.getProperty("com.trendmicro.tme.grapheditor.zookeeper.tmeroot");
+            ZKSessionManager.initialize(connectString, Integer.valueOf(prop.getProperty("com.trendmicro.tme.grapheditor.zookeeper.timeout")));
             ZKSessionManager.instance().waitConnected();
             
             HandlerList handlers = new HandlerList();
             
             Map<Class<?>, Object> classMap = new HashMap<Class<?>, Object>();
-            classMap.put(ExchangeFarm.class, new ExchangeFarm(prop.getProperty("com.trendmicro.tme.grapheditor.zookeeper.tmeroot")));
+            classMap.put(ExchangeFarm.class, new ExchangeFarm());
             ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SECURITY | ServletContextHandler.SESSIONS);
             ServletHolder jerseyHolder = new ServletHolder(new GraphEditorContainer(classMap));
             

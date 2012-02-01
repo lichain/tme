@@ -32,7 +32,7 @@ public class GraphManager {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> getGraphList() throws CODIException {
-        return new ZNode("/tme2/global/graph/route").getChildren();
+        return new ZNode("/global/graph/route").getChildren();
     }
     
     @GET
@@ -69,7 +69,7 @@ public class GraphManager {
     @Path("/{name}")
     @PUT
     public void createGraph(@PathParam("name") String name) throws CODIException, JAXBException {
-        ZNode node = new ZNode("/tme2/global/graph/route/" + name);
+        ZNode node = new ZNode("/global/graph/route/" + name);
         GraphModel graph = new GraphModel(name);
         node.create(false, new Gson().toJson(graph));
     }
@@ -77,12 +77,12 @@ public class GraphManager {
     @Path("/{name}")
     @DELETE
     public void removeGraph(@PathParam("name") String name) throws CODIException, JAXBException {
-        ZNode node = new ZNode("/tme2/global/graph/route/" + name);
+        ZNode node = new ZNode("/global/graph/route/" + name);
         node.delete();
     }
     
     private void setGraph(GraphModel graph) throws CODIException, JAXBException {
-        ZNode node = new ZNode("/tme2/global/graph/route/" + graph.getName());
+        ZNode node = new ZNode("/global/graph/route/" + graph.getName());
         node.setContent(new Gson().toJson(graph));
     }
     
@@ -108,7 +108,7 @@ public class GraphManager {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public GraphModel getGraph(@PathParam("name") String name) throws CODIException, JAXBException {
-        ZNode node = new ZNode("/tme2/global/graph/route/" + name);
+        ZNode node = new ZNode("/global/graph/route/" + name);
         return new Gson().fromJson(node.getContentString(), GraphModel.class);
     }
     

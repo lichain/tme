@@ -20,11 +20,9 @@ public class BrokerFarm implements DataListener {
     private HashMap<String, ZooKeeperInfo.Loading> allBrokerLoadings = new HashMap<String, ZooKeeperInfo.Loading>();
     private DataObserver obs = null;
     private long lastUpdateTs = 0;
-    private String brokerNode;
     
-    public BrokerFarm(String tmeRootPath) {
-        brokerNode = tmeRootPath + "/broker";
-        obs = new DataObserver(brokerNode, this, true, 0);
+    public BrokerFarm() {
+        obs = new DataObserver("/broker", this, true, 0);
         obs.start();
     }
     

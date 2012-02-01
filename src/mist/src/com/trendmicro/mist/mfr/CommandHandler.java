@@ -23,7 +23,7 @@ import com.trendmicro.spn.common.util.Utils;
 public class CommandHandler extends Thread implements DataListener {
     private final static Logger logger = LoggerFactory.getLogger(CommandHandler.class);
     private static CommandHandler m_theSingleton = null;
-    private static final String NODE_PATH = "/tme2/local/mist_client/" + Utils.getHostIP();
+    private static final String NODE_PATH = "/local/mist_client/" + Utils.getHostIP();
     private ZNode commandNode = null;
     private DataObserver obs = null;
     private LinkedBlockingDeque<ZooKeeperInfo.Command> cmdQueue = new LinkedBlockingDeque<ZooKeeperInfo.Command>();

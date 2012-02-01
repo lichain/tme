@@ -128,7 +128,7 @@ public class Daemon {
     public static String nameLog4jConfig;
     public static String clientID;
     public static Properties propMIST = new Properties();
-    public static BrokerFarm brokerFarm = new BrokerFarm();
+    public static BrokerFarm brokerFarm;
 
     public static Daemon instance;
 
@@ -280,13 +280,14 @@ public class Daemon {
         setupEnvironment();
 
         try {
-            ZKSessionManager.initialize(Daemon.propMIST.getProperty("mistd.zookeeper"), Integer.valueOf(Daemon.propMIST.getProperty("mistd.zookeeper.timeout")));
+            ZKSessionManager.initialize(Daemon.propMIST.getProperty("mistd.zookeeper") + Daemon.propMIST.getProperty("mistd.zookeeper.tmeroot"), Integer.valueOf(Daemon.propMIST.getProperty("mistd.zookeeper.timeout")));
             ZKSessionManager.instance().waitConnected();
             logger.info(String.format("MISTd started (%s) @ %s", Version.getVersion(), Utils.getHostIP()));
 
             CommandHandler.getInstance();
             ExchangeFarm.getInstance();
             RouteFarm.getInstance();
+            brokerFarm = new BrokerFarm();
 
             if(!bindServicePort(10)) {
                 logger.error("unable to bind daemon service port, exit");

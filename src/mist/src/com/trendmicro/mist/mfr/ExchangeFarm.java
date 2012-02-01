@@ -32,7 +32,7 @@ import com.trendmicro.spn.common.util.Utils;
 public class ExchangeFarm extends Thread implements DataListener {
     private final static Logger logger = LoggerFactory.getLogger(ExchangeFarm.class);
     private static ExchangeFarm m_theSingleton = null;
-    private static final String FIXED_NODE = "/tme2/global/fixed_exchange";
+    private static final String FIXED_NODE = "/global/fixed_exchange";
     private static final ZooKeeperInfo.Reference refdata = ZooKeeperInfo.Reference.newBuilder().setHost(Utils.getHostIP()).build();
 
     private HashMap<String, String> fixedExchanges = new HashMap<String, String>();
@@ -109,7 +109,7 @@ public class ExchangeFarm extends Thread implements DataListener {
          */
         public void renewRef() {
             ArrayList<ZNode> refList = allExchangeRefs.get(exchange.toString());
-            String lockPath = "/tme2/exchange/" + exchange.toString() + ".lock";
+            String lockPath = "/exchange/" + exchange.toString() + ".lock";
             ZLock lock = new ZLock(lockPath);
             try {
                 /**
@@ -330,7 +330,7 @@ public class ExchangeFarm extends Thread implements DataListener {
 
     private boolean hasReference(Exchange exchange) {
         try {
-            String path = "/tme2/exchange/" + exchange.toString();
+            String path = "/exchange/" + exchange.toString();
             ZNode node = new ZNode(path);
             boolean no_ref = ((!node.exists()) || (node.getChildren().size() == 0));
             return !no_ref;
@@ -389,7 +389,7 @@ public class ExchangeFarm extends Thread implements DataListener {
 
     public String incExchangeRef(Exchange exchange) {
         String exchangeFullName = exchange.toString();
-        String refRoot = "/tme2/exchange/" + exchangeFullName;
+        String refRoot = "/exchange/" + exchangeFullName;
         String exchangeRefPath = null;
 
         ZooKeeperInfo.Exchange.Builder builder = ZooKeeperInfo.Exchange.newBuilder();
@@ -434,7 +434,7 @@ public class ExchangeFarm extends Thread implements DataListener {
 
     public void decExchangeRef(Exchange exchange) {
         String exchangeFullName = exchange.toString();
-        String refRoot = "/tme2/exchange/" + exchangeFullName;
+        String refRoot = "/exchange/" + exchangeFullName;
 
         ArrayList<ZNode> refList = allExchangeRefs.get(exchangeFullName);
         ZNode refNode = null;
@@ -480,7 +480,7 @@ public class ExchangeFarm extends Thread implements DataListener {
             return hostname;
 
         String exchangeFullName = exchange.toString();
-        String exchangeNodePath = "/tme2/exchange/" + exchangeFullName;
+        String exchangeNodePath = "/exchange/" + exchangeFullName;
 
         ZNode exchangeNode = new ZNode(exchangeNodePath);
         try {
@@ -492,7 +492,7 @@ public class ExchangeFarm extends Thread implements DataListener {
                 ZooKeeperInfo.Exchange ex = exBuilder.build();
                 hostname = ex.getHost();
 
-                ZNode brokerNode = new ZNode("/tme2/broker/" + hostname);
+                ZNode brokerNode = new ZNode("/broker/" + hostname);
                 if(hostname.compareTo("") == 0 || !brokerNode.exists()) {
                     hostname = decideExchangeHost(realname, true);
                     exchangeNode.setContent(ZooKeeperInfo.Exchange.newBuilder().setHost(hostname).build().toString().getBytes());
@@ -523,11 +523,11 @@ public class ExchangeFarm extends Thread implements DataListener {
     public static List<ExchangeInfo> getAllExchanges() {
         List<ExchangeInfo> list = new ArrayList<ExchangeInfo>();
         try {
-            ZNode exchangeNode = new ZNode("/tme2/exchange");
+            ZNode exchangeNode = new ZNode("/exchange");
             List<String> exchanges = exchangeNode.getChildren();
             for(String name : exchanges) {
                 try {
-                    ZNode exchangeChildNode = new ZNode("/tme2/exchange/" + name);
+                    ZNode exchangeChildNode = new ZNode("/exchange/" + name);
                     byte[] data = exchangeChildNode.getContent();
                     ZooKeeperInfo.Exchange.Builder ex_builder = ZooKeeperInfo.Exchange.newBuilder();
                     TextFormat.merge(new String(data), ex_builder);
@@ -551,7 +551,7 @@ public class ExchangeFarm extends Thread implements DataListener {
     public static String getCurrentExchangeHost(Exchange exchange) {
         String host = null;
         String exchangeFullName = exchange.toString();
-        String exchangeNodePath = "/tme2/exchange/" + exchangeFullName;
+        String exchangeNodePath = "/exchange/" + exchangeFullName;
 
         ZNode exchangeNode = new ZNode(exchangeNodePath);
         ZooKeeperInfo.Exchange.Builder exBuilder = ZooKeeperInfo.Exchange.newBuilder();
@@ -567,7 +567,7 @@ public class ExchangeFarm extends Thread implements DataListener {
     }
 
     public static FlowControlBehavior getDropPolicy(Exchange exchange) {
-        String path = "/tme2/global/drop_exchange" + "/" + exchange.getName();
+        String path = "/global/drop_exchange" + "/" + exchange.getName();
         ZNode dropNode = new ZNode(path);
         try {
             if(dropNode.exists()) {
@@ -589,7 +589,7 @@ public class ExchangeFarm extends Thread implements DataListener {
     }
 
     public static ZooKeeperInfo.TotalLimit getTotalLimit(Exchange exchange) {
-        String path = "/tme2/global/limit_exchange" + "/" + exchange.getName();
+        String path = "/global/limit_exchange" + "/" + exchange.getName();
         ZNode limitNode = new ZNode(path);
         try {
             ZooKeeperInfo.TotalLimit.Builder limitBuilder = ZooKeeperInfo.TotalLimit.newBuilder();

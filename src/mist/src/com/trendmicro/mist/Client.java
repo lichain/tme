@@ -114,7 +114,7 @@ public class Client {
             return;
         }
         
-        String lockPath = "/tme2/exchange/" + exchange.toString() + ".lock";
+        String lockPath = "/exchange/" + exchange.toString() + ".lock";
         ZLock lock = new ZLock(lockPath);
         ZNode lockNode = new ZNode(lockPath);
         brokerDetermined = determined;
@@ -207,7 +207,7 @@ public class Client {
             opened = false;
         }
         
-        String lockPath = "/tme2/exchange/" + exchange.toString() + ".lock";
+        String lockPath = "/exchange/" + exchange.toString() + ".lock";
         ZLock lock = new ZLock(lockPath);
         ZNode lockNode = new ZNode(lockPath);
         try {

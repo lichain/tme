@@ -37,7 +37,7 @@ public class RouteFarm implements DataListener {
 
     // ///////////////////////////////////////////////////////////////////////
 
-    public static final String graphRoot = "/tme2/global/graph";
+    public static final String graphRoot = "/global/graph";
 
     public static RouteFarm getInstance() {
         if(null == m_theSingleton)

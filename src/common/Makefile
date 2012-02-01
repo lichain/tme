@@ -60,6 +60,7 @@ rpm: default
 	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
 	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
 	cp -f $(BINPATH)/daemon.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BINPATH)/create_zookeeper_nodes.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
 	cp -rf $(LIBPATH)/* $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
 	cp -f $(BUILDPATH)/*.jar $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
 	cd $(BUILDPATH); tar cfz $(PKGNAME).tar.gz $(PKGNAME)

@@ -6,8 +6,6 @@
 
 #include <MistMessage.pb.h>
 #include <GateTalk.pb.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
-#include <google/protobuf/io/coded_stream.h>
 #include <iostream>
 #include <arpa/inet.h>
 
@@ -229,7 +227,7 @@ class Block_Policy_Skip : public Block_Policy_Length
 		}
 };
 
-class Block_Policy_MessageBlock
+class Block_Policy_MessageBlock : public Block_Policy_Length
 {
 	public:
 		Block_Policy_MessageBlock() : _ttl(-1), _id("") {}
@@ -244,22 +242,14 @@ class Block_Policy_MessageBlock
 		
 	protected:
 		message_payload Read(const int fd){
-			using namespace google::protobuf::io;
-			static FileInputStream fis(fd);
-			CodedInputStream cis(&fis);
-
-			const char* msgbuf;
-			size_t len = 0;
-			char buf[4];
-			if(cis.ReadRaw(buf, 4)){
-				len = ntohl(*((uint32_t*)buf));
-				int limit = cis.PushLimit(len);
-				_msg.ParseFromCodedStream(&cis);
-				msgbuf = _msg.message().data();
-				len = _msg.message().size();
-				cis.PopLimit(limit);
+			message_payload raw = Block_Policy_Length::Read(fd);
+			if(_msg.ParseFromArray(raw.buf, raw.len)) {
+				return message_payload(_msg.message().data(), _msg.message().size());
 			}
-			return message_payload(msgbuf, len);
+			else {
+				std::cerr<<"Error parsing message!"<<std::endl;
+				return message_payload(_buf, 0);
+			}
 		}
 
 		void Write(const int fd, const char* buf, const size_t count){

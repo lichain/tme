@@ -11,6 +11,7 @@ import com.trendmicro.codi.ZKSessionManager;
 import com.trendmicro.codi.ZNode;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
 import com.trendmicro.mist.util.ZKTestServer;
+import com.trendmicro.tme.mfr.BrokerFarm;
 
 public class TestBrokerFarm extends TestCase {
     private ZKTestServer zkTestServer = null;
@@ -78,7 +79,7 @@ public class TestBrokerFarm extends TestCase {
          * Test broker root node event, should ignore
          */
         changeMap.put("", "".getBytes());
-        brokerFarm.onDataChanged(BrokerFarm.BRK_NODE, changeMap);
+        brokerFarm.onDataChanged("/broker", changeMap);
         assertTrue(brokerFarm.getAllBrokers().isEmpty());
 
         /**
@@ -87,7 +88,7 @@ public class TestBrokerFarm extends TestCase {
         changeMap.clear();
         ZooKeeperInfo.Broker brkNode = genBrokerInfo("127.0.0.1", 7676, true, "OpenMQ", false);
         changeMap.put("127.0.0.1", brkNode.toString().getBytes());
-        brokerFarm.onDataChanged(BrokerFarm.BRK_NODE, changeMap);
+        brokerFarm.onDataChanged("/broker", changeMap);
         assertEquals(brkNode, brokerFarm.getBrokerByHost("127.0.0.1"));
 
         /**
@@ -96,7 +97,7 @@ public class TestBrokerFarm extends TestCase {
         changeMap.clear();
         ZooKeeperInfo.Loading loadingNode = genBrokerLoading(10);
         changeMap.put("127.0.0.1/loading", loadingNode.toString().getBytes());
-        brokerFarm.onDataChanged(BrokerFarm.BRK_NODE, changeMap);
+        brokerFarm.onDataChanged("/broker", changeMap);
         assertEquals(brkNode, brokerFarm.getBrokerByHost("127.0.0.1"));
         assertEquals(loadingNode, brokerFarm.getAllLoading().get("127.0.0.1"));
         assertEquals(1, brokerFarm.getBrokerCount());
@@ -106,7 +107,7 @@ public class TestBrokerFarm extends TestCase {
          */
         changeMap.clear();
         changeMap.put("127.0.0.1/loading", null);
-        brokerFarm.onDataChanged(BrokerFarm.BRK_NODE, changeMap);
+        brokerFarm.onDataChanged("/broker", changeMap);
         assertTrue(brokerFarm.getAllLoading().isEmpty());
 
         /**
@@ -114,7 +115,7 @@ public class TestBrokerFarm extends TestCase {
          */
         changeMap.clear();
         changeMap.put("127.0.0.1", null);
-        brokerFarm.onDataChanged(BrokerFarm.BRK_NODE, changeMap);
+        brokerFarm.onDataChanged("/broker", changeMap);
         assertTrue(brokerFarm.getAllBrokers().isEmpty());
         assertEquals(0, brokerFarm.getBrokerCount());
 
@@ -124,7 +125,7 @@ public class TestBrokerFarm extends TestCase {
         changeMap.clear();
         changeMap.put("127.0.0.1", brkNode.toString().getBytes());
         changeMap.put("127.0.0.1/loading", loadingNode.toString().getBytes());
-        brokerFarm.onDataChanged(BrokerFarm.BRK_NODE, changeMap);
+        brokerFarm.onDataChanged("/broker", changeMap);
         assertEquals(brkNode, brokerFarm.getBrokerByHost("127.0.0.1"));
         assertEquals(loadingNode, brokerFarm.getAllLoading().get("127.0.0.1"));
         assertEquals(1, brokerFarm.getBrokerCount());
@@ -135,7 +136,7 @@ public class TestBrokerFarm extends TestCase {
         changeMap.clear();
         changeMap.put("127.0.0.1", null);
         changeMap.put("127.0.0.1/loading", null);
-        brokerFarm.onDataChanged(BrokerFarm.BRK_NODE, changeMap);
+        brokerFarm.onDataChanged("/broker", changeMap);
         assertTrue(brokerFarm.getAllBrokers().isEmpty());
         assertTrue(brokerFarm.getAllLoading().isEmpty());
         assertEquals(0, brokerFarm.getBrokerCount());
@@ -149,7 +150,7 @@ public class TestBrokerFarm extends TestCase {
          * Test add 1 broker node
          */
         ZooKeeperInfo.Broker brk = genBrokerInfo("127.0.0.1", 7676, true, "OpenMQ", false);
-        ZNode broker1Node = new ZNode(BrokerFarm.BRK_NODE + "/127.0.0.1");
+        ZNode broker1Node = new ZNode("/broker" + "/127.0.0.1");
         broker1Node.create(false, brk.toString().getBytes());
         waitForUpdate(brokerFarm);
         assertEquals(brk, brokerFarm.getAllBrokers().get("127.0.0.1"));
@@ -159,7 +160,7 @@ public class TestBrokerFarm extends TestCase {
          * Test add another broker node
          */
         ZooKeeperInfo.Broker brk2 = genBrokerInfo("127.0.0.2", 7676, true, "OpenMQ", false);
-        ZNode broker2Node = new ZNode(BrokerFarm.BRK_NODE + "/127.0.0.2");
+        ZNode broker2Node = new ZNode("/broker" + "/127.0.0.2");
         broker2Node.create(false, brk2.toString().getBytes());
         waitForUpdate(brokerFarm);
         assertEquals(brk2, brokerFarm.getAllBrokers().get("127.0.0.2"));
@@ -169,7 +170,7 @@ public class TestBrokerFarm extends TestCase {
          * Test add loading node
          */
         ZooKeeperInfo.Loading loading = genBrokerLoading(10);
-        ZNode loading1Node = new ZNode(BrokerFarm.BRK_NODE + "/127.0.0.1/loading");
+        ZNode loading1Node = new ZNode("/broker" + "/127.0.0.1/loading");
         loading1Node.create(false, loading.toString().getBytes());
         waitForUpdate(brokerFarm);
         assertEquals(loading, brokerFarm.getAllLoading().get("127.0.0.1"));
@@ -178,7 +179,7 @@ public class TestBrokerFarm extends TestCase {
          * Test add another loading node
          */
         ZooKeeperInfo.Loading loading2 = genBrokerLoading(10);
-        ZNode loading2Node = new ZNode(BrokerFarm.BRK_NODE + "/127.0.0.2/loading");
+        ZNode loading2Node = new ZNode("/broker" + "/127.0.0.2/loading");
         loading2Node.create(false, loading.toString().getBytes());
         waitForUpdate(brokerFarm);
         assertEquals(loading2, brokerFarm.getAllLoading().get("127.0.0.2"));

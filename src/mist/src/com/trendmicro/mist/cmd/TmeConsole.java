@@ -44,7 +44,6 @@ import com.trendmicro.mist.BrokerSpy;
 import com.trendmicro.mist.Daemon;
 import com.trendmicro.mist.console.CommandExecutable;
 import com.trendmicro.mist.console.Console;
-import com.trendmicro.mist.mfr.BrokerFarm;
 import com.trendmicro.mist.mfr.ExchangeFarm;
 import com.trendmicro.mist.proto.MistMessage;
 import com.trendmicro.mist.proto.MistMessage.KeyValuePair;
@@ -53,6 +52,7 @@ import com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig;
 import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.mist.util.Packet;
 import com.trendmicro.spn.common.util.Utils;
+import com.trendmicro.tme.mfr.BrokerFarm;
 
 public class TmeConsole {
     private static BrokerFarm brokerFarm = null;
@@ -1355,7 +1355,7 @@ public class TmeConsole {
         boolean locked = false;
         try {
             locked = authenticateLock();
-            brokerFarm = BrokerFarm.getInstance();
+            brokerFarm = new BrokerFarm();
             myApp = new TmeConsole();
             myApp.addShutdownHook();
             myApp.start();

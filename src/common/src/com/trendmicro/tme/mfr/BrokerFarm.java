@@ -1,5 +1,10 @@
 package com.trendmicro.tme.mfr;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,6 +51,51 @@ public class BrokerFarm implements DataListener {
         return allBrokers;
     }
     
+    public boolean checkConnectable(ZooKeeperInfo.Broker broker) {
+        if(broker.getStatus() != ZooKeeperInfo.Broker.Status.ONLINE)
+            return false;
+
+        boolean connectable = false;
+        Socket sock = null;
+        try {
+            sock = new Socket();
+            sock.setReuseAddress(true);
+            sock.setTcpNoDelay(true);
+            sock.connect(new InetSocketAddress(broker.getHost(), Integer.parseInt(broker.getPort())));
+            BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+            for(int wait_cnt = 0; wait_cnt < 20 && !in.ready(); wait_cnt++){
+                try {
+                    Thread.sleep(500);
+                }
+                catch(InterruptedException e) {
+                }
+            }
+
+            if(in.ready()) {
+                if(broker.getBrokerType().equals("openmq")) {
+                    String line = in.readLine();
+                    if(line.startsWith("101 "))
+                        connectable = true;
+                    else
+                        logger.error("checkConnectable(): get " + line);
+                }
+            }
+        }
+        catch(IOException e) {
+            logger.warn("checkConnectable() " + e.getMessage(), e);
+        }
+        finally {
+            try {
+                sock.getInputStream().close();
+                sock.close();
+            }
+            catch(IOException e) {
+                logger.error(e.getMessage(), e);
+            }
+        }
+        return connectable;
+    }
+
     @Override
     public void onDataChanged(String parentPath, Map<String, byte[]> changeMap) {
         for(Entry<String, byte[]> ent : changeMap.entrySet()) {

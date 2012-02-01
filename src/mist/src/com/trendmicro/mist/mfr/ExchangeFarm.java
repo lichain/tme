@@ -23,6 +23,7 @@ import com.trendmicro.codi.ZNode;
 import com.trendmicro.codi.lock.Lock.LockType;
 import com.trendmicro.codi.lock.ZLock;
 import com.trendmicro.mist.BrokerSpy;
+import com.trendmicro.mist.Daemon;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
 import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.mist.util.ParallelExecutor;
@@ -168,9 +169,9 @@ public class ExchangeFarm extends Thread implements DataListener {
             return null;
 
         String hostname = null;
-        ZooKeeperInfo.Broker broker = BrokerFarm.getInstance().getBrokerByHost(fixed_host);
+        ZooKeeperInfo.Broker broker = Daemon.brokerFarm.getBrokerByHost(fixed_host);
         if(broker != null) {
-            if(BrokerFarm.checkConnectable(broker)) {
+            if(Daemon.brokerFarm.checkConnectable(broker)) {
                 hostname = fixed_host;
                 logger.info(String.format("fixed exchange: %s @ %s", conceptName, fixed_host));
             }
@@ -251,7 +252,7 @@ public class ExchangeFarm extends Thread implements DataListener {
     }
 
     private String decideExchangeHost(String name, boolean isMigrate) {
-        if(BrokerFarm.getInstance().getBrokerCount() == 0)
+        if(Daemon.brokerFarm.getBrokerCount() == 0)
             return null;
 
         Vector<Vector<String>> loadingScaleVec = new Vector<Vector<String>>();
@@ -260,7 +261,7 @@ public class ExchangeFarm extends Thread implements DataListener {
             loadingScaleVec.add(brokers);
         }
 
-        Map<String, ZooKeeperInfo.Loading> loadingMap = BrokerFarm.getInstance().getAllLoading();
+        Map<String, ZooKeeperInfo.Loading> loadingMap = Daemon.brokerFarm.getAllLoading();
 
         if(!isMigrate) {
             /**
@@ -284,8 +285,8 @@ public class ExchangeFarm extends Thread implements DataListener {
                 // select a broker in the same loading scale by exchange name's
                 // hash value
                 int idx = Math.abs(name.hashCode()) % brokers.size();
-                b = BrokerFarm.getInstance().getBrokerByHost(brokers.get(idx));
-                if(BrokerFarm.checkConnectable(b)) {
+                b = Daemon.brokerFarm.getBrokerByHost(brokers.get(idx));
+                if(Daemon.brokerFarm.checkConnectable(b)) {
                     if(b.getReserved()) {
                         reserved.add(b.getHost());
                         brokers.remove(idx);

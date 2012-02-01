@@ -3,13 +3,13 @@ package com.trendmicro.mist;
 import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 
+import javax.jms.ConnectionFactory;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.trendmicro.mist.mfr.BrokerFarm;
 import com.trendmicro.mist.proto.GateTalk;
 import com.trendmicro.mist.session.Session;
 import com.trendmicro.mist.session.SessionPool;
@@ -61,7 +61,33 @@ public class Connection implements ExceptionListener {
         do {
             connected = false;
             try {
-                connection = BrokerFarm.prepareJMSConnection(connectionConfig.getBrokerType(), connList, connectionConfig.getUsername(), connectionConfig.getPassword());
+                String username = connectionConfig.getUsername();
+                String password = connectionConfig.getPassword();
+                if(username == null)
+                    username = "";
+                if(password == null)
+                    password = "";
+                try {
+                    if(connectionConfig.getBrokerType().equals("openmq")) {
+                        ConnectionFactory conn_fact = new com.sun.messaging.ConnectionFactory();
+                        if(connList.size() == 1) {
+                            ((com.sun.messaging.ConnectionFactory) conn_fact).setProperty(com.sun.messaging.ConnectionConfiguration.imqBrokerHostName, connList.get(0).getHost());
+                            ((com.sun.messaging.ConnectionFactory) conn_fact).setProperty(com.sun.messaging.ConnectionConfiguration.imqBrokerHostPort, connList.get(0).getPort());
+                        }
+                        else if(connList.size() > 1) {
+                            ((com.sun.messaging.ConnectionFactory) conn_fact).setProperty(com.sun.messaging.ConnectionConfiguration.imqAddressList, connList.toString());
+                            ((com.sun.messaging.ConnectionFactory) conn_fact).setProperty(com.sun.messaging.ConnectionConfiguration.imqAddressListIterations, "-1");
+                            ((com.sun.messaging.ConnectionFactory) conn_fact).setProperty(com.sun.messaging.ConnectionConfiguration.imqReconnectEnabled, "true");
+                            ((com.sun.messaging.ConnectionFactory) conn_fact).setProperty(com.sun.messaging.ConnectionConfiguration.imqReconnectAttempts, "1");
+                        }
+                        ((com.sun.messaging.ConnectionFactory) conn_fact).setProperty(com.sun.messaging.ConnectionConfiguration.imqDefaultUsername, username);
+                        ((com.sun.messaging.ConnectionFactory) conn_fact).setProperty(com.sun.messaging.ConnectionConfiguration.imqDefaultPassword, password);
+                        connection = conn_fact.createConnection();
+                    }
+                }
+                catch(JMSException e) {
+                    throw e;
+                }
                 connection.setExceptionListener(this);
                 connection.start();
                 connected = true;

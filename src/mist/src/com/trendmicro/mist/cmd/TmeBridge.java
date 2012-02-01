@@ -51,7 +51,6 @@ import com.trendmicro.mist.util.Credential;
 import com.trendmicro.mist.util.Exchange;
 import com.trendmicro.mist.util.Packet;
 import com.trendmicro.spn.common.util.Utils;
-import com.trendmicro.mist.mfr.BrokerFarm;
 import com.trendmicro.mist.console.CommandExecutable;
 import com.trendmicro.mist.console.Console;
 import com.trendmicro.mist.Daemon;
@@ -536,7 +535,7 @@ public class TmeBridge implements Runnable {
                         tab.addCell(id.toString());
                         tab.addCell(b.getType());
                         tab.addCell(connList.toString().replace(",", ";"));
-                        tab.addCell(BrokerFarm.authenticateBroker(b.getType(), connList, b.getUsername(), b.getPassword()) ? "ONLINE": "BROKEN");
+                        //tab.addCell(brokerFarm.authenticateBroker(b.getType(), connList, b.getUsername(), b.getPassword()) ? "ONLINE": "BROKEN");
                     }
                     outputResponse(tab.render());
                 }
@@ -812,7 +811,7 @@ public class TmeBridge implements Runnable {
                     tab.addCell(String.valueOf(b.getType()));
                     tab.addCell(String.valueOf(b.getUsername() + ":" + b.getPassword()));
                     tab.addCell(String.valueOf(connList.toString().replace(",", ";")));
-                    tab.addCell(BrokerFarm.authenticateBroker(b.getType(), connList, b.getUsername(), b.getPassword()) ? "ONLINE": "BROKEN");
+                    //tab.addCell(brokerFarm.authenticateBroker(b.getType(), connList, b.getUsername(), b.getPassword()) ? "ONLINE": "BROKEN");
                 }
                 outputResponse(tab.render());
             }
@@ -834,10 +833,10 @@ public class TmeBridge implements Runnable {
                 builder.setId(generateBrokerID());
                 BridgeTalk.BrokerInfo binfo = builder.build();
                 
-                if(!BrokerFarm.authenticateBroker(binfo.getType(), connList, binfo.getUsername(), binfo.getPassword())) {
+                /*if(!BrokerFarm.authenticateBroker(binfo.getType(), connList, binfo.getUsername(), binfo.getPassword())) {
                     outputResponse(String.format("can not connect `%s' with account `%s'", connList.toString(), binfo.getUsername()));
                     return;
-                }
+                }*/
                 
                 if(addBroker(binfo))
                     outputResponse(String.format("broker added with id = %d", binfo.getId()));

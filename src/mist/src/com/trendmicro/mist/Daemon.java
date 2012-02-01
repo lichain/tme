@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.trendmicro.codi.ZKSessionManager;
-import com.trendmicro.mist.mfr.BrokerFarm;
 import com.trendmicro.mist.mfr.CommandHandler;
 import com.trendmicro.mist.mfr.ExchangeFarm;
 import com.trendmicro.mist.mfr.RouteFarm;
@@ -35,6 +34,7 @@ import com.trendmicro.mist.session.ProducerSession;
 import com.trendmicro.mist.session.Session;
 import com.trendmicro.mist.session.SessionPool;
 import com.trendmicro.spn.common.util.Utils;
+import com.trendmicro.tme.mfr.BrokerFarm;
 
 public class Daemon {
     private static boolean shutdownRequested = false;
@@ -128,6 +128,7 @@ public class Daemon {
     public static String nameLog4jConfig;
     public static String clientID;
     public static Properties propMIST = new Properties();
+    public static BrokerFarm brokerFarm = new BrokerFarm();
 
     public static Daemon instance;
 
@@ -184,7 +185,7 @@ public class Daemon {
     }
 
     public static Connection getConnection(String host) {
-        ZooKeeperInfo.Broker broker = BrokerFarm.getInstance().getBrokerByHost(host);
+        ZooKeeperInfo.Broker broker = brokerFarm.getBrokerByHost(host);
         GateTalk.Connection.Builder conn_builder = GateTalk.Connection.newBuilder();
         conn_builder.setBrokerType(broker.getBrokerType());
         conn_builder.setHostName(broker.getHost());
@@ -215,12 +216,12 @@ public class Daemon {
             }
             strOut.write(tab.render() + "\n");
         }
-        strOut.write(String.format("%d brokers available%n", BrokerFarm.getInstance().getBrokerCount()));
-        if(BrokerFarm.getInstance().getBrokerCount() > 0) {
+        strOut.write(String.format("%d brokers available%n", brokerFarm.getBrokerCount()));
+        if(brokerFarm.getBrokerCount() > 0) {
             Table tab = new Table(2);
             tab.addCell("Host");
             tab.addCell("Status");
-            for(Entry<String, ZooKeeperInfo.Broker> ent : BrokerFarm.getInstance().getAllBrokers().entrySet()) {
+            for(Entry<String, ZooKeeperInfo.Broker> ent : brokerFarm.getAllBrokers().entrySet()) {
                 tab.addCell(ent.getValue().getHost() + ":" + ent.getValue().getPort());
                 tab.addCell(ent.getValue().getStatus().toString());
             }
@@ -285,7 +286,6 @@ public class Daemon {
 
             CommandHandler.getInstance();
             ExchangeFarm.getInstance();
-            BrokerFarm.getInstance();
             RouteFarm.getInstance();
 
             if(!bindServicePort(10)) {

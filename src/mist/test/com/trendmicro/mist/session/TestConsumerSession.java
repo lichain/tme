@@ -18,16 +18,17 @@ import com.sun.messaging.jmq.jmsservice.JMSServiceException;
 import com.trendmicro.codi.CODIException;
 import com.trendmicro.codi.ZKSessionManager;
 import com.trendmicro.mist.MistException;
-import com.trendmicro.mist.mfr.BrokerFarm;
 import com.trendmicro.mist.proto.GateTalk;
 import com.trendmicro.mist.proto.MistMessage;
 import com.trendmicro.mist.util.OpenMQTestBroker;
 import com.trendmicro.mist.util.Packet;
 import com.trendmicro.mist.util.ZKTestServer;
 import com.trendmicro.spn.common.util.Utils;
+import com.trendmicro.tme.mfr.BrokerFarm;
 
 public class TestConsumerSession extends TestCase {
     private ZKTestServer zkTestServer;
+    private BrokerFarm brokerFarm = new BrokerFarm();
 
     class OnMessageRunner extends Thread {
         ConsumerSession sess;
@@ -88,11 +89,11 @@ public class TestConsumerSession extends TestCase {
         brk.start();
         brk.registerOnZk();
         for(int i = 0; i < 10; i++) {
-            if(BrokerFarm.getInstance().getBrokerCount() == 1)
+            if(brokerFarm.getBrokerCount() == 1)
                 break;
             Utils.justSleep(500);
         }
-        assertEquals(1, BrokerFarm.getInstance().getBrokerCount());
+        assertEquals(1, brokerFarm.getBrokerCount());
         assertTrue(Utils.checkSocketConnectable("localhost", 9876));
 
         /**
@@ -139,11 +140,11 @@ public class TestConsumerSession extends TestCase {
         brk.start();
         brk.registerOnZk();
         for(int i = 0; i < 10; i++) {
-            if(BrokerFarm.getInstance().getBrokerCount() == 1)
+            if(brokerFarm.getBrokerCount() == 1)
                 break;
             Utils.justSleep(500);
         }
-        assertEquals(1, BrokerFarm.getInstance().getBrokerCount());
+        assertEquals(1, brokerFarm.getBrokerCount());
         assertTrue(Utils.checkSocketConnectable("localhost", 9876));
 
         /**

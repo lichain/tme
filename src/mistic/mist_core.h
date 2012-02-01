@@ -243,7 +243,10 @@ class Block_Policy_MessageBlock : public Block_Policy_Length
 	protected:
 		message_payload Read(const int fd){
 			message_payload raw = Block_Policy_Length::Read(fd);
-			if(_msg.ParseFromArray(raw.buf, raw.len)) {
+			if(raw.len == 0){
+				return message_payload(_buf, 0);
+			}
+			else if(_msg.ParseFromArray(raw.buf, raw.len)) {
 				return message_payload(_msg.message().data(), _msg.message().size());
 			}
 			else {

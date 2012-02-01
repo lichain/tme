@@ -21,7 +21,8 @@ bool on_close = false;
 
 int sock;
 
-void attach(const string& session_id, bool ack){
+void attach(const string& session_id, bool ack, long limit){
+	long msg_cnt = 0;
 	string filename = string("/var/run/tme/pid/") + session_id + string(".pid");
 
 	ofstream ofs(filename.c_str());
@@ -60,6 +61,10 @@ void attach(const string& session_id, bool ack){
 				}
 				write(sock,&ackSize,4);
 				ackResponse.SerializeToFileDescriptor(sock);
+
+				if(++msg_cnt == limit){
+					on_close = true;
+				}
 			}
 			close(sock);
 		}
@@ -142,7 +147,8 @@ int main(int argc, char* argv[]) {
 	program_opt::options_description opt_desc("Allowed options");
 	opt_desc.add_options()("help", "Display help messages")("attach,a", "Attach session")("session-id,s", "Session ID")
 			("ack,A", "Manual ACK messages")("mount,m", program_opt::value<string>(),"Mount exchange")
-			("unmount,u", program_opt::value<string>(), "Unmount exchange")("detach,d", "Detach session");
+			("unmount,u", program_opt::value<string>(), "Unmount exchange")("detach,d", "Detach session")
+			("limit,l", program_opt::value<long>(), "Retrieve count limit");
 
 	program_opt::positional_options_description pos_opt_desc;
 	pos_opt_desc.add("session-id", -1);
@@ -158,7 +164,7 @@ int main(int argc, char* argv[]) {
 	session_id = var_map["session-id"].as<string>();
 
 	if (var_map.count("attach")) {
-		attach(var_map["session-id"].as<string>(), var_map.count("ack")>0);
+		attach(var_map["session-id"].as<string>(), var_map.count("ack")>0, var_map.count("limit")>0 ? var_map["limit"].as<long>() : -1);
 	}
 	else if (var_map.count("mount")) {
 		mount(var_map["session-id"].as<string>(), var_map["mount"].as<string>());

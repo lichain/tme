@@ -254,7 +254,7 @@ public class TmeConsole {
             String nodePath = miExchange.toString();
 
             try {
-                ZNode node = new ZNode("/tme2/exchange/" + nodePath);
+                ZNode node = new ZNode("/exchange/" + nodePath);
                 ZooKeeperInfo.Exchange.Builder exBuilder = ZooKeeperInfo.Exchange.newBuilder();
                 try {
                     TextFormat.merge(new String(node.getContent()), exBuilder);
@@ -337,7 +337,7 @@ public class TmeConsole {
                 List<String> refList = node.getChildren();
                 ArrayList<String> hostList = new ArrayList<String>();
                 for(String refPath : refList) {
-                    String data = new String(new ZNode("/tme2/exchange/" + nodePath + "/" + refPath).getContent());
+                    String data = new String(new ZNode("/exchange/" + nodePath + "/" + refPath).getContent());
                     ZooKeeperInfo.Reference.Builder refBuilder = ZooKeeperInfo.Reference.newBuilder();
                     TextFormat.merge(data, refBuilder);
                     ZooKeeperInfo.Reference ref = refBuilder.build();
@@ -350,7 +350,7 @@ public class TmeConsole {
                 for(String host : hostList) {
                     myConsole.logResponse("[%s] informing %n", miExchange.toString(), host);
                     ZooKeeperInfo.Command cmd = ZooKeeperInfo.Command.newBuilder().setType(ZooKeeperInfo.Command.Type.MIGRATE_EXCHANGE).addArgument(nodePath).build();
-                    ZNode.createSequentialNode("/tme2/local/mist_client/" + host + "/cmd", false, cmd.toString().getBytes());
+                    ZNode.createSequentialNode("/local/mist_client/" + host + "/cmd", false, cmd.toString().getBytes());
                 }
 
                 if(hasOld) {
@@ -457,9 +457,9 @@ public class TmeConsole {
             }
 
             myConsole.logResponse("starting `%s' ... ", broker_ip);
-            String lockPath = "/tme2/locks/brk_" + broker_ip;
+            String lockPath = "/locks/brk_" + broker_ip;
             ZLock brokerLock = new ZLock(lockPath);
-            ZNode brokerNode = new ZNode("/tme2/broker/" + broker_ip);
+            ZNode brokerNode = new ZNode("/broker/" + broker_ip);
             try{
 
                 brokerLock.acquire(LockType.WRITE_LOCK);
@@ -514,9 +514,9 @@ public class TmeConsole {
             }
 
             myConsole.logResponse("stopping `%s' ...%n", broker_ip);
-            String lockPath = "/tme2/locks/brk_" + broker_ip;
+            String lockPath = "/locks/brk_" + broker_ip;
             ZLock brokerLock = new ZLock(lockPath);
-            ZNode brokerNode = new ZNode("/tme2/broker/" + broker_ip);
+            ZNode brokerNode = new ZNode("/broker/" + broker_ip);
             try {
                 brokerLock.acquire(LockType.WRITE_LOCK);
                 ZooKeeperInfo.Broker.Builder brkBuilder = ZooKeeperInfo.Broker.newBuilder();
@@ -624,7 +624,7 @@ public class TmeConsole {
             broker = builder.build();
 
             try {
-                new ZNode("/tme2/broker/" + broker_ip).setContent(broker.toString().getBytes());
+                new ZNode("/broker/" + broker_ip).setContent(broker.toString().getBytes());
                 myConsole.logResponse("broker `%s' reserved = %b%n", broker_ip, broker.getReserved());
             }
             catch(Exception e) {
@@ -698,11 +698,11 @@ public class TmeConsole {
         private void bridge() {
             try {
                 myConsole.logResponseNL("==> all tme-bridge(s)");
-                List<String> all_bridge = new ZNode("/tme2/bridge").getChildren();
+                List<String> all_bridge = new ZNode("/bridge").getChildren();
                 boolean showed = false;
                 for(String b: all_bridge) {
-                    List<String> masters = new ZNode("/tme2/bridge/" + b + "/master").getChildren();
-                    List<String> slaves = new ZNode("/tme2/bridge/" + b + "/slave").getChildren();
+                    List<String> masters = new ZNode("/bridge/" + b + "/master").getChildren();
+                    List<String> slaves = new ZNode("/bridge/" + b + "/slave").getChildren();
                     if(masters.size() + slaves.size() > 0) {
                         myConsole.logResponse("    %s:%n", b);
                         for(String m: masters)
@@ -723,7 +723,7 @@ public class TmeConsole {
         private void mistd() {
             try {
                 myConsole.logResponseNL("==> all mistd clients");
-                List<String> all_mistd = new ZNode("/tme2/local/mist_client").getChildren();
+                List<String> all_mistd = new ZNode("/local/mist_client").getChildren();
                 if(all_mistd.size() == 0)
                     myConsole.logResponseNL("    no clients");
                 else {
@@ -739,7 +739,7 @@ public class TmeConsole {
         private boolean verifyZooKeeper(String host) {
             if(!Utils.checkSocketConnectable(host))
                 return false;
-            String zkPath = "/tme2/ZK_TEST_NODE";
+            String zkPath = "/ZK_TEST_NODE";
             String zkData = "02a7e44daac8046f43de84b2546a4d63";
             try {
                 ZNode node = new ZNode(zkPath);
@@ -816,10 +816,10 @@ public class TmeConsole {
 
     private class ConfigCommand implements CommandExecutable {
         private Options opts = new Options();
-        private static final String ZNODE_PORTAL_DB = "/tme2/global/portal_db";
-        private static final String ZNODE_MAIL_SMTP = "/tme2/global/mail_smtp";
-        private static final String ZNODE_MAIL_ALERT = "/tme2/global/mail_alert";
-        private static final String ZNODE_MAIL_SENDER = "/tme2/global/mail_sender";
+        private static final String ZNODE_PORTAL_DB = "/global/portal_db";
+        private static final String ZNODE_MAIL_SMTP = "/global/mail_smtp";
+        private static final String ZNODE_MAIL_ALERT = "/global/mail_alert";
+        private static final String ZNODE_MAIL_SENDER = "/global/mail_sender";
 
         private boolean checkDBConnection(ZooKeeperInfo.PortalDB db) {
             String connectionURL = String.format("jdbc:mysql://%s:%s/%s?user=%s&password=%s", db.getHost(), db.getPort(), db.getName(), db.getUser(), db.getPassword());
@@ -1095,14 +1095,14 @@ public class TmeConsole {
             builder.setHost(broker_ip);
             ZooKeeperInfo.Exchange ex_data = builder.build();
 
-            String path = String.format("/tme2/global/fixed_exchange/%s", ex.getName());
+            String path = String.format("/global/fixed_exchange/%s", ex.getName());
             createAndSetNode(path, ex_data.toString().getBytes());
             myConsole.logResponse("exchange `%s' fixed on broker `%s'%n", ex.getName(), broker_ip);
         }
 
         private void unfix(String exchange) {
             Exchange ex = new Exchange(exchange);
-            String path = String.format("/tme2/global/fixed_exchange/%s", ex.getName());
+            String path = String.format("/global/fixed_exchange/%s", ex.getName());
             if(deleteNode(path))
                 myConsole.logResponse("fixed exchange `%s' removed%n", ex.getName());
             else
@@ -1188,9 +1188,9 @@ public class TmeConsole {
 
         ////////////////////////////////////////////////////////////////////////////////
 
-        public static final String ZNODE_FIXED = "/tme2/global/fixed_exchange";
-        public static final String ZNODE_DROP = "/tme2/global/drop_exchange";
-        public static final String ZNODE_LIMIT = "/tme2/global/limit_exchange";
+        public static final String ZNODE_FIXED = "/global/fixed_exchange";
+        public static final String ZNODE_DROP = "/global/drop_exchange";
+        public static final String ZNODE_LIMIT = "/global/limit_exchange";
 
         public ExchangeCommand() {
             Option optHelp = new Option("h", "help", false, "display help message");
@@ -1293,7 +1293,7 @@ public class TmeConsole {
     }
 
     private boolean isValidBrokerIP(String broker_ip) {
-        String path = String.format("/tme2/broker/%s", broker_ip);
+        String path = String.format("/broker/%s", broker_ip);
         try {
             if(new ZNode(path).exists())
                 return true;
@@ -1372,7 +1372,7 @@ public class TmeConsole {
     }
     
     private static boolean authenticateLock() throws Exception {
-        ZKSessionManager.initialize(Daemon.propMIST.getProperty("mistd.zookeeper"), Integer.valueOf(Daemon.propMIST.getProperty("mistd.zookeeper.timeout")));
+        ZKSessionManager.initialize(Daemon.propMIST.getProperty("mistd.zookeeper") + Daemon.propMIST.getProperty("mistd.zookeeper.tmeroot"), Integer.valueOf(Daemon.propMIST.getProperty("mistd.zookeeper.timeout")));
         ZKSessionManager zksm = ZKSessionManager.instance();
 
         String node = Daemon.propMIST.getProperty("console.acl.node");
@@ -1404,7 +1404,7 @@ public class TmeConsole {
 
         zksm.setDefaultPerms(Id.ANYONE, EnumSet.allOf(Perms.class));
 
-        String lockPath = "/tme2/global/tme-console.lock";
+        String lockPath = "/global/tme-console.lock";
         consoleLock = new ZLock(lockPath);
 
         if(consoleLock.tryAcquire(LockType.WRITE_LOCK, 3000) == false)

@@ -63,8 +63,8 @@ public class TmeBridge implements Runnable {
     private static Logger logger = LoggerFactory.getLogger(TmeBridge.class);
     private ServerSocket server;
     private HashMap<String, CommandExecutable> commandTable = new HashMap<String, CommandExecutable>();
-    private String BRIDGE_PATH = "/tme2/bridge/" + Daemon.propMIST.getProperty("bridge.name");
-    private String ZK_SERVER = Daemon.propMIST.getProperty("mistd.zookeeper");
+    private String BRIDGE_PATH = "/bridge/" + Daemon.propMIST.getProperty("bridge.name");
+    private String ZK_SERVER = Daemon.propMIST.getProperty("mistd.zookeeper") + Daemon.propMIST.getProperty("mistd.zookeeper.tmeroot");
     private int ZK_TIMEOUT = Integer.valueOf(Daemon.propMIST.getProperty("mistd.zookeeper.timeout"));
     private boolean isMaster = false;
     private int retVal = 0;

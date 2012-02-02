@@ -189,7 +189,7 @@ public class ProducerSession extends Session {
                     Client c = null;
                     synchronized(allClients) {
                         c = findClient(dest);
-                        if(c == null)
+                        if(c == null || c.getProducer() == null)
                             c = mountAndAddProducer(dest);
                     }
                     c.getProducer().setTimeToLive(ttl);

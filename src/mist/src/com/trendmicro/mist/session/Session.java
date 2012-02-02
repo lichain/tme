@@ -251,12 +251,11 @@ public abstract class Session implements Runnable {
                 throw new MistException(MistException.ALREADY_MOUNTED);
 
             Client c = new Client(clientConfig, sessionConfig);
-            allClients.put(c.getExchange(), c);
             if(isAttached()){
                 c.openClient(determinedConnection, false, false);
                 addClientIfAttached(c);
             }
-
+            allClients.put(c.getExchange(), c);
             return c;
         }
     }

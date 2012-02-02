@@ -527,6 +527,10 @@ public class ExchangeFarm extends Thread implements DataListener {
             List<String> exchanges = exchangeNode.getChildren();
             for(String name : exchanges) {
                 try {
+                    if(name.endsWith(".lock")) {
+                        continue;
+                    }
+
                     ZNode exchangeChildNode = new ZNode("/exchange/" + name);
                     byte[] data = exchangeChildNode.getContent();
                     ZooKeeperInfo.Exchange.Builder ex_builder = ZooKeeperInfo.Exchange.newBuilder();

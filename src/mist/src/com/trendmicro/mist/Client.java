@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.trendmicro.codi.CODIException;
-import com.trendmicro.codi.ZNode;
 import com.trendmicro.codi.lock.Lock.LockType;
 import com.trendmicro.codi.lock.ZLock;
 import com.trendmicro.mist.mfr.ExchangeFarm;
@@ -116,7 +115,6 @@ public class Client {
         
         String lockPath = "/exchange/" + exchange.toString() + ".lock";
         ZLock lock = new ZLock(lockPath);
-        ZNode lockNode = new ZNode(lockPath);
         brokerDetermined = determined;
         try {
             if(brokerDetermined) {
@@ -186,8 +184,6 @@ public class Client {
             if(!brokerDetermined) {
                 try {
                     lock.release();
-                    if(lockNode.getChildren().isEmpty())
-                        lockNode.delete();
                 }
                 catch(CODIException e) {
                 }
@@ -209,7 +205,6 @@ public class Client {
         
         String lockPath = "/exchange/" + exchange.toString() + ".lock";
         ZLock lock = new ZLock(lockPath);
-        ZNode lockNode = new ZNode(lockPath);
         try {
             logger.info("closing jms client");
             if(isConsumer())
@@ -244,8 +239,6 @@ public class Client {
             if(!brokerDetermined) {
                 try {
                     lock.release();
-                    if(lockNode.getChildren().isEmpty())
-                        lockNode.delete();
                 }
                 catch(CODIException e) {
                 }

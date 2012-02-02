@@ -75,7 +75,7 @@ void manual_ack_loop(istream& is, int sock){
 	}
 }
 
-void attach(const string& session_id, bool ack) {
+void attach(const string& session_id, bool ack, bool counting) {
 	Command req_cmd;
 	Command res;
 	Request* req_ptr = req_cmd.add_request();
@@ -83,6 +83,7 @@ void attach(const string& session_id, bool ack) {
 	req_ptr->set_argument(session_id);
 	req_ptr->set_role(Request::SINK);
 
+	unsigned long count = 0;
 	Response ackResponse;
 	ackResponse.set_success(true);
 	uint32_t ackSize = htonl(ackResponse.ByteSize());
@@ -103,6 +104,9 @@ void attach(const string& session_id, bool ack) {
 				response_processor.set_sock_fd(sock);
 				while(processor.process_one()){
 					response_processor.process_one();
+					if(counting){
+						cerr<<++count<<" messages delivered"<<endl;
+					}
 				}
 			}
 			close(sock);
@@ -135,7 +139,8 @@ int main(int argc, char* argv[]) {
 
 	opt_desc.add_options()("help", "Display help messages")("attach,a",
 			"Attach session")("session-id,s", "Session ID")("ack,A", program_opt::value<string>(&ack_session_id),
-			"Manual ACK messages")("detach,d", "Detach session");
+			"Manual ACK messages")("detach,d", "Detach session")
+			("count,c", "Output delivered message count");
 
 	program_opt::positional_options_description pos_opt_desc;
 	pos_opt_desc.add("session-id", -1);
@@ -153,7 +158,7 @@ int main(int argc, char* argv[]) {
 	string session_id = var_map["session-id"].as<string> ();
 
 	if (var_map.count("attach")) {
-		attach(session_id, var_map.count("ack") > 0);
+		attach(session_id, var_map.count("ack") > 0, var_map.count("count") > 0);
 	} 
 	else if (var_map.count("detach")) {
 		detach(session_id);

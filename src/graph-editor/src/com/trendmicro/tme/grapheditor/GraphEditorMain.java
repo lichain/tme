@@ -76,11 +76,11 @@ public class GraphEditorMain {
             System.err.println("Graph Editor started listening on port " + port);
             logger.info("Graph Editor started listening on port " + port);
             
-            IOUtils.closeQuietly(new URL(String.format("http://localhost:%d/%s?jsp_precompile", port, "graph/graph.jsp")).openConnection().getInputStream());
-            IOUtils.closeQuietly(new URL(String.format("http://localhost:%d/%s?jsp_precompile", port, "graph/index.jsp")).openConnection().getInputStream());
-            IOUtils.closeQuietly(new URL(String.format("http://localhost:%d/%s?jsp_precompile", port, "processor/processor.jsp")).openConnection().getInputStream());
-            IOUtils.closeQuietly(new URL(String.format("http://localhost:%d/%s?jsp_precompile", port, "processor/index.jsp")).openConnection().getInputStream());
-            IOUtils.closeQuietly(new URL(String.format("http://localhost:%d/%s?jsp_precompile", port, "exchange/exchange.jsp")).openConnection().getInputStream());
+            IOUtils.closeQuietly(new URL(String.format("http://127.0.0.1:%d/%s?jsp_precompile", port, "graph/graph.jsp")).openConnection().getInputStream());
+            IOUtils.closeQuietly(new URL(String.format("http://127.0.0.1:%d/%s?jsp_precompile", port, "graph/index.jsp")).openConnection().getInputStream());
+            IOUtils.closeQuietly(new URL(String.format("http://127.0.0.1:%d/%s?jsp_precompile", port, "processor/processor.jsp")).openConnection().getInputStream());
+            IOUtils.closeQuietly(new URL(String.format("http://127.0.0.1:%d/%s?jsp_precompile", port, "processor/index.jsp")).openConnection().getInputStream());
+            IOUtils.closeQuietly(new URL(String.format("http://127.0.0.1:%d/%s?jsp_precompile", port, "exchange/exchange.jsp")).openConnection().getInputStream());
             
             server.join();
         }

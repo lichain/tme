@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.security.Principal;
 import java.sql.DriverManager;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -21,6 +22,12 @@ import java.util.Vector;
 import javax.jms.BytesMessage;
 import javax.jms.ConnectionFactory;
 import javax.jms.TextMessage;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.NameCallback;
+import javax.security.auth.callback.PasswordCallback;
+import javax.security.auth.callback.UnsupportedCallbackException;
+import javax.security.auth.login.LoginContext;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -33,6 +40,7 @@ import org.nocrala.tools.texttablefmt.Table;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.TextFormat;
+import com.sun.security.auth.UserPrincipal;
 import com.trendmicro.codi.CODIException;
 import com.trendmicro.codi.Id;
 import com.trendmicro.codi.Perms;
@@ -1371,36 +1379,48 @@ public class TmeConsole {
         }
     }
     
+    private static final String ACL_NODE = "/global/acl/console_admins";
+
     private static boolean authenticateLock() throws Exception {
         ZKSessionManager.initialize(Daemon.propMIST.getProperty("mistd.zookeeper") + Daemon.propMIST.getProperty("mistd.zookeeper.tmeroot"), Integer.valueOf(Daemon.propMIST.getProperty("mistd.zookeeper.timeout")));
         ZKSessionManager zksm = ZKSessionManager.instance();
+        zksm.waitConnected();
 
-        String node = Daemon.propMIST.getProperty("console.acl.node");
+        ZNode authNode = new ZNode(ACL_NODE);
+        if(authNode.exists()) {
+            LoginContext lc = new LoginContext("ldaploginmodule", new CallbackHandler() {
 
-        if(!node.equals("")) {
-            String aclUser = Daemon.propMIST.getProperty("console.acl.user");
-            String passphrase = Daemon.propMIST.getProperty("console.acl.password");
-            if(passphrase == null || passphrase.equals(""))
-                passphrase = askPassword("Enter authorization password:");
+                @Override
+                public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+                    for(Callback cb : callbacks) {
+                        if(cb instanceof NameCallback) {
+                            System.out.print("Enter username: ");
+                            ((NameCallback) cb).setName(System.console().readLine());
+                        }
+                        else if(cb instanceof PasswordCallback) {
+                            System.out.print("Enter password: ");
+                            ((PasswordCallback) cb).setPassword(System.console().readPassword());
+                        }
+                    }
+                }
+            });
+            lc.login();
 
-            zksm.addAuthDigest(aclUser, passphrase);
-            zksm.setDefaultPerms(Id.CREATOR, EnumSet.allOf(Perms.class));
-            zksm.setDefaultPerms(Id.ANYONE, EnumSet.noneOf(Perms.class));
-            zksm.waitConnected();
-
-            ZNode authNode = new ZNode(node);
-            if(authNode.exists()) {
-                //TODO: needs a new authenticator here
-                if(loggedUser == null)
-                    throw new Exception("You are not authorized to console, please contact with operation");
+            boolean authorized = false;
+            for(String admin : authNode.getContentString().split(",")) {
+                for(Principal p : lc.getSubject().getPrincipals()) {
+                    if(p instanceof UserPrincipal) {
+                        if(p.getName().equals(admin.trim())) {
+                            authorized = true;
+                        }
+                    }
+                }
             }
-            else
-                myConsole.logResponseNL("Warning: Can't get authorization information, running under unprotected mode!\n");
+            if(!authorized)
+                throw new Exception("You are not authorized to console, please contact with operation");
         }
-        else {
-            zksm.waitConnected();
+        else
             myConsole.logResponseNL("Warning: Can't get authorization information, running under unprotected mode!\n");
-        }
 
         zksm.setDefaultPerms(Id.ANYONE, EnumSet.allOf(Perms.class));
 
@@ -1428,20 +1448,4 @@ public class TmeConsole {
         }
         return 0;
     }
-
-    private static String askPassword(String prompt) {
-		try {
-			java.io.Console cons;
-			 char[] passwd = null;
-			 if ((cons = System.console()) != null &&
-			     (passwd = cons.readPassword("%s", prompt)) != null) {
-				 cons.flush();
-			 }
-			 return passwd != null ? new String(passwd) : null;
-		}
-		catch (Exception ioe) {
-			ioe.printStackTrace();
-		}
-		return null;
-	}
 }

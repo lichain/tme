@@ -55,6 +55,7 @@ rm -rf $RPM_BUILD_ROOT
 %config /opt/trend/tme/conf/mist/mistd.properties
 %config /opt/trend/tme/conf/mist/tme-mistd.monit
 %config /opt/trend/tme/conf/mist/logback.xml
+%config /opt/trend/tme/conf/mist/ldaploginmodule.conf
 
 %pre
 

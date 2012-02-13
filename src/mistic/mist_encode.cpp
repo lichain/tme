@@ -51,6 +51,10 @@ int main(int argc, char* argv[]) {
 	}
 	else if (var_map.count("stream")) {
 		Processor<Block_Policy_Length, Block_Policy_MessageBlock, Read_Stdin_Policy, Write_Stdout_Policy> processor;
+		processor.set_id(message_id);
+		if(var_map.count("ttl")){
+		    processor.set_ttl(var_map["ttl"].as<int>());
+		}
 		processor.run();
 	} else {
 		cout << opt_desc << endl;

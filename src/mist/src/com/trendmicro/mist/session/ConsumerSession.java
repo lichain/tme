@@ -111,7 +111,7 @@ public class ConsumerSession extends Session implements MessageListener {
         try {
             socketInput.close();
         }
-        catch(IOException e) {
+        catch(Exception e) {
         }
     }
     

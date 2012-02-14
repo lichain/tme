@@ -258,7 +258,7 @@ class Block_Policy_MessageBlock : public Block_Policy_Length
 		void Write(const int fd, const char* buf, const size_t count){
 			_msg.set_id(_id);
 			if(_ttl > 0){
-			    _msg.set_ttl(_ttl);
+			    _msg.set_ttl(_ttl * 1000);	// change from second to millisecond
 			}
 			_msg.set_message(buf, count);
 			uint32_t len = htonl(_msg.ByteSize());

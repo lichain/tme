@@ -1,7 +1,7 @@
 #ifndef _MIST_CORE
 #define _MIST_CORE
 
-#define MAX_MSG_SIZE 512000
+#define MAX_MSG_SIZE 20 * 1024 * 1024
 #define MISTD_PORT 9498
 
 #include <MistMessage.pb.h>

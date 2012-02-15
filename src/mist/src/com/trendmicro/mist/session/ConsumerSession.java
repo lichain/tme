@@ -13,12 +13,15 @@ import javax.jms.Topic;
 
 import com.google.protobuf.ByteString;
 import com.trendmicro.mist.Client;
+import com.trendmicro.mist.Daemon;
 import com.trendmicro.mist.ExchangeMetric;
 import com.trendmicro.mist.MistException;
 import com.trendmicro.mist.proto.GateTalk;
 import com.trendmicro.mist.proto.MistMessage;
 import com.trendmicro.mist.proto.MistMessage.KeyValuePair;
+import com.trendmicro.mist.proto.MistMessage.MessageBlock;
 import com.trendmicro.mist.util.Exchange;
+import com.trendmicro.mist.util.MessageFilter;
 import com.trendmicro.mist.util.Packet;
 import com.trendmicro.spn.common.util.Utils;
 
@@ -26,6 +29,7 @@ public class ConsumerSession extends Session implements MessageListener {
     public static class MessagePrepared {
         public MistMessage.MessageBlock msgBlock;
         public Exchange from;
+        public MessageBlock.Builder builder;
         
         private byte[] convertJMSMessage(BytesMessage msg) throws JMSException, IOException {
             ByteString.Output byteOut = ByteString.newOutput();
@@ -43,12 +47,12 @@ public class ConsumerSession extends Session implements MessageListener {
             else if(d instanceof Topic)
                 from = new Exchange("topic:" + ((Topic) d).getTopicName());
             
-            MistMessage.MessageBlock.Builder builder = MistMessage.MessageBlock.newBuilder();
+            builder = MistMessage.MessageBlock.newBuilder();
             builder.setId(from.toString());
             
             byte[] payload = convertJMSMessage(msg);
             builder.setMessage(ByteString.copyFrom(payload));
-            
+
             Enumeration<?> propNames = msg.getPropertyNames();
             while(propNames.hasMoreElements()) {
                 String key = (String) propNames.nextElement();
@@ -58,6 +62,11 @@ public class ConsumerSession extends Session implements MessageListener {
                 else
                     builder.addProperties(KeyValuePair.newBuilder().setKey(key).setValue(value).build());
             }
+
+            for(MessageFilter filter : Daemon.messageFilters) {
+                filter.postReceive(this);
+            }
+
             msgBlock = builder.build();
         }
     }

@@ -16,6 +16,7 @@ import com.trendmicro.mist.proto.GateTalk;
 import com.trendmicro.mist.proto.MistMessage;
 import com.trendmicro.mist.proto.MistMessage.KeyValuePair;
 import com.trendmicro.mist.util.Exchange;
+import com.trendmicro.mist.util.MessageFilter;
 import com.trendmicro.mist.util.Packet;
 import com.trendmicro.spn.common.util.Utils;
 
@@ -84,6 +85,10 @@ public class ProducerSession extends Session {
                     props = new HashMap<String, String>();
                 for(KeyValuePair pair : mBlock.getPropertiesList())
                     props.put(pair.getKey(), pair.getValue());
+            }
+
+            for(MessageFilter filter : Daemon.messageFilters) {
+                filter.preSend(this);
             }
 
             if(msg.length > Daemon.MAX_TRANSMIT_MESSAGE_SIZE)

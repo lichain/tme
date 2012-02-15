@@ -33,6 +33,7 @@ import com.trendmicro.mist.session.ConsumerSession;
 import com.trendmicro.mist.session.ProducerSession;
 import com.trendmicro.mist.session.Session;
 import com.trendmicro.mist.session.SessionPool;
+import com.trendmicro.mist.util.MessageFilter;
 import com.trendmicro.spn.common.util.Utils;
 import com.trendmicro.tme.mfr.BrokerFarm;
 
@@ -139,6 +140,7 @@ public class Daemon {
 
     public static List<Connection> connectionPool = Collections.synchronizedList(new ArrayList<Connection>());
     public static ArrayList<Thread> deadServiceList = new ArrayList<Thread>();
+    public static ArrayList<MessageFilter> messageFilters = new ArrayList<MessageFilter>();
 
     static {
         nameTempDir = "/var/run/tme";
@@ -292,6 +294,26 @@ public class Daemon {
             if(!bindServicePort(10)) {
                 logger.error("unable to bind daemon service port, exit");
                 System.exit(-1);
+            }
+
+            String filters = Daemon.propMIST.getProperty("mistd.messagefilters", "");
+            for(String filter :filters.split(":")){
+                if(filter.length() > 0){
+                    Class<?> filterClass = Class.forName(filter);
+                    boolean match = false;
+                    for(Class<?> iface : filterClass.getInterfaces()){
+                        if(iface.equals(MessageFilter.class)){
+                            match = true;
+                        }
+                    }
+                    if(match){
+                        Daemon.messageFilters.add((MessageFilter)filterClass.getConstructor().newInstance());
+                        logger.info("loaded MessageFilter: " + filterClass.getName());
+                    }
+                    else {
+                        logger.error("class {} does not implement MessageFilter!", filter);
+                    }
+                }
             }
 
             do {

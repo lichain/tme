@@ -35,10 +35,6 @@ int create_session() {
 			cerr<<res.response(0).exception()<<endl;
 		}
 	}
-	else{
-	    cerr<<"Error communicate to MIST daemon"<<endl;
-	}
-
 	return session_id;
 }
 
@@ -58,9 +54,6 @@ bool destroy_session(const string& session_id) {
 			cerr<<res.response(0).exception()<<endl;
 		}
 	}
-	else{
-	    cerr<<"Error communicate to MIST daemon"<<endl;
-	}
 	return false;
 }
 
@@ -79,9 +72,6 @@ bool list_session() {
 			cerr<<res.response(0).exception()<<endl;
 		}
 	}
-	else{
-	    cerr<<"Error communicate to MIST daemon"<<endl;
-	}
 	return false;
 }
 
@@ -99,9 +89,6 @@ bool show_status() {
 		else{
 			cerr<<res.response(0).exception()<<endl;
 		}
-	}
-	else{
-	    cerr<<"Error communicate to MIST daemon"<<endl;
 	}
 	return false;
 }

@@ -38,8 +38,10 @@ int connectTo(int port){
 
 bool sendRequest(const com::trendmicro::mist::proto::Command& req, com::trendmicro::mist::proto::Command& res){
     int sock;
-    if((sock=connectTo(MISTD_PORT))<0)
+    if((sock=connectTo(MISTD_PORT))<0){
+	std::cerr<<"Error connecting to MIST daemon!"<<std::endl;
         return false;
+    }
 
     uint32_t byteSize=htonl(req.ByteSize());
     write(sock,&byteSize,4);
@@ -51,6 +53,7 @@ bool sendRequest(const com::trendmicro::mist::proto::Command& req, com::trendmic
         return true;
     }
     else{
+	std::cerr<<"Error parsing response data!"<<std::endl;
         close(sock);
         return false;
     }
@@ -174,7 +177,6 @@ class Block_Policy_Line : public Block_Base
 				*ptr++ = c;
 			}
 			*ptr = '\0';
-std::cerr<<"size="<<size<<std::endl;
 			return message_payload(_buf, size);
 		}
 

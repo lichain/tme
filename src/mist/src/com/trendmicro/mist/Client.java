@@ -250,6 +250,7 @@ public class Client {
     public synchronized void sendMessageBytes(byte[] data, HashMap<String, String> props) throws MistException {
         try {
             BytesMessage message = getJMSSession().createBytesMessage();
+            message.setBooleanProperty("JMS_SUN_COMPRESS", true);
             for(Map.Entry<String, String> ent: props.entrySet()) {
                 try {
                     message.setStringProperty(ent.getKey(), ent.getValue());

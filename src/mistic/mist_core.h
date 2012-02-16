@@ -16,6 +16,9 @@
 #define MIST_SOURCE_ATTACH_ERROR 3
 #define MIST_SOURCE_DETACH_ERROR 4
 
+#define MIST_SINK_ATTACH_ERROR 3
+#define MIST_SINK_DETACH_ERROR 4
+
 #include <MistMessage.pb.h>
 #include <GateTalk.pb.h>
 #include <iostream>

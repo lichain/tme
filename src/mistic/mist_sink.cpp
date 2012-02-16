@@ -75,7 +75,7 @@ void manual_ack_loop(istream& is, int sock){
 	}
 }
 
-void attach(const string& session_id, bool ack, bool counting) {
+bool attach(const string& session_id, bool ack, bool counting) {
 	Command req_cmd;
 	Command res;
 	Request* req_ptr = req_cmd.add_request();
@@ -110,12 +110,17 @@ void attach(const string& session_id, bool ack, bool counting) {
 				}
 			}
 			close(sock);
+			return true;
+		}
+		else{
+			cerr<<res.response(0).exception()<<endl;
 		}
 	}
+	return false;
 
 }
 
-void detach(const string& session_id) {
+bool detach(const string& session_id) {
 	Command req_cmd;
 	Command res;
 	Request* req_ptr = req_cmd.add_request();
@@ -124,11 +129,13 @@ void detach(const string& session_id) {
 	if (sendRequest(req_cmd, res)){
             if (res.response(0).success()){
                 cerr<<res.response(0).context()<<endl;
+		return true;
             }
             else{
                 cerr<<res.response(0).exception()<<endl;
             }
         }
+	return false;
 }
 
 int main(int argc, char* argv[]) {
@@ -151,21 +158,26 @@ int main(int argc, char* argv[]) {
 					pos_opt_desc).run(), var_map);
 	program_opt::notify(var_map);
 
+	if(var_map.count("help")){
+		cerr << opt_desc << endl;
+		return 0;
+	}
+
 	if (!var_map.count("session-id")) {
 		cerr << opt_desc << endl;
-		return 1;
+		return MIST_ARGUMENT_ERROR;
 	}
 	string session_id = var_map["session-id"].as<string> ();
 
 	if (var_map.count("attach")) {
-		attach(session_id, var_map.count("ack") > 0, var_map.count("count") > 0);
+		if(!attach(session_id, var_map.count("ack") > 0, var_map.count("count") > 0)){
+			return MIST_SINK_ATTACH_ERROR;
+		}
 	} 
 	else if (var_map.count("detach")) {
-		detach(session_id);
+		if(!detach(session_id)){
+			return MIST_SINK_DETACH_ERROR;
+		}
 	} 
-	else {
-		cerr << opt_desc << endl;
-		return 1;
-	}
 	return 0;
 }

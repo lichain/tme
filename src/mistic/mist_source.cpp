@@ -167,34 +167,36 @@ int main(int argc, char* argv[]) {
 	program_opt::store(program_opt::command_line_parser(argc, argv).options(opt_desc).positional(pos_opt_desc).run(), var_map);
 	program_opt::notify(var_map);
 
+	if(var_map.count("help")){
+		cerr << opt_desc << endl;
+		return 0;
+	}
+
 	if(!var_map.count("session-id")){
 		cerr << opt_desc << endl;
-				return 1;
+		return MIST_ARGUMENT_ERROR;
 	}
 	session_id = var_map["session-id"].as<string>();
 
 	if (var_map.count("attach")) {
 		if(!attach(var_map["session-id"].as<string>(), var_map.count("ack")>0, var_map.count("limit")>0 ? var_map["limit"].as<long>() : -1)){
-			return 3;
+			return MIST_SOURCE_ATTACH_ERROR;
 		}
 	}
 	else if (var_map.count("mount")) {
 		if(!mount(var_map["session-id"].as<string>(), var_map["mount"].as<string>())){
-			return 1;
+			return MIST_SOURCE_MOUNT_ERROR;
 		}
 	}
 	else if (var_map.count("unmount")) {
 		if(!unmount(var_map["session-id"].as<string>(), var_map["unmount"].as<string>())){
-			return 2;
+			return MIST_SOURCE_UNMOUNT_ERROR;
 		}
 	}
 	else if (var_map.count("detach")) {
 		if(!detach(var_map["session-id"].as<string>())){
-			return 4;
+			return MIST_SOURCE_DETACH_ERROR;
 		}
-	}
-	else {
-		cerr << opt_desc << endl;
 	}
 	return 0;
 }

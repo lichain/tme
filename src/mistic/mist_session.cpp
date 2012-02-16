@@ -110,17 +110,17 @@ int main(int argc, char* argv[]) {
 	}
 	else if(var_map.count("destroy")){
 		if(!destroy_session(var_map["destroy"].as<string>())){
-			return 2;
+			return MIST_SESSION_DESTROY_ERROR;
 		}
 	}
 	else if(var_map.count("list")){
 		if(!list_session()){
-			return 3;
+			return MIST_SESSION_LIST_ERROR;
 		}
 	}
 	else if(var_map.count("status")){
 		if(!show_status()){
-			return 4;
+			return MIST_SESSION_STATUS_ERROR;
 		}
 	}
 	else{
@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
 			cout<<create_session()<<endl;
 		}
 		else{
-			return 1;
+			return MIST_SESSION_CREATE_ERROR;
 		}
 	}
 	return 0;

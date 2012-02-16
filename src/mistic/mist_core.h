@@ -4,6 +4,18 @@
 #define MAX_MSG_SIZE 20 * 1024 * 1024
 #define MISTD_PORT 9498
 
+#define MIST_ARGUMENT_ERROR 134
+
+#define MIST_SESSION_CREATE_ERROR 1
+#define MIST_SESSION_DESTROY_ERROR 2
+#define MIST_SESSION_LIST_ERROR 3
+#define MIST_SESSION_STATUS_ERROR 4
+
+#define MIST_SOURCE_MOUNT_ERROR 1
+#define MIST_SOURCE_UNMOUNT_ERROR 2
+#define MIST_SOURCE_ATTACH_ERROR 3
+#define MIST_SOURCE_DETACH_ERROR 4
+
 #include <MistMessage.pb.h>
 #include <GateTalk.pb.h>
 #include <iostream>

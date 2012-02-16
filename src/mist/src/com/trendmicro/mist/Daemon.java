@@ -12,6 +12,7 @@ import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -140,7 +141,7 @@ public class Daemon {
 
     public static List<Connection> connectionPool = Collections.synchronizedList(new ArrayList<Connection>());
     public static ArrayList<Thread> deadServiceList = new ArrayList<Thread>();
-    public static ArrayList<MessageFilter> messageFilters = new ArrayList<MessageFilter>();
+    public static LinkedList<MessageFilter> messageFilters = new LinkedList<MessageFilter>();
 
     static {
         nameTempDir = "/var/run/tme";

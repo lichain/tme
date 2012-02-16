@@ -2,6 +2,7 @@ package com.trendmicro.mist.session;
 
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.Iterator;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
@@ -63,10 +64,10 @@ public class ConsumerSession extends Session implements MessageListener {
                     builder.addProperties(KeyValuePair.newBuilder().setKey(key).setValue(value).build());
             }
 
-            for(MessageFilter filter : Daemon.messageFilters) {
-                filter.postReceive(this);
+            Iterator<MessageFilter> iter = Daemon.messageFilters.descendingIterator();
+            while(iter.hasNext()){
+                iter.next().postReceive(this);
             }
-
             msgBlock = builder.build();
         }
     }

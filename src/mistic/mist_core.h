@@ -36,7 +36,7 @@ int connectTo(int port){
         return sock;
 }
 
-int sendRequest(const com::trendmicro::mist::proto::Command& req, com::trendmicro::mist::proto::Command& res){
+bool sendRequest(const com::trendmicro::mist::proto::Command& req, com::trendmicro::mist::proto::Command& res){
     int sock;
     if((sock=connectTo(MISTD_PORT))<0)
         return -1;
@@ -48,11 +48,11 @@ int sendRequest(const com::trendmicro::mist::proto::Command& req, com::trendmicr
     read(sock,&byteSize,4);
     if(res.ParseFromFileDescriptor(sock)){
         close(sock);
-        return 0;
+        return true;
     }
     else{
         close(sock);
-        return -1;
+        return false;
     }
 }
 
@@ -174,6 +174,7 @@ class Block_Policy_Line : public Block_Base
 				*ptr++ = c;
 			}
 			*ptr = '\0';
+std::cerr<<"size="<<size<<std::endl;
 			return message_payload(_buf, size);
 		}
 

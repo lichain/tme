@@ -39,7 +39,7 @@ void attach(const string& session_id, bool ack, long limit){
 	Response ackResponse;
 	ackResponse.set_success(true);
 	uint32_t ackSize=htonl(ackResponse.ByteSize());
-	if (sendRequest(req_cmd, res) == 0) {
+	if (sendRequest(req_cmd, res)) {
 		if (res.response(0).success()) {
 
 			sock = connectTo(atoi(res.response(0).context().c_str()));
@@ -77,7 +77,7 @@ void detach(const string& session_id){
 	Request* req_ptr = req_cmd.add_request();
 	req_ptr->set_type(Request::CLIENT_DETACH);
 	req_ptr->set_argument(session_id);
-	if (sendRequest(req_cmd, res) == 0){
+	if (sendRequest(req_cmd, res)){
 	    if (res.response(0).success()){
 		cerr<<res.response(0).context()<<endl;
 	    }
@@ -97,7 +97,7 @@ void mount(const string& session_id, const string& exName) {
 	clientPtr->set_action(Client::MOUNT);
 
 	Command res;
-	if (sendRequest(cmd, res) == 0){
+	if (sendRequest(cmd, res)){
 		if (res.response(0).success()){
 			cerr<<res.response(0).context()<<endl;
 		}
@@ -117,7 +117,7 @@ void unmount(const string& session_id, const string& exName) {
 	clientPtr->set_action(Client::UNMOUNT);
 
 	Command res;
-	if (sendRequest(cmd, res) == 0){
+	if (sendRequest(cmd, res)){
 		if (res.response(0).success()){
 			cerr<<res.response(0).context()<<endl;
 		}

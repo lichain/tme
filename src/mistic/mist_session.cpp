@@ -27,7 +27,7 @@ int create_session() {
 	sessPtr->mutable_connection()->set_broker_type("");
 
 	Command res;
-	if (sendRequest(cmd, res) == 0)
+	if (sendRequest(cmd, res))
 		if (res.response(0).success())
 			session_id = atoi(res.response(0).context().c_str());
 
@@ -41,7 +41,7 @@ void destroy_session(const string& session_id) {
 	reqPtr->set_argument(session_id);
 
 	Command res;
-	if (sendRequest(cmd, res) == 0) {
+	if (sendRequest(cmd, res)) {
 		if (res.response(0).success()) {
 			cerr<<res.response(0).context()<<endl;
 		}
@@ -57,7 +57,7 @@ void list_session() {
 	reqPtr->set_type(Request::SESSION_LIST);
 
 	Command res;
-	if (sendRequest(cmd, res) == 0) {
+	if (sendRequest(cmd, res)) {
 		if (res.response(0).success()) {
 			cerr<<res.response(0).context()<<endl;
 		}
@@ -73,7 +73,7 @@ void show_status() {
 	reqPtr->set_type(Request::DAEMON_STATUS);
 
 	Command res;
-	if (sendRequest(cmd, res) == 0) {
+	if (sendRequest(cmd, res)) {
 		if (res.response(0).success()) {
 			cerr<<res.response(0).context()<<endl;
 		}

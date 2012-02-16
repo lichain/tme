@@ -21,7 +21,7 @@ bool on_close = false;
 
 int sock;
 
-void attach(const string& session_id, bool ack, long limit){
+bool attach(const string& session_id, bool ack, long limit){
 	long msg_cnt = 0;
 	string filename = string("/var/run/tme/pid/") + session_id + string(".pid");
 
@@ -41,7 +41,6 @@ void attach(const string& session_id, bool ack, long limit){
 	uint32_t ackSize=htonl(ackResponse.ByteSize());
 	if (sendRequest(req_cmd, res)) {
 		if (res.response(0).success()) {
-
 			sock = connectTo(atoi(res.response(0).context().c_str()));
 			int trueflag = 1;
 			setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &trueflag, sizeof(int));
@@ -67,11 +66,16 @@ void attach(const string& session_id, bool ack, long limit){
 				}
 			}
 			close(sock);
+			return true;
+		}
+		else{
+		    cerr<<res.response(0).exception()<<endl;
 		}
 	}
+	return false;
 }
 
-void detach(const string& session_id){
+bool detach(const string& session_id){
 	Command req_cmd;
 	Command res;
 	Request* req_ptr = req_cmd.add_request();
@@ -80,14 +84,16 @@ void detach(const string& session_id){
 	if (sendRequest(req_cmd, res)){
 	    if (res.response(0).success()){
 		cerr<<res.response(0).context()<<endl;
+		return true;
 	    }
 	    else{
 		cerr<<res.response(0).exception()<<endl;
 	    }
 	}
+	return false;
 }
 
-void mount(const string& session_id, const string& exName) {
+bool mount(const string& session_id, const string& exName) {
 	Command cmd;
 	Client* clientPtr = cmd.add_client();
 	clientPtr->set_session_id(atoi(session_id.c_str()));
@@ -100,14 +106,16 @@ void mount(const string& session_id, const string& exName) {
 	if (sendRequest(cmd, res)){
 		if (res.response(0).success()){
 			cerr<<res.response(0).context()<<endl;
+			return true;
 		}
 		else{
 					cerr<<res.response(0).exception()<<endl;
 				}
 	}
+	return false;
 }
 
-void unmount(const string& session_id, const string& exName) {
+bool unmount(const string& session_id, const string& exName) {
 	Command cmd;
 	Client* clientPtr = cmd.add_client();
 	clientPtr->set_session_id(atoi(session_id.c_str()));
@@ -120,11 +128,13 @@ void unmount(const string& session_id, const string& exName) {
 	if (sendRequest(cmd, res)){
 		if (res.response(0).success()){
 			cerr<<res.response(0).context()<<endl;
+			return true;
 		}
 		else{
 					cerr<<res.response(0).exception()<<endl;
 				}
 	}
+	return false;
 }
 
 string session_id;
@@ -164,20 +174,27 @@ int main(int argc, char* argv[]) {
 	session_id = var_map["session-id"].as<string>();
 
 	if (var_map.count("attach")) {
-		attach(var_map["session-id"].as<string>(), var_map.count("ack")>0, var_map.count("limit")>0 ? var_map["limit"].as<long>() : -1);
+		if(!attach(var_map["session-id"].as<string>(), var_map.count("ack")>0, var_map.count("limit")>0 ? var_map["limit"].as<long>() : -1)){
+			return 3;
+		}
 	}
 	else if (var_map.count("mount")) {
-		mount(var_map["session-id"].as<string>(), var_map["mount"].as<string>());
+		if(!mount(var_map["session-id"].as<string>(), var_map["mount"].as<string>())){
+			return 1;
+		}
 	}
 	else if (var_map.count("unmount")) {
-		unmount(var_map["session-id"].as<string>(), var_map["unmount"].as<string>());
+		if(!unmount(var_map["session-id"].as<string>(), var_map["unmount"].as<string>())){
+			return 2;
+		}
 	}
 	else if (var_map.count("detach")) {
-		detach(var_map["session-id"].as<string>());
+		if(!detach(var_map["session-id"].as<string>())){
+			return 4;
+		}
 	}
 	else {
 		cerr << opt_desc << endl;
-		return 1;
 	}
 	return 0;
 }

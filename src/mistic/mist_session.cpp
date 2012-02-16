@@ -27,14 +27,22 @@ int create_session() {
 	sessPtr->mutable_connection()->set_broker_type("");
 
 	Command res;
-	if (sendRequest(cmd, res))
-		if (res.response(0).success())
+	if (sendRequest(cmd, res)){
+		if (res.response(0).success()){
 			session_id = atoi(res.response(0).context().c_str());
+		}
+		else{
+			cerr<<res.response(0).exception()<<endl;
+		}
+	}
+	else{
+	    cerr<<"Error communicate to MIST daemon"<<endl;
+	}
 
 	return session_id;
 }
 
-void destroy_session(const string& session_id) {
+bool destroy_session(const string& session_id) {
 	Command cmd;
 	Request* reqPtr = cmd.add_request();
 	reqPtr->set_type(Request::SESSION_DESTROY);
@@ -44,14 +52,19 @@ void destroy_session(const string& session_id) {
 	if (sendRequest(cmd, res)) {
 		if (res.response(0).success()) {
 			cerr<<res.response(0).context()<<endl;
+			return true;
 		}
 		else{
 			cerr<<res.response(0).exception()<<endl;
 		}
 	}
+	else{
+	    cerr<<"Error communicate to MIST daemon"<<endl;
+	}
+	return false;
 }
 
-void list_session() {
+bool list_session() {
 	Command cmd;
 	Request* reqPtr = cmd.add_request();
 	reqPtr->set_type(Request::SESSION_LIST);
@@ -60,14 +73,19 @@ void list_session() {
 	if (sendRequest(cmd, res)) {
 		if (res.response(0).success()) {
 			cerr<<res.response(0).context()<<endl;
+			return true;
 		}
 		else{
 			cerr<<res.response(0).exception()<<endl;
 		}
 	}
+	else{
+	    cerr<<"Error communicate to MIST daemon"<<endl;
+	}
+	return false;
 }
 
-void show_status() {
+bool show_status() {
 	Command cmd;
 	Request* reqPtr = cmd.add_request();
 	reqPtr->set_type(Request::DAEMON_STATUS);
@@ -76,11 +94,16 @@ void show_status() {
 	if (sendRequest(cmd, res)) {
 		if (res.response(0).success()) {
 			cerr<<res.response(0).context()<<endl;
+			return true;
 		}
 		else{
 			cerr<<res.response(0).exception()<<endl;
 		}
 	}
+	else{
+	    cerr<<"Error communicate to MIST daemon"<<endl;
+	}
+	return false;
 }
 
 int main(int argc, char* argv[]) {
@@ -97,19 +120,30 @@ int main(int argc, char* argv[]) {
 
 	if( var_map.count("help")){
 		cerr << opt_desc << endl;
-				return 1;
 	}
 	else if(var_map.count("destroy")){
-		destroy_session(var_map["destroy"].as<string>());
+		if(!destroy_session(var_map["destroy"].as<string>())){
+			return 2;
+		}
 	}
 	else if(var_map.count("list")){
-		list_session();
+		if(!list_session()){
+			return 3;
+		}
 	}
 	else if(var_map.count("status")){
-		show_status();
+		if(!show_status()){
+			return 4;
+		}
 	}
 	else{
-		cout<<create_session()<<endl;
+		int sess_id = create_session();
+		if(sess_id != -1){
+			cout<<create_session()<<endl;
+		}
+		else{
+			return 1;
+		}
 	}
 	return 0;
 }

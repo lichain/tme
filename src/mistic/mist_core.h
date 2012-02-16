@@ -39,7 +39,7 @@ int connectTo(int port){
 bool sendRequest(const com::trendmicro::mist::proto::Command& req, com::trendmicro::mist::proto::Command& res){
     int sock;
     if((sock=connectTo(MISTD_PORT))<0)
-        return -1;
+        return false;
 
     uint32_t byteSize=htonl(req.ByteSize());
     write(sock,&byteSize,4);

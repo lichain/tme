@@ -126,7 +126,7 @@ int main(int argc, char* argv[]) {
 	else{
 		int sess_id = create_session();
 		if(sess_id != -1){
-			cout<<create_session()<<endl;
+			cout<<sess_id<<endl;
 		}
 		else{
 			return MIST_SESSION_CREATE_ERROR;

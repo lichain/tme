@@ -42,11 +42,11 @@
         <img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
     </div>
 
-    <h1><a href="https://github.com/trendmicro/tme">tme</a>
+    <h1><a href="https://github.com/trendmicro/tme">TME</a>
       <span class="small">by <a href="https://github.com/trendmicro">trendmicro</a></span></h1>
 
     <div class="description">
-      Trend Message Exchange (TME) aims to provide a distributed messaging infrastructure with scalability, stability, and operability.
+      TME (Trend Message Exchange) aims to provide a distributed messaging infrastructure with scalability, stability, and operability.
     </div>
 
     
@@ -55,76 +55,10 @@
 [ to be expanded ]</p>
     
 
-    
-      <h2>Dependencies</h2>
-      <p>JDK > 1.6.0_21<br>
-Monit<br>
-Boost<br>
-RRDTool<br>
-Graphviz<br>
-</p>
-    
-
-    
-      <h2>Install</h2>
-      <p>### CentOS ###<br>
-<br>
-#### Broker ####<br>
-1. sudo yum install tme-broker<br>
-2. /opt/trend/tme/bin/create_zookeeper_nodes.sh [zookeeper quorum] [tme root node prefix path] (this only has to run once per cluster)<br>
-3. Edit /opt/trend/tme/conf/broker/config.properties (zookeeper quorum setting and tme root node path should be identical to the previous step)<br>
-4. sudo /opt/trend/tme/bin/install_tme-broker.sh <br>
-<br>
-#### MIST (clients) ####<br>
-1. sudo yum install tme-mist<br>
-2. Edit /opt/trend/tme/conf/mist/mistd.properties , also, the zookeeper settings should be identical<br>
-3. sudo /opt/trend/tme/bin/install_tme-mistd.sh <br>
-<br>
-Now you have the minimum TME cluster setup completed. Execute sid=`mist-session` ; echo "hello TME" | mist-encode --wrap test --line | mist-sink $sid --attach ; mist-session --destroy $sid<br>
-<br>
-followed by<br>
-<br>
-sid=`mist-session` ; mist-source $sid --mount test ; mist-source $sid --attach | mist-decode --line ; mist-session --destroy $sid<br>
-<br>
-You should see "hello TME" printed on your screen. Press ctrl+c to terminate the program.<br>
-<br>
-#### Portal ####<br>
-1. sudo yum install tme-portal-collector<br>
-2. Edit /opt/trend/tme/conf/portal-collector/portal-collector.properties<br>
-3. sudo /opt/trend/tme/bin/install_tme-portal-collector.sh<br>
-4. sudo yum install tme-portal-web<br>
-5. Edit /opt/trend/tme/conf/portal-web/portal-web-conf.sh<br>
-6. sudo /opt/trend/tme/bin/install_tme-portal-web.sh <br>
-<br>
-Open your browser and connect to http://[portal host]:[portal port] , and you should see the portal page<br>
-<br>
-#### Graph Editor ####<br>
-1. sudo yum install tme-graph-editor<br>
-2. Edit /opt/trend/tme/conf/graph-editor/graph-editor.properties<br>
-3. sudo /opt/trend/tme/bin/install_tme-graph-editor.sh <br>
-<br>
-Open your browser and connect to http://[editor host]:[editor port]/webapp/graph-editor/graph , and you should see the graph editor page<br>
-<br>
-#### Monit ####<br>
-Make sure monit daemons are started on all machines<br>
-<br>
-#### Security ####<br>
-<br>
-By default, the security of tme-console is disabled. To enable security, you have to login to one quorum of ZooKeeper use zkCli.sh to start ZooKeeper console and enter the following:<br>
-<br>
-create /tme2/global/acl "" ip:127.0.0.1:cdwra,world:anyone:r<br>
- create /tme2/global/acl/console_admins foo,bar ip:127.0.0.1:cdwra,world:anyone:r<br>
-<br>
-In this example, the admins are foo and bar. They are seperated by comma.<br>
-<br>
-After the node is created, you will be prompted to input username and password when you launch tme-console.<br>
-<br>
-Because the node is created with the ACL above, it can only be modified from one of the ZooKeeper quorums. When you have to modify the content of admins, you have to use the ZooKeeper client and execute<br>
-<br>
-set /tme2/global/acl/console_admins alice,bob<br>
-</p>
-    
-
+<h2><a href="https://github.com/trendmicro/tme/wiki">Learn</a> about TME</h2>
+<h2><a href="https://github.com/trendmicro/tme">Get</a> the code</h2>
+<h2><a href="https://github.com/trendmicro/tme/downloads">Download</a> the packages</h2>
+<h2><a href="http://tme.iridiant.net/tme-jira/">Report</a> issues</h2>
     
       <h2>License</h2>
       <p>Apache License, Version 2.0<br>
@@ -142,8 +76,6 @@ set /tme2/global/acl/console_admins alice,bob<br>
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<br>
    See the License for the specific language governing permissions and<br>
    limitations under the License.</p>
-    
-
     
       <h2>Authors</h2>
       <p>Scott Wang (scott_wang@hotmail.com)<br/>      </p>

@@ -14,7 +14,7 @@ openmq:
 	mv -f build/mq/dist/mq/lib/imqbroker.jar ../src/broker/lib/imqbroker.jar
 	mv -f build/mq/dist/mq/lib/imqutil.jar ../src/broker/lib/imqutil.jar
 	mv -f build/mq/dist/mq/lib/imqadmin.jar ../src/broker/lib/imqadmin.jar
-	sed -i "s/\$$_classes/\'\/opt\/trend\/tme\/lib\/*\'/g" build/mq/dist/mq/bin/imqcmd
+	sed -i -e "s/\$$_classes/\'\/opt\/trend\/tme\/lib\/*\'/g" build/mq/dist/mq/bin/imqcmd
 	mv -f build/mq/dist/mq/bin/imqcmd ../src/broker/bin/imqcmd
 	mv -f build/mq/dist/mq/lib/imqinit ../src/broker/lib/imqinit
 

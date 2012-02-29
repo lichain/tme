@@ -1,8 +1,12 @@
 package com.trendmicro.tme.portal;
 
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.Properties;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,15 +47,47 @@ public class ExchangeMetricCollector {
         this.writer = writer;
     }
     
+    private String getJMXUrl(String broker) {
+        Socket sock = new Socket();
+        try {
+            sock.connect(new InetSocketAddress(broker, 7676));
+            String url = null;
+            for(String line : IOUtils.toString(sock.getInputStream()).split("\n")) {
+                if(line.startsWith("jmxrmi rmi JMX")) {
+                    url = line.substring(line.indexOf('=') + 1, line.length() - 1);
+                    break;
+                }
+            }
+            logger.info("jmxurl of broker {} = {}", broker, url);
+            return url;
+        }
+        catch(Exception e) {
+            logger.error(e.getMessage(), e);
+            return null;
+        }
+        finally {
+            try {
+                IOUtils.closeQuietly(sock.getInputStream());
+                IOUtils.closeQuietly(sock.getOutputStream());
+                sock.close();
+            }
+            catch(IOException e) {
+            }
+        }
+    }
+
     public void run() {
         logger.info("Exchange Metric Collector started");
         while(true) {
             JmxProcess jmxProcess = new JmxProcess();
             for(Broker broker : brokerFarm.getAllBrokers().values()) {
                 if(broker.getStatus() == Broker.Status.ONLINE) {
-                    Server server = new Server(broker.getHost(), "5566");
-                    server.setUsername("monitorRole");
-                    server.setPassword("secret");
+                    Server server = new Server();
+                    server.setHost(broker.getHost());
+                    server.setUsername("admin");
+                    server.setPassword("admin");
+                    server.setUrl(getJMXUrl(broker.getHost()));
+
                     try {
                         server.addQuery(createQuery());
                     }

@@ -1,0 +1,14 @@
+#!/bin/sh
+
+if [ "`getent passwd TME`" == "" ]; then
+    echo "Error: must create user TME first!"
+    exit 1
+fi
+
+mkdir -p /var/lib/tme
+chown TME:TME /var/lib/tme
+mkdir -p /var/log/tme
+chown TME:TME /var/log/tme
+mkdir -p /var/run/tme
+chown TME:TME /var/run/tme
+

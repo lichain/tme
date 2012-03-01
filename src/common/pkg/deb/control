@@ -1,0 +1,9 @@
+Package: tme-common
+Version: 2.5
+Section: base
+Priority: optional
+Architecture: all
+Depends: openjdk-6-jdk
+Maintainer: https://github.com/trendmicro/tme
+Description: The base package of TME
+

@@ -26,6 +26,7 @@ CONFPATH    = conf
 WEBPATH		= web
 RPMPATH     = $(BUILDPATH)/$(PKGNAME)
 INSTALLPATH	= /opt/trend/tme
+BUILD_PREFIX	?= 
 
 SRCDIR      = src
 
@@ -39,6 +40,8 @@ CI_TAG       += _build$(BUILD_NUMBER)
 endif
 endif
 
+DEBBUILD_DIR   := $(TOP_OUTPUT_DIR)/deb/$(PKGNAME)-$(CI_TAG)
+
 # ----------------------------------------------------------------------------
 # Main targets
 # ----------------------------------------------------------------------------
@@ -46,6 +49,29 @@ endif
 .PHONY: default
 default: 
 	@ant
+
+.PHONY: install
+install: default
+	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)
+	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
+	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BINPATH)/daemon.sh $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BINPATH)/create_zookeeper_nodes.sh $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
+	cp -rf $(LIBPATH)/* $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
+	cp -f $(BUILDPATH)/*.jar $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
+
+.PHONY: deb
+deb:
+	rm -rf $(DEBBUILD_DIR)
+	BUILD_PREFIX=$(DEBBUILD_DIR) make install
+	mkdir -p $(DEBBUILD_DIR)/DEBIAN
+	cd $(DEBBUILD_DIR) ; find . -type f | sed -e '/DEBIAN\/md5sums/d' | xargs md5sum | sed -e 's/\.\///g' > $(DEBBUILD_DIR)/DEBIAN/md5sums
+	sed -e "s/Version:.*/Version: $(VERSION)-$(CI_TAG)/g" pkg/deb/control > $(DEBBUILD_DIR)/DEBIAN/control
+	cp -f pkg/deb/postinst $(DEBBUILD_DIR)/DEBIAN/
+	cp -f pkg/deb/prerm $(DEBBUILD_DIR)/DEBIAN/
+	dpkg-deb --build $(DEBBUILD_DIR)
+	mkdir -p $(ARTIFACTS_DIR);
+	cp -f $(DEBBUILD_DIR)/../*.deb $(ARTIFACTS_DIR)
 
 .PHONY: rebuild
 rebuild: clean default

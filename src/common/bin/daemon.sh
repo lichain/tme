@@ -38,6 +38,10 @@ then
             echo "$progname does not exist!"
         fi
     }
+
+    reload_monit() {
+        /etc/init.d/monit reload
+    }
 elif [ -e /etc/lsb-release ]
 then
     source /etc/lsb-release
@@ -68,6 +72,10 @@ then
 
         status() {
             RETVAL=$?
+        }
+
+        reload_monit() {
+            /etc/init.d/monit force-reload
         }
     fi
 fi

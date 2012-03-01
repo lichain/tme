@@ -1,0 +1,9 @@
+Package: tme-broker
+Version: 2.5
+Section: base
+Priority: optional
+Architecture: all
+Depends: openjdk-6-jdk, tme-common (>= 2.5-20120301Z), monit
+Maintainer: https://github.com/trendmicro/tme
+Description: The message broker of TME
+

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+chmod 400 /opt/trend/tme/conf/broker/jmxremote.password
+chown TME:TME /opt/trend/tme/conf/broker/jmxremote.password
+

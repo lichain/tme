@@ -40,7 +40,7 @@ CI_TAG       += _build$(BUILD_NUMBER)
 endif
 endif
 
-DEBBUILD_DIR   := $(TOP_OUTPUT_DIR)/deb/$(PKGNAME)-$(CI_TAG)
+DEBBUILD_DIR   := $(TOP_OUTPUT_DIR)/deb/$(PKGNAME)-$(CI_TAG)_all
 
 # ----------------------------------------------------------------------------
 # Main targets

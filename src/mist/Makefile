@@ -26,6 +26,7 @@ CONFPATH    = conf
 WEBPATH		= web
 RPMPATH     = $(BUILDPATH)/$(PKGNAME)
 INSTALLPATH	= /opt/trend/tme
+BUILD_PREFIX    ?=
 
 SRCDIR      = src
 
@@ -39,6 +40,8 @@ CI_TAG       += _build$(BUILD_NUMBER)
 endif
 endif
 
+DEBBUILD_DIR   := $(TOP_OUTPUT_DIR)/deb/$(PKGNAME)-$(CI_TAG)_all
+
 # ----------------------------------------------------------------------------
 # Main targets
 # ----------------------------------------------------------------------------
@@ -47,6 +50,36 @@ endif
 default: 
 	echo "package com.trendmicro.mist; public class Version { public static String getVersion() { return \"${VERSION}-${CI_TAG}\"; } }" > src/com/trendmicro/mist/Version.java
 	@ant
+
+.PHONY: install
+install: default
+	mkdir -p $(BUILD_PREFIX)/etc/init.d
+	mkdir -p $(BUILD_PREFIX)/usr/bin
+	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
+	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
+	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)/$(CONFPATH)
+	cp -f $(BINPATH)/tme-mistd $(BUILD_PREFIX)/etc/init.d
+	cp -f $(BINPATH)/mist-line-gen $(BUILD_PREFIX)/usr/bin
+	cp -f $(BINPATH)/tme-console $(BUILD_PREFIX)/usr/bin
+	cp -f $(BINPATH)/mistd.sh $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BINPATH)/install_tme-mistd.sh $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BINPATH)/remove_tme-mistd.sh $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BUILDPATH)/*.jar $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
+	cp -rf $(LIBPATH)/* $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
+	cp -rf $(CONFPATH)/* $(BUILD_PREFIX)/$(INSTALLPATH)/$(CONFPATH)
+
+.PHONY: deb
+deb:
+	rm -rf $(DEBBUILD_DIR)
+	BUILD_PREFIX=$(DEBBUILD_DIR) make install
+	mkdir -p $(DEBBUILD_DIR)/DEBIAN
+	cd $(DEBBUILD_DIR) ; find . -type f | sed -e '/DEBIAN\/md5sums/d' | xargs md5sum | sed -e 's/\.\///g' > $(DEBBUILD_DIR)/DEBIAN/md5sums
+	sed -e "s/Version:.*/Version: $(VERSION)-$(CI_TAG)/g" pkg/deb/control > $(DEBBUILD_DIR)/DEBIAN/control
+	cp -f pkg/deb/postinst $(DEBBUILD_DIR)/DEBIAN/
+	cp -f pkg/deb/prerm $(DEBBUILD_DIR)/DEBIAN/
+	dpkg-deb --build $(DEBBUILD_DIR)
+	mkdir -p $(ARTIFACTS_DIR);
+	cp -f $(DEBBUILD_DIR)/../*.deb $(ARTIFACTS_DIR)
 
 .PHONY: rebuild
 rebuild: clean default

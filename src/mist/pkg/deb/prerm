@@ -1,0 +1,6 @@
+#!/bin/sh
+
+/opt/trend/tme/bin/remove_tme-mistd.sh
+
+exit 0
+

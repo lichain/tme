@@ -1,0 +1,75 @@
+
+%define __os_install_post \
+    /usr/lib/rpm/brp-compress \
+    %{!?__debug_package:/usr/lib/rpm/brp-strip %{__strip}} \
+    /usr/lib/rpm/brp-strip-static-archive %{__strip} \
+    /usr/lib/rpm/brp-strip-comment-note %{__strip} %{__objdump} \
+    /usr/lib/rpm/brp-python-bytecompile \
+%{nil}
+
+%define name tme-portal-web
+
+Summary: TME Portal Web
+Name: %{name}
+Version: %{version}
+Release: %{release}
+License: Trend Micro Inc.
+Group: System Environment/Daemons
+Source: tme-portal-web-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-%{version}-root
+Requires: ruby >= 1.9.2, ruby-bundler, rrdtool, nodejs, tme-common, monit
+Requires(post): /sbin/chkconfig, /sbin/service
+Requires(preun): /sbin/chkconfig, /sbin/service
+
+%description
+
+TME Portal Web
+
+%prep
+
+rm -rf $RPM_BUILD_ROOT
+mkdir -p $RPM_BUILD_ROOT
+mkdir -p $RPM_BUILD_ROOT/opt/trend/tme/lib/portal-web
+mkdir -p $RPM_BUILD_ROOT/opt/trend/tme/bin
+mkdir -p $RPM_BUILD_ROOT/opt/trend/tme/conf/portal-web
+mkdir -p $RPM_BUILD_ROOT/etc/init.d
+
+%setup -q
+
+%build
+
+%install
+
+cp -rf * $RPM_BUILD_ROOT/opt/trend/tme/lib/portal-web
+mv $RPM_BUILD_ROOT/opt/trend/tme/lib/portal-web/portal-web.sh $RPM_BUILD_ROOT/opt/trend/tme/bin
+mv $RPM_BUILD_ROOT/opt/trend/tme/lib/portal-web/install_tme-portal-web.sh $RPM_BUILD_ROOT/opt/trend/tme/bin
+mv $RPM_BUILD_ROOT/opt/trend/tme/lib/portal-web/remove_tme-portal-web.sh $RPM_BUILD_ROOT/opt/trend/tme/bin
+mv $RPM_BUILD_ROOT/opt/trend/tme/lib/portal-web/portal-web-conf.sh $RPM_BUILD_ROOT/opt/trend/tme/conf/portal-web
+mv $RPM_BUILD_ROOT/opt/trend/tme/lib/portal-web/tme-portal-web.monit $RPM_BUILD_ROOT/opt/trend/tme/conf/portal-web
+mv $RPM_BUILD_ROOT/opt/trend/tme/lib/portal-web/tme-portal-web $RPM_BUILD_ROOT/etc/init.d
+
+%post
+# this adds a symlink of librrd.so which the rrdtool package does not install
+ln -fs /usr/lib64/librrd.so.4 /usr/lib64/librrd.so
+
+%preun
+/opt/trend/tme/bin/remove_tme-portal-web.sh
+
+if [ "$1" = "0" ]; then
+# only remove the link during uninstall
+    rm -f /usr/lib64/librrd.so
+fi
+
+%clean
+
+rm -rf $RPM_BUILD_ROOT
+
+%files
+/etc/init.d/tme-portal-web
+
+%config /opt/trend/tme/conf/portal-web/portal-web-conf.sh
+%config /opt/trend/tme/conf/portal-web/tme-portal-web.monit
+/opt/trend/tme/lib/portal-web
+%attr(755, TME, TME) /opt/trend/tme/lib/portal-web/public/images
+/opt/trend/tme/conf/portal-web
+/opt/trend/tme/bin

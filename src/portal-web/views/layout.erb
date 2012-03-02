@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+    <head>
+        <title>TME Portal</title>
+        <%= stylesheet_tag "bootstrap.min.css" %>
+        <%= stylesheet_tag "layout.css" %>
+
+        <%= javascript_tag "jquery-1.7.min.js" %>
+        <%= javascript_tag "bootstrap-modal.js" %>
+        <%= javascript_tag "bootstrap-dropdown.js" %>
+        <%= javascript_tag "bootstrap-twipsy.js" %>
+        <%= javascript_tag "bootstrap-popover.js" %>
+        <%= javascript_tag "bootstrap-tabs.js" %>
+        <script type="text/javascript">
+            $(function () {
+                $("a[rel=popover]")
+                .popover({
+                    offset: 10
+                })
+                .click(function(e) {
+                    e.preventDefault()
+                })
+            })
+        </script>
+    </head>
+
+    <body>
+        <div class="topbar">
+            <div class="fill">
+                <div class="container">
+                    <h3><a href="#">TME Portal</a></h3>
+
+                    <form id="filter-form" class="pull-left" action="">
+                        <input id="filter" type="text" placeholder="Filter" />
+                    </form>
+
+                    <!--
+                    <ul>
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#">Exchanges</a></li>
+                        <li class="dropdown" data-dropdown="dropdown">
+                            <a href="#" class="dropdown-toggle">Dropdown</a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#">Secondary link</a></li>
+                                <li><a href="#">Something else here</a></li>
+                                <li class="divider"></li>
+                                <li><a href="#">Another link</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    -->
+
+                </div><!-- container -->
+            </div><!-- fill -->
+        </div><!-- topbar -->
+
+        <div class="container">
+            <div class="content">
+                <%= yield %>
+            </div>
+        </div>
+    </body>
+</html>

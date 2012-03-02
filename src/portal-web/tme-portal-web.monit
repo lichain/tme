@@ -1,0 +1,5 @@
+set daemon 20
+check process tme-portal-web
+   with pidfile "/var/run/tme/tme-portal-web.pid"
+   start program = "/etc/init.d/tme-portal-web start"
+   stop program = "/etc/init.d/tme-portal-web stop"

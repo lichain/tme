@@ -1,0 +1,122 @@
+<%= javascript_tag "jquery.uitablefilter.js" %>
+<%= javascript_tag "jquery.tablesorter.min.js" %>
+<%= javascript_tag "jquery.cookie.js" %>
+<script type="text/javascript">
+    $(function(){
+        var exchanges = $('table#exchanges')
+
+        $("#filter")
+        .keyup(function() {
+            $.cookie('filter', this.value);
+            $.uiTableFilter( exchanges, this.value );
+        })
+        .keypress(function(e){
+            if (e["keyCode"] == 13) {
+                return false;
+            }
+        });
+
+        $(".rrdmodal-trigger").click(function() {
+            name = $(this).attr("rrd");
+
+            $.getScript("/exchanges/"+name, function() {
+
+                $("#rrdmodal").modal({
+                    keyboard: true,
+                    backdrop: true,
+                    show: true,
+                })
+
+            });
+        })
+
+		$(document).ready(function() {
+			$('.popover-with-html').each(function(){$(this).data('popover').options.html = true})
+            if($.cookie('filter')){
+                $.uiTableFilter( exchanges, $.cookie('filter'));
+            }
+
+            $("#exchanges").bind("sortEnd",function() { 
+                $.cookie("headerSortDownIdx", $('.headerSortDown').index());
+                $.cookie("headerSortUpIdx", $('.headerSortUp').index());
+            });
+
+			list = [];
+			downIdx = $.cookie("headerSortDownIdx");
+			if(downIdx != null && downIdx != "-1"){
+				list.push([eval(downIdx), 0])
+			}
+			upIdx = $.cookie("headerSortUpIdx");
+			if(upIdx != null && upIdx != "-1"){
+				list.push([eval(upIdx), 1])
+			}
+            $("#exchanges").tablesorter({sortList: list});
+		});
+
+    });
+
+function setRange(name, range){
+	$.cookie('range', range);
+    $.getScript("/exchanges/"+name, function() {});
+}
+</script>
+
+<div id="rrdmodal" class="modal hide fade">
+    <div class="modal-header">
+        <a class="close">&times;</a>
+        <h5>Exchanges Graphics</h5>
+    </div>
+    <div class="modal-body">
+    </div>
+    <!--
+    <div class="modal-footer">
+        <a class="btn primary">ok</a>
+    </div>
+    -->
+</div>
+
+<div class="span14">
+    <table id="exchanges" class="zebra-striped">
+        <thead>
+            <tr>
+                <th>name</th>
+                <th>type</th>
+                <th>broker</th>
+                <th>pending</th>
+                <th>consumers</th>
+                <th>producers</th>
+            <tr>
+        </thead>
+        <tbody>
+            <% @json.each_with_index do |data, index| %>
+                <tr>
+                    <td>
+                        <a  rel="popover" 
+                            class="rrdmodal-trigger popover-with-html"
+                            href=<%= url("/exchanges/#{File.basename data[:rrd].sub(/\.rrd$/, '')}") %>
+                            rrd="<%= File.basename data[:rrd].sub(/\.rrd$/, "") %>"
+                            data-content="<ul><% data[:metrics].each do |k,v| %><li><%= escape_html k %>: <%= escape_html v %></li><% end %>
+							        <li>Consumer Hosts: <%= escape_html data[:consumers] %></li>
+									<li>Producer Hosts: <%= escape_html data[:producers] %></li></ul>"
+                            title="Last Exchanges"><%= data[:name] %></a>
+                    </td>
+                    <td>
+                        <%= data[:type] %>
+                    </td>
+                    <td>
+                        <%= data[:broker] %>
+                    </td>
+                    <td>
+                        <%= data[:metrics][:Pending] %>
+                    </td>
+                    <td>
+                        <%= data[:metrics][:Consumers] %>
+                    </td>
+                    <td>
+                        <%= data[:metrics][:Producers] %>
+                    </td>
+                </tr>
+            <% end %>
+        </tbody>
+    </table>
+</div>

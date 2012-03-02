@@ -1,0 +1,13 @@
+<div class="page-header">
+    <h1>Exchanges Graphics</h1>
+</div>
+<div class="span14">
+	<ul id=\"metric_list\">
+		<% @metrics.each do |k,v| %><li><%= escape_html k %>: <%= escape_html v %></li><% end %>
+		<li>Consumer Hosts: <%= escape_html @consumers %></li>
+		<li>Producer Hosts: <%= escape_html @producers %></li>
+	</ul>
+    <img class=rrd src="/images/<%= File.basename(@file) %>.raw.png">
+    <img class=rrd src="/images/<%= File.basename(@file) %>.size.png">
+    <img class=rrd src="/images/<%= File.basename(@file) %>.source.png">
+</div>

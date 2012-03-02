@@ -88,22 +88,13 @@ release: rebuild upload
 rpm: default
 	mkdir -p $(RPMBUILD_DIR)/{RPMS,SOURCES,BUILD,SPECS,SRPMS}
 	# Create source tarball
-	mkdir -p $(RPMPATH)/etc/init.d
-	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
-	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
-	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(CONFPATH)
-	cp -f $(BINPATH)/tme-portal-collector $(RPMPATH)/etc/init.d
-	cp -f $(BINPATH)/portal-collector.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
-	cp -f $(BINPATH)/install_tme-portal-collector.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
-	cp -f $(BINPATH)/remove_tme-portal-collector.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
-	cp -f $(BUILDPATH)/*.jar $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
-	cp -rf $(LIBPATH)/* $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
-	cp -rf $(CONFPATH)/* $(RPMPATH)/$(INSTALLPATH)/$(CONFPATH)
+	rm -rf $(RPMPATH)
+	BUILD_PREFIX=$(RPMPATH) make install
 	cd $(BUILDPATH); tar cfz $(PKGNAME).tar.gz $(PKGNAME)
 	mv $(BUILDPATH)/$(PKGNAME).tar.gz $(RPMBUILD_DIR)/SOURCES
 	rm -rf $(RPMPATH) 
 	# Create SPEC file with changelog, and build RPM files.
-	export STAMP_VER=$(CI_TAG); cat $(NAME).spec | sed -e "s/#RELEASE_VER#/$$STAMP_VER/" -e "s/#MAJOR_VER#/$(VERSION)/" > $(NAME)-tmp.spec
+	export STAMP_VER=$(CI_TAG); cat pkg/rpm/$(NAME).spec | sed -e "s/#RELEASE_VER#/$$STAMP_VER/" -e "s/#MAJOR_VER#/$(VERSION)/" > $(NAME)-tmp.spec
 	rpmbuild --quiet --target noarch --define="_topdir $(RPMBUILD_DIR)" -ba $(NAME)-tmp.spec ; rm -f $(NAME)-tmp.spec
 	# Copy RPM files to artifacts directory
 	mkdir -p $(ARTIFACTS_DIR);

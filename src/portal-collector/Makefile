@@ -4,7 +4,7 @@
 # convention.
 # ----------------------------------------------------------------------------
 
-TOP_DIR        ?= $(abspath ../..)
+TOP_DIR	?= $(abspath ../..)
 TOP_OUTPUT_DIR ?= $(TOP_DIR)/output
 ARTIFACTS_DIR  ?= $(TOP_OUTPUT_DIR)/artifacts
 RPMBUILD_DIR   ?= $(TOP_OUTPUT_DIR)/rpmbuild
@@ -14,8 +14,8 @@ RPMBUILD_DIR   ?= $(TOP_OUTPUT_DIR)/rpmbuild
 # Module specific variables
 # ----------------------------------------------------------------------------
 
-CODE        = tme-portal-collector
-NAME        = tme-portal-collector
+CODE	= tme-portal-collector
+NAME	= tme-portal-collector
 VERSION     = 2.5
 PKGNAME     = ${NAME}-${VERSION}
 
@@ -26,11 +26,12 @@ CONFPATH    = conf
 WEBPATH		= web
 RPMPATH     = $(BUILDPATH)/$(PKGNAME)
 INSTALLPATH	= /opt/trend/tme
+BUILD_PREFIX    ?=
 
 SRCDIR      = src
 
 ifndef CI_TAG
-CI_TAG        = $(shell date -u "+%Y%m%dZ")
+CI_TAG	= $(shell date -u "+%Y%m%dZ")
 ifdef JOB_NAME
 CI_TAG       += _$(JOB_NAME)
 endif
@@ -39,6 +40,8 @@ CI_TAG       += _build$(BUILD_NUMBER)
 endif
 endif
 
+DEBBUILD_DIR   := $(TOP_OUTPUT_DIR)/deb/$(PKGNAME)-$(CI_TAG)_all
+
 # ----------------------------------------------------------------------------
 # Main targets
 # ----------------------------------------------------------------------------
@@ -46,6 +49,34 @@ endif
 .PHONY: default
 default: 
 	@ant
+
+.PHONY: install
+install: default
+	mkdir -p $(BUILD_PREFIX)/etc/init.d
+	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
+	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
+	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)/$(CONFPATH)
+	cp -f $(BINPATH)/tme-portal-collector $(BUILD_PREFIX)/etc/init.d
+	cp -f $(BINPATH)/portal-collector.sh $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BINPATH)/install_tme-portal-collector.sh $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BINPATH)/remove_tme-portal-collector.sh $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BUILDPATH)/*.jar $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
+	cp -rf $(LIBPATH)/* $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
+	cp -rf $(CONFPATH)/* $(BUILD_PREFIX)/$(INSTALLPATH)/$(CONFPATH)
+
+.PHONY: deb
+deb:
+	rm -rf $(DEBBUILD_DIR)
+	BUILD_PREFIX=$(DEBBUILD_DIR) make install
+	mkdir -p $(DEBBUILD_DIR)/DEBIAN
+	cd $(DEBBUILD_DIR) ; find . -type f | sed -e '/DEBIAN\/md5sums/d' | xargs md5sum | sed -e 's/\.\///g' > $(DEBBUILD_DIR)/DEBIAN/md5sums
+	sed -e "s/Version:.*/Version: $(VERSION)-$(CI_TAG)/g" pkg/deb/control > $(DEBBUILD_DIR)/DEBIAN/control
+	cp -f pkg/deb/postinst $(DEBBUILD_DIR)/DEBIAN/
+	cp -f pkg/deb/prerm $(DEBBUILD_DIR)/DEBIAN/
+	dpkg-deb --build $(DEBBUILD_DIR)
+	mkdir -p $(ARTIFACTS_DIR);
+	cp -f $(DEBBUILD_DIR)/../*.deb $(ARTIFACTS_DIR)
+
 
 .PHONY: rebuild
 rebuild: clean default

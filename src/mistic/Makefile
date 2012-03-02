@@ -27,6 +27,7 @@ CONFPATH    = conf
 WEBPATH		= web
 RPMPATH     = $(BUILDPATH)/$(PKGNAME)
 INSTALLPATH	= /opt/trend/tme
+BUILD_PREFIX    ?=
 
 SRCDIR      = src
 
@@ -40,6 +41,15 @@ CI_TAG       += _build$(BUILD_NUMBER)
 endif
 endif
 
+export ARCH=$(shell uname -m)
+ifeq ($(ARCH), x86_64)
+	DEB_ARCH = amd64
+else
+	DEB_ARCH = $(ARCH)
+endif
+
+DEBBUILD_DIR   := $(TOP_OUTPUT_DIR)/deb/$(PKGNAME)-$(CI_TAG)_$(DEB_ARCH)
+
 # ----------------------------------------------------------------------------
 # Main targets
 # ----------------------------------------------------------------------------
@@ -51,6 +61,31 @@ default: $(WORKS_DIR)/protobuf-2.1.0/src/protoc
 
 $(WORKS_DIR)/protobuf-2.1.0/src/protoc:
 	cd $(TOP_DIR)/3rd_party ; make protobuf
+
+.PHONY: install
+install: default
+	mkdir -p $(BUILD_PREFIX)/usr/bin
+	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
+	cp -f $(BINPATH)/mistic/mist-session $(BUILD_PREFIX)/usr/bin
+	cp -f $(BINPATH)/mistic/mist-sink $(BUILD_PREFIX)/usr/bin
+	cp -f $(BINPATH)/mistic/mist-source $(BUILD_PREFIX)/usr/bin
+	cp -f $(BINPATH)/mistic/mist-encode $(BUILD_PREFIX)/usr/bin
+	cp -f $(BINPATH)/mistic/mist-decode $(BUILD_PREFIX)/usr/bin
+	cp -f $(WORKS_DIR)/protobuf-2.1.0/src/.libs/libprotobuf.so.4 $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
+
+.PHONY: deb
+deb:
+	rm -rf $(DEBBUILD_DIR)
+	BUILD_PREFIX=$(DEBBUILD_DIR) make install
+	mkdir -p $(DEBBUILD_DIR)/DEBIAN
+	cd $(DEBBUILD_DIR) ; find . -type f | sed -e '/DEBIAN\/md5sums/d' | xargs md5sum | sed -e 's/\.\///g' > $(DEBBUILD_DIR)/DEBIAN/md5sums
+	sed -e "s/Version:.*/Version: $(VERSION)-$(CI_TAG)/g" pkg/deb/control > $(DEBBUILD_DIR)/DEBIAN/control
+	sed -i -e "s/Architecture:.*/Architecture: $(DEB_ARCH)/g" $(DEBBUILD_DIR)/DEBIAN/control
+	cp -f pkg/deb/postinst $(DEBBUILD_DIR)/DEBIAN/
+	cp -f pkg/deb/prerm $(DEBBUILD_DIR)/DEBIAN/
+	dpkg-deb --build $(DEBBUILD_DIR)
+	mkdir -p $(ARTIFACTS_DIR);
+	cp -f $(DEBBUILD_DIR)/../*.deb $(ARTIFACTS_DIR)
 
 .PHONY: rebuild
 rebuild: clean default

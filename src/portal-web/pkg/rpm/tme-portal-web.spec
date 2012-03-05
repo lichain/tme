@@ -29,10 +29,6 @@ TME Portal Web
 
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT/opt/trend/tme/lib/portal-web
-mkdir -p $RPM_BUILD_ROOT/opt/trend/tme/bin
-mkdir -p $RPM_BUILD_ROOT/opt/trend/tme/conf/portal-web
-mkdir -p $RPM_BUILD_ROOT/etc/init.d
 
 %setup -q
 
@@ -40,13 +36,7 @@ mkdir -p $RPM_BUILD_ROOT/etc/init.d
 
 %install
 
-cp -rf * $RPM_BUILD_ROOT/opt/trend/tme/lib/portal-web
-mv $RPM_BUILD_ROOT/opt/trend/tme/lib/portal-web/portal-web.sh $RPM_BUILD_ROOT/opt/trend/tme/bin
-mv $RPM_BUILD_ROOT/opt/trend/tme/lib/portal-web/install_tme-portal-web.sh $RPM_BUILD_ROOT/opt/trend/tme/bin
-mv $RPM_BUILD_ROOT/opt/trend/tme/lib/portal-web/remove_tme-portal-web.sh $RPM_BUILD_ROOT/opt/trend/tme/bin
-mv $RPM_BUILD_ROOT/opt/trend/tme/lib/portal-web/portal-web-conf.sh $RPM_BUILD_ROOT/opt/trend/tme/conf/portal-web
-mv $RPM_BUILD_ROOT/opt/trend/tme/lib/portal-web/tme-portal-web.monit $RPM_BUILD_ROOT/opt/trend/tme/conf/portal-web
-mv $RPM_BUILD_ROOT/opt/trend/tme/lib/portal-web/tme-portal-web $RPM_BUILD_ROOT/etc/init.d
+cp -rf * $RPM_BUILD_ROOT
 
 %post
 # this adds a symlink of librrd.so which the rrdtool package does not install

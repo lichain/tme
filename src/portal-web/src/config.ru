@@ -1,4 +1,4 @@
-ENV['ROOT'] = File.dirname __FILE__
+ENV['ROOT'] = ::File.dirname __FILE__
 
 ENV['BUNDLE_GEMFILE']="#{ENV['ROOT']}/Gemfile"
 

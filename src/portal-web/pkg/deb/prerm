@@ -1,0 +1,6 @@
+#!/bin/sh
+
+/opt/trend/tme/bin/remove_tme-portal-web.sh
+
+exit 0
+

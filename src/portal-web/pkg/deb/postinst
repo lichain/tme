@@ -2,3 +2,7 @@
 
 mkdir -p /etc/monit.d
 
+ln -s /usr/lib/librrd.so.4 /usr/lib/librrd.so
+
+chown TME:TME /opt/trend/tme/lib/portal-web/public/images
+

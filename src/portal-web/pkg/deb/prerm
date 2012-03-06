@@ -2,5 +2,7 @@
 
 /opt/trend/tme/bin/remove_tme-portal-web.sh
 
+rm /usr/lib/librrd.so
+
 exit 0
 

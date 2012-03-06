@@ -59,6 +59,12 @@ rpm:
 		$(MAKE) --print-directory --directory=$$d rpm; \
 	done;
 
+.PHONY: deb
+deb:
+	@for d in $(SUB_MODULE_DIRS); do \
+		$(MAKE) --print-directory --directory=$$d deb; \
+	done;
+
 .PHONY: clean
 clean:
 	@for d in $(SUB_MODULE_DIRS); do \

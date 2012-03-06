@@ -16,9 +16,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import javax.xml.bind.JAXBException;
 
-import org.graphviz.SWIGTYPE_p_Agraph_t;
-import org.graphviz.gv;
-
 import com.google.gson.Gson;
 import com.sun.jersey.api.view.Viewable;
 import com.trendmicro.codi.CODIException;
@@ -73,11 +70,14 @@ public class ProcessorManager {
         node.setContent(new Gson().toJson(processor));
     }
     
-    private SWIGTYPE_p_Agraph_t generateGraph(ProcessorModel processor) {
-        SWIGTYPE_p_Agraph_t graph = gv.strictdigraph("G_" + processor.getName());
-        gv.setv(graph, "rankdir", "LR");
-        processor.addToGraph(graph, RenderView.PROCESSOR_EDITOR);
-        return graph;
+    private String generateGraph(ProcessorModel processor) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("digraph \"G_%s\"{\n", processor.getName()));
+        sb.append("compound=true;\n");
+        sb.append("rankdir=LR;\n");
+        sb.append(processor.toSubgraph(RenderView.PROCESSOR_EDITOR));
+        sb.append("}\n");
+        return sb.toString();
     }
     
     @Path("/{name}")

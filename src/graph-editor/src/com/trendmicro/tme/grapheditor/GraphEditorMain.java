@@ -24,10 +24,6 @@ public class GraphEditorMain {
     private static final String CONFIG_PATH = System.getProperty("com.trendmicro.tme.grapheditor.conf", "/opt/trend/tme/conf/graph-editor/graph-editor.properties");
     private static final Logger logger = LoggerFactory.getLogger(GraphEditorMain.class);
     
-    static {
-        System.loadLibrary("gv_java");
-    }
-    
     public static void main(String[] args) throws Exception {
         try {
             Properties prop = new Properties();

@@ -19,9 +19,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import javax.xml.bind.JAXBException;
 
-import org.graphviz.SWIGTYPE_p_Agraph_t;
-import org.graphviz.gv;
-
 import com.google.gson.Gson;
 import com.sun.jersey.api.view.Viewable;
 import com.trendmicro.codi.CODIException;
@@ -86,13 +83,14 @@ public class GraphManager {
         node.setContent(new Gson().toJson(graph));
     }
     
-    private SWIGTYPE_p_Agraph_t generateGraph(List<GraphModel> graphs) throws JAXBException, CODIException {
-        SWIGTYPE_p_Agraph_t graph = gv.strictdigraph("G");
+    private String generateGraph(List<GraphModel> graphs) throws JAXBException, CODIException {
+        return null;
+        /*SWIGTYPE_p_Agraph_t graph = gv.strictdigraph("G");
         gv.setv(graph, "rankdir", "LR");
         for(GraphModel graphModel : graphs) {
             graphModel.addToGraph(graph);
         }
-        return graph;
+        return graph;*/
     }
     
     @Path("/{name}")

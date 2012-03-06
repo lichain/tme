@@ -8,10 +8,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.graphviz.SWIGTYPE_p_Agedge_t;
-import org.graphviz.SWIGTYPE_p_Agraph_t;
-import org.graphviz.gv;
-
 import com.google.gson.Gson;
 import com.trendmicro.codi.CODIException;
 import com.trendmicro.codi.ZNode;
@@ -68,7 +64,7 @@ public class GraphModel {
         this.enabled = enabled;
     }
     
-    public void addToGraph(SWIGTYPE_p_Agraph_t graph) throws JAXBException, CODIException {
+    /*public void addToGraph(SWIGTYPE_p_Agraph_t graph) throws JAXBException, CODIException {
         for(String processorName : processors) {
             ZNode node = new ZNode("/global/graph/processor/" + processorName);
             ProcessorModel processor = new Gson().fromJson(node.getContentString(), ProcessorModel.class);
@@ -84,5 +80,5 @@ public class GraphModel {
             gv.setv(edge, "label", "x");
             gv.setv(edge, "href", String.format("javascript:remove_rule('%s');", rule.replaceAll("\\\"", "\\\\\"")));
         }
-    }
+    }*/
 }

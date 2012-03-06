@@ -4,10 +4,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.graphviz.SWIGTYPE_p_Agnode_t;
-import org.graphviz.SWIGTYPE_p_Agraph_t;
-import org.graphviz.gv;
-
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement
 public class ExchangeModel {
@@ -55,13 +51,15 @@ public class ExchangeModel {
         }
         return false;
     }
-    
-    public void addToGraph(SWIGTYPE_p_Agraph_t graph, String processorName) {
-        SWIGTYPE_p_Agnode_t inputNode = gv.node(graph, getFullName());
-        gv.setv(inputNode, "id", "input-" + getFullName());
-        gv.setv(inputNode, "shape", "record");
-        gv.setv(inputNode, "color", "red");
-        gv.setv(inputNode, "href", String.format("javascript:exchange_onclick('%s');", getFullName()));
-        gv.setv(gv.edge(inputNode, processorName), "style", "dotted");
+
+    public String toSubgraph() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("\"%s\" [", getFullName()));
+        sb.append(String.format("id=\"input-%s\" ", getFullName()));
+        sb.append("shape=record ");
+        sb.append("color=red ");
+        sb.append(String.format("href=\"javascript:exchange_onclick('%s');\"", getFullName()));
+        sb.append("];\n");
+        return sb.toString();
     }
 }

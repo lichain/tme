@@ -1,8 +1,8 @@
 package com.trendmicro.tme.grapheditor;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 import javax.ws.rs.WebApplicationException;
@@ -10,30 +10,66 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.io.IOUtils;
-import org.graphviz.SWIGTYPE_p_Agraph_t;
-import org.graphviz.gv;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GraphvizStreamingOutput implements StreamingOutput {
-    private SWIGTYPE_p_Agraph_t graph;
+    private static final Logger logger = LoggerFactory.getLogger(GraphvizStreamingOutput.class);
+    private String dot;
     private String type;
     
-    public GraphvizStreamingOutput(SWIGTYPE_p_Agraph_t graph, String type) {
-        this.graph = graph;
+    public GraphvizStreamingOutput(String dot, String type) {
+        this.dot = dot;
         this.type = type;
     }
     
     @Override
-    public void write(OutputStream outputStream) throws IOException, WebApplicationException {
-        gv.layout(graph, "dot");
-        File tmp = File.createTempFile("graph-editor", null);
+    public void write(final OutputStream outputStream) throws IOException, WebApplicationException {
+        Process p = null;
         try {
-            if(!gv.render(graph, type, tmp.getAbsolutePath())) {
-                throw new WebApplicationException(new Exception("GraphViz Render Error!"), Status.INTERNAL_SERVER_ERROR.getStatusCode());
+            p = Runtime.getRuntime().exec(String.format("dot -T%s", type).split(" "));
+            final InputStream resultStream = p.getInputStream();
+            final InputStream errorStream = p.getErrorStream();
+
+            new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        IOUtils.copy(resultStream, outputStream);
+                    }
+                    catch(IOException e) {
+                        logger.error(e.getMessage(), e);
+                    }
+                }
+            }.start();
+
+            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        IOUtils.copy(errorStream, bos);
+                    }
+                    catch(IOException e) {
+                        logger.error(e.getMessage(), e);
+                    }
+                }
+            }.start();
+
+            p.getOutputStream().write(dot.getBytes());
+            p.getOutputStream().close();
+            if(p.waitFor() != 0) {
+                String errorMsg = bos.toString();
+                logger.error("dot render error: {}", errorMsg);
+                throw new Exception("dot render error: " + errorMsg);
             }
-            IOUtils.copy(new FileInputStream(tmp.getAbsolutePath()), outputStream);
+        }
+        catch(Exception e) {
+            logger.error(e.getMessage(), e);
+            throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR.getStatusCode());
         }
         finally {
-            tmp.delete();
+            p.destroy();
         }
     }
 }

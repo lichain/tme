@@ -17,12 +17,12 @@ public class GraphvizStreamingOutput implements StreamingOutput {
     private static final Logger logger = LoggerFactory.getLogger(GraphvizStreamingOutput.class);
     private String dot;
     private String type;
-    
+
     public GraphvizStreamingOutput(String dot, String type) {
         this.dot = dot;
         this.type = type;
     }
-    
+
     @Override
     public void write(final OutputStream outputStream) throws IOException, WebApplicationException {
         Process p = null;
@@ -30,12 +30,14 @@ public class GraphvizStreamingOutput implements StreamingOutput {
             p = Runtime.getRuntime().exec(String.format("dot -T%s", type).split(" "));
             final InputStream resultStream = p.getInputStream();
             final InputStream errorStream = p.getErrorStream();
+            final OutputStream toDotStream = p.getOutputStream();
 
             new Thread() {
                 @Override
                 public void run() {
                     try {
-                        IOUtils.copy(resultStream, outputStream);
+                        toDotStream.write(dot.getBytes());
+                        toDotStream.close();
                     }
                     catch(IOException e) {
                         logger.error(e.getMessage(), e);
@@ -56,8 +58,7 @@ public class GraphvizStreamingOutput implements StreamingOutput {
                 }
             }.start();
 
-            p.getOutputStream().write(dot.getBytes());
-            p.getOutputStream().close();
+            IOUtils.copy(resultStream, outputStream);
             if(p.waitFor() != 0) {
                 String errorMsg = bos.toString();
                 logger.error("dot render error: {}", errorMsg);

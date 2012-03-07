@@ -68,8 +68,6 @@ public class LoggingFilter implements Filter {
         }
     }
     
-    private String name = "";
-    
     @Override
     public void destroy() {
     }
@@ -81,14 +79,13 @@ public class LoggingFilter implements Filter {
             HttpServletResponse response = (HttpServletResponse) res;
             FilterResponse fRes = new FilterResponse(response);
             
-            logger.info(String.format("%s:%s [%s %s%s Accept:(%s) ] ", name, request.getUserPrincipal() == null ? "": request.getUserPrincipal().getName(), request.getMethod(), request.getRequestURI(), request.getQueryString() == null ? "": " QS:" + request.getQueryString(), request.getHeader("Accept")));
+            logger.info(String.format("%s [%s %s%s Accept:(%s) ] ", request.getUserPrincipal() == null ? "": request.getUserPrincipal().getName(), request.getMethod(), request.getRequestURI(), request.getQueryString() == null ? "": " QS:" + request.getQueryString(), request.getHeader("Accept")));
             chain.doFilter(req, fRes);
-            logger.info(String.format("%s: [/%s/%s]", name, Status.fromStatusCode(fRes.getStatus()), fRes.getContentType() == null ? "": " Content-Type:" + fRes.getContentType()));
+            logger.info(String.format("[/%s/%s]", Status.fromStatusCode(fRes.getStatus()), fRes.getContentType() == null ? "": " Content-Type:" + fRes.getContentType()));
         }
     }
     
     @Override
     public void init(FilterConfig config) throws ServletException {
-        name = config.getInitParameter("name");
     }
 }

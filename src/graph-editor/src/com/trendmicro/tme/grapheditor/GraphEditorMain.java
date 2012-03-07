@@ -59,7 +59,6 @@ public class GraphEditorMain {
             handler.addServlet(jerseyHolder, "/webapp/graph-editor/*");
             
             FilterHolder loggingFilterHolder = new FilterHolder(new LoggingFilter());
-            loggingFilterHolder.setInitParameter("name", "Brain");
             handler.addFilter(loggingFilterHolder, "/*", 1);
             
             handlers.addHandler(handler);

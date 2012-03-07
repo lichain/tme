@@ -31,7 +31,7 @@ public class GraphManager {
     public List<String> getGraphList() throws CODIException {
         return new ZNode("/global/graph/route").getChildren();
     }
-    
+
     @GET
     @Produces(MediaType.TEXT_HTML)
     public Response getGraphIndex() throws CODIException {
@@ -41,7 +41,7 @@ public class GraphManager {
         cc.setNoStore(true);
         return Response.status(Status.OK).cacheControl(cc).entity(new Viewable("/graph/index.jsp", getGraphList())).build();
     }
-    
+
     @GET
     @Produces("application/x-xdot")
     public StreamingOutput generateCombinedView(@QueryParam("graphSelected") String graphs) throws CODIException, JAXBException, IOException {
@@ -51,7 +51,7 @@ public class GraphManager {
         }
         return new GraphvizStreamingOutput(generateGraph(graphList), "xdot");
     }
-    
+
     @GET
     @Produces("image/png")
     public StreamingOutput generateCombinedViewImage(@QueryParam("graphSelected") String graphs) throws CODIException, JAXBException, IOException {
@@ -59,10 +59,10 @@ public class GraphManager {
         for(String graphName : graphs.split(",")) {
             graphList.add(getGraph(graphName));
         }
-        
+
         return new GraphvizStreamingOutput(generateGraph(graphList), "png");
     }
-    
+
     @Path("/{name}")
     @PUT
     public void createGraph(@PathParam("name") String name) throws CODIException, JAXBException {
@@ -70,29 +70,33 @@ public class GraphManager {
         GraphModel graph = new GraphModel(name);
         node.create(false, new Gson().toJson(graph));
     }
-    
+
     @Path("/{name}")
     @DELETE
     public void removeGraph(@PathParam("name") String name) throws CODIException, JAXBException {
         ZNode node = new ZNode("/global/graph/route/" + name);
         node.delete();
     }
-    
+
     private void setGraph(GraphModel graph) throws CODIException, JAXBException {
         ZNode node = new ZNode("/global/graph/route/" + graph.getName());
         node.setContent(new Gson().toJson(graph));
     }
-    
+
     private String generateGraph(List<GraphModel> graphs) throws JAXBException, CODIException {
-        return null;
-        /*SWIGTYPE_p_Agraph_t graph = gv.strictdigraph("G");
-        gv.setv(graph, "rankdir", "LR");
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("digraph G{\n");
+        sb.append("compound=true;\n");
+        sb.append("rankdir=LR;\n");
         for(GraphModel graphModel : graphs) {
-            graphModel.addToGraph(graph);
+            sb.append(graphModel.toSubgraph());
         }
-        return graph;*/
+        sb.append("}\n");
+
+        return sb.toString();
     }
-    
+
     @Path("/{name}")
     @GET
     @Produces("application/x-xdot")
@@ -101,7 +105,7 @@ public class GraphManager {
             getGraph(name)
         })), "xdot");
     }
-    
+
     @Path("/{name}")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -109,15 +113,15 @@ public class GraphManager {
         ZNode node = new ZNode("/global/graph/route/" + name);
         return new Gson().fromJson(node.getContentString(), GraphModel.class);
     }
-    
+
     @Path("/{name}")
     @GET
     @Produces("text/html")
     public Viewable getPage(@PathParam("name") String name) throws CODIException, JAXBException, IOException {
-        
+
         return new Viewable("/graph/graph.jsp", getGraph(name));
     }
-    
+
     @Path("/{name}/rule/{rule}")
     @DELETE
     public void removeRule(@PathParam("name") String name, @PathParam("rule") String rule) throws JAXBException, CODIException {
@@ -125,7 +129,7 @@ public class GraphManager {
         graph.removeRule(rule);
         setGraph(graph);
     }
-    
+
     @Path("/{name}/rule/{rule}")
     @PUT
     public void addRule(@PathParam("name") String name, @PathParam("rule") String rule) throws JAXBException, CODIException {
@@ -133,7 +137,7 @@ public class GraphManager {
         graph.addRule(rule);
         setGraph(graph);
     }
-    
+
     @Path("/{name}/processor/{processor}")
     @PUT
     public void addProcessor(@PathParam("name") String name, @PathParam("processor") String processor) throws JAXBException, CODIException {
@@ -141,7 +145,7 @@ public class GraphManager {
         graph.addProcessor(processor);
         setGraph(graph);
     }
-    
+
     @Path("/{name}/processor/{processor}")
     @DELETE
     public void removeProcessor(@PathParam("name") String name, @PathParam("processor") String processor) throws JAXBException, CODIException {
@@ -149,7 +153,7 @@ public class GraphManager {
         graph.removeProcessor(processor);
         setGraph(graph);
     }
-    
+
     @Path("/{name}/enable")
     @PUT
     public void enable(@PathParam("name") String name) throws JAXBException, CODIException {
@@ -157,7 +161,7 @@ public class GraphManager {
         graph.setEnabled(true);
         setGraph(graph);
     }
-    
+
     @Path("/{name}/enable")
     @DELETE
     public void disable(@PathParam("name") String name) throws JAXBException, CODIException {

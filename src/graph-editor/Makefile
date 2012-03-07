@@ -26,6 +26,7 @@ CONFPATH    = conf
 WEBPATH		= web
 RPMPATH     = $(BUILDPATH)/$(PKGNAME)
 INSTALLPATH	= /opt/trend/tme
+BUILD_PREFIX    ?=
 
 SRCDIR      = src
 
@@ -39,6 +40,8 @@ CI_TAG       += _build$(BUILD_NUMBER)
 endif
 endif
 
+DEBBUILD_DIR   := $(TOP_OUTPUT_DIR)/deb/$(PKGNAME)-$(CI_TAG)_all
+
 # ----------------------------------------------------------------------------
 # Main targets
 # ----------------------------------------------------------------------------
@@ -46,6 +49,22 @@ endif
 .PHONY: default
 default: 
 	@ant
+
+.PHONY: install
+install: default
+	mkdir -p $(BUILD_PREFIX)/etc/init.d
+	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
+	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
+	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)/$(CONFPATH)
+	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)/$(WEBPATH)
+	cp -f $(BINPATH)/tme-graph-editor $(BUILD_PREFIX)/etc/init.d
+	cp -f $(BINPATH)/graph-editor.sh $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BINPATH)/install_tme-graph-editor.sh $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BINPATH)/remove_tme-graph-editor.sh $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BUILDPATH)/*.jar $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
+	cp -rf $(LIBPATH)/* $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
+	cp -rf $(CONFPATH)/* $(BUILD_PREFIX)/$(INSTALLPATH)/$(CONFPATH)
+	cp -rf $(WEBPATH)/* $(BUILD_PREFIX)/$(INSTALLPATH)/$(WEBPATH)
 
 .PHONY: rebuild
 rebuild: clean default
@@ -57,19 +76,8 @@ release: rebuild upload
 rpm: default
 	mkdir -p $(RPMBUILD_DIR)/{RPMS,SOURCES,BUILD,SPECS,SRPMS}
 	# Create source tarball
-	mkdir -p $(RPMPATH)/etc/init.d
-	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
-	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
-	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(CONFPATH)
-	mkdir -p $(RPMPATH)/$(INSTALLPATH)/$(WEBPATH)
-	cp -f $(BINPATH)/tme-graph-editor $(RPMPATH)/etc/init.d
-	cp -f $(BINPATH)/graph-editor.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
-	cp -f $(BINPATH)/install_tme-graph-editor.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
-	cp -f $(BINPATH)/remove_tme-graph-editor.sh $(RPMPATH)/$(INSTALLPATH)/$(BINPATH)
-	cp -f $(BUILDPATH)/*.jar $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
-	cp -rf $(LIBPATH)/* $(RPMPATH)/$(INSTALLPATH)/$(LIBPATH)
-	cp -rf $(CONFPATH)/* $(RPMPATH)/$(INSTALLPATH)/$(CONFPATH)
-	cp -rf $(WEBPATH)/* $(RPMPATH)/$(INSTALLPATH)/$(WEBPATH)
+	rm -rf $(RPMPATH)
+	BUILD_PREFIX=$(RPMPATH) make install
 	cd $(BUILDPATH); tar cfz $(PKGNAME).tar.gz $(PKGNAME)
 	mv $(BUILDPATH)/$(PKGNAME).tar.gz $(RPMBUILD_DIR)/SOURCES
 	rm -rf $(RPMPATH) 

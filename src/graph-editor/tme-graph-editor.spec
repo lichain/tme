@@ -18,7 +18,7 @@ License: Trend Micro Inc.
 Group: System Environment/Daemons
 Source: %{name}-%{ver}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{ver}-root
-Requires: jdk, graphviz-java, tme-common >= 2.5-20120203Z, monit
+Requires: jdk, graphviz, tme-common >= 2.5-20120203Z, monit
 Requires(post): /sbin/chkconfig, /sbin/service
 Requires(preun): /sbin/chkconfig, /sbin/service
 
@@ -81,6 +81,8 @@ elif [ "$1" = "2" ]; then
 fi
 
 %preun
+
+/opt/trend/tme/bin/remove_tme-graph-editor.sh
 
 if [ "$1" = "1" ]; then
     # upgrade

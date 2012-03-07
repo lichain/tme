@@ -74,7 +74,7 @@ rpm: default
 	mv $(BUILDPATH)/$(PKGNAME).tar.gz $(RPMBUILD_DIR)/SOURCES
 	rm -rf $(RPMPATH) 
 	# Create SPEC file with changelog, and build RPM files.
-	export STAMP_VER=$(CI_TAG); cat $(NAME).spec | sed -e "s/#RELEASE_VER#/$$STAMP_VER/" -e "s/#MAJOR_VER#/$(VERSION)/" > $(NAME)-tmp.spec
+	export STAMP_VER=$(CI_TAG); cat pkg/rpm/$(NAME).spec | sed -e "s/#RELEASE_VER#/$$STAMP_VER/" -e "s/#MAJOR_VER#/$(VERSION)/" > $(NAME)-tmp.spec
 	rpmbuild --quiet --target noarch --define="_topdir $(RPMBUILD_DIR)" -ba $(NAME)-tmp.spec ; rm -f $(NAME)-tmp.spec
 	# Copy RPM files to artifacts directory
 	mkdir -p $(ARTIFACTS_DIR);

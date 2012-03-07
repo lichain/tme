@@ -80,7 +80,7 @@ public class ProcessorModel {
         }
 
         for(String output : outputs) {
-            sb.append(String.format("\"%s\" [id=\"output-%s\" shape=record color=green href=\"%s\"];\n", output, output, view.equals(RenderView.PROCESSOR_EDITOR) ? String.format("javascript:remove_output('%s');", output): "void(0);"));
+            sb.append(String.format("\"%s\" [id=\"output-%s\" shape=record color=\"#008000\" href=\"%s\"];\n", output, output, view.equals(RenderView.PROCESSOR_EDITOR) ? String.format("javascript:remove_output('%s');", output): "void(0);"));
             sb.append(String.format("\"%s\" -> \"%s\" [style=dotted];\n", name, output));
         }
         sb.append("}\n");

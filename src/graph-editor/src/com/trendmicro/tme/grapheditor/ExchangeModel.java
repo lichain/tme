@@ -57,7 +57,7 @@ public class ExchangeModel {
         sb.append(String.format("\"%s\" [", getFullName()));
         sb.append(String.format("id=\"input-%s\" ", getFullName()));
         sb.append("shape=record ");
-        sb.append("color=red ");
+        sb.append("color=\"#FF0000\" ");
         sb.append(String.format("href=\"javascript:exchange_onclick('%s');\"", getFullName()));
         sb.append("];\n");
         return sb.toString();

@@ -9,4 +9,4 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 add_subdirectory (mist_proto) 
-add_subdirectory (mistic)
+add_subdirectory (mist-tools)

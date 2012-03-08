@@ -20,7 +20,7 @@ NAME        = tme-mist-tools
 VERSION     = 2.5
 PKGNAME     = ${NAME}-${VERSION}
 
-BINPATH     = $(WORKS_DIR)/mistic
+BINPATH     = $(WORKS_DIR)/mist-tools
 BUILDPATH   = build
 LIBPATH     = lib
 CONFPATH    = conf
@@ -66,11 +66,11 @@ $(WORKS_DIR)/protobuf-2.1.0/src/protoc:
 install: default
 	mkdir -p $(BUILD_PREFIX)/usr/bin
 	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
-	cp -f $(BINPATH)/mistic/mist-session $(BUILD_PREFIX)/usr/bin
-	cp -f $(BINPATH)/mistic/mist-sink $(BUILD_PREFIX)/usr/bin
-	cp -f $(BINPATH)/mistic/mist-source $(BUILD_PREFIX)/usr/bin
-	cp -f $(BINPATH)/mistic/mist-encode $(BUILD_PREFIX)/usr/bin
-	cp -f $(BINPATH)/mistic/mist-decode $(BUILD_PREFIX)/usr/bin
+	cp -f $(BINPATH)/mist-tools/mist-session $(BUILD_PREFIX)/usr/bin
+	cp -f $(BINPATH)/mist-tools/mist-sink $(BUILD_PREFIX)/usr/bin
+	cp -f $(BINPATH)/mist-tools/mist-source $(BUILD_PREFIX)/usr/bin
+	cp -f $(BINPATH)/mist-tools/mist-encode $(BUILD_PREFIX)/usr/bin
+	cp -f $(BINPATH)/mist-tools/mist-decode $(BUILD_PREFIX)/usr/bin
 	cp -f $(WORKS_DIR)/protobuf-2.1.0/src/.libs/libprotobuf.so.4 $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
 
 .PHONY: deb

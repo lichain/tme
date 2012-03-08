@@ -65,7 +65,7 @@ bool list_session() {
 	Command res;
 	if (sendRequest(cmd, res)) {
 		if (res.response(0).success()) {
-			cerr<<res.response(0).context()<<endl;
+			cout<<res.response(0).context()<<endl;
 			return true;
 		}
 		else{
@@ -83,7 +83,7 @@ bool show_status() {
 	Command res;
 	if (sendRequest(cmd, res)) {
 		if (res.response(0).success()) {
-			cerr<<res.response(0).context()<<endl;
+			cout<<res.response(0).context()<<endl;
 			return true;
 		}
 		else{

@@ -95,7 +95,7 @@ rpm: default
 	mv $(BUILDPATH)/$(PKGNAME).tar.gz $(RPMBUILD_DIR)/SOURCES
 	rm -rf $(RPMPATH)
 	# Create SPEC file with changelog, and build RPM files.
-	rpmbuild --target noarch --define "version $(VERSION)" --define "release $(CI_TAG)" --define="_topdir $(RPMBUILD_DIR)" -ba pkg/rpm/tme-portal-web.spec
+	rpmbuild --target noarch --define "version $(VERSION)" --define "release $(shell date -u "+%Y%m%dZ")" --define="_topdir $(RPMBUILD_DIR)" -ba pkg/rpm/tme-portal-web.spec
 	# Copy RPM files to artifacts directory
 	mkdir -p $(ARTIFACTS_DIR);
 	cp -f $(RPMBUILD_DIR)/RPMS/*/$(NAME)-*.rpm $(ARTIFACTS_DIR)/;

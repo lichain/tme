@@ -30,17 +30,9 @@ BUILD_PREFIX	?=
 
 SRCDIR      = src
 
-ifndef CI_TAG
-CI_TAG        = $(shell date -u "+%Y%m%dZ")
-ifdef JOB_NAME
-CI_TAG       += _$(JOB_NAME)
-endif
-ifdef BUILD_NUMBER
-CI_TAG       += _build$(BUILD_NUMBER)
-endif
-endif
+DATE_TAG        = $(shell date -u "+%Y%m%dZ")
 
-DEBBUILD_DIR   := $(TOP_OUTPUT_DIR)/deb/$(PKGNAME)-$(CI_TAG)_all
+DEBBUILD_DIR   := $(TOP_OUTPUT_DIR)/deb/$(PKGNAME)-$(DATE_TAG)_all
 
 # ----------------------------------------------------------------------------
 # Main targets
@@ -66,7 +58,7 @@ deb:
 	BUILD_PREFIX=$(DEBBUILD_DIR) make install
 	mkdir -p $(DEBBUILD_DIR)/DEBIAN
 	cd $(DEBBUILD_DIR) ; find . -type f | sed -e '/DEBIAN\/md5sums/d' | xargs md5sum | sed -e 's/\.\///g' > $(DEBBUILD_DIR)/DEBIAN/md5sums
-	sed -e "s/Version:.*/Version: $(VERSION)-$(CI_TAG)/g" pkg/deb/control > $(DEBBUILD_DIR)/DEBIAN/control
+	sed -e "s/Version:.*/Version: $(VERSION)-$(DATE_TAG)/g" pkg/deb/control > $(DEBBUILD_DIR)/DEBIAN/control
 	cp -f pkg/deb/postinst $(DEBBUILD_DIR)/DEBIAN/
 	cp -f pkg/deb/prerm $(DEBBUILD_DIR)/DEBIAN/
 	dpkg-deb --build $(DEBBUILD_DIR)
@@ -89,12 +81,10 @@ rpm: default
 	mv $(BUILDPATH)/$(PKGNAME).tar.gz $(RPMBUILD_DIR)/SOURCES
 	rm -rf $(RPMPATH) 
 	# Create SPEC file with changelog, and build RPM files.
-	export STAMP_VER=$(CI_TAG); cat pkg/rpm/$(NAME).spec | sed -e "s/#RELEASE_VER#/$$STAMP_VER/" -e "s/#MAJOR_VER#/$(VERSION)/" > $(NAME)-tmp.spec
-	rpmbuild --quiet --target noarch --define="_topdir $(RPMBUILD_DIR)" -ba $(NAME)-tmp.spec ; rm -f $(NAME)-tmp.spec
+	rpmbuild --target noarch --define "version $(VERSION)" --define "release $(DATE_TAG)" --define="_topdir $(RPMBUILD_DIR)" -bb pkg/rpm/tme-common.spec
 	# Copy RPM files to artifacts directory
 	mkdir -p $(ARTIFACTS_DIR);
 	cp -f $(RPMBUILD_DIR)/RPMS/*/$(NAME)-*.rpm $(ARTIFACTS_DIR)/;
-	cp -f $(RPMBUILD_DIR)/SRPMS/$(NAME)-*.rpm  $(ARTIFACTS_DIR)/;
 
 .PHONY: clean
 clean:

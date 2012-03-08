@@ -8,16 +8,15 @@
 %{nil}
 
 %define name tme-graph-editor
-%define ver #MAJOR_VER#
 
 Summary: TME Graph Editor
 Name: %{name}
-Version: %{ver}
-Release: #RELEASE_VER#
+Version: %{version}
+Release: %{release}
 License: Trend Micro Inc.
 Group: System Environment/Daemons
-Source: %{name}-%{ver}.tar.gz
-BuildRoot: %{_tmppath}/%{name}-%{ver}-root
+Source: %{name}-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Requires: jdk, graphviz, tme-common >= 2.5-20120203Z, monit
 Requires(post): /sbin/chkconfig, /sbin/service
 Requires(preun): /sbin/chkconfig, /sbin/service

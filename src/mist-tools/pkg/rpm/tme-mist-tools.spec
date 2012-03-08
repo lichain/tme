@@ -8,16 +8,15 @@
 %{nil}
 
 %define name tme-mist-tools
-%define ver #MAJOR_VER#
 
 Summary: TME MIST Toolkits
 Name: %{name}
-Version: %{ver}
-Release: #RELEASE_VER#
+Version: %{version}
+Release: %{release}
 License: Trend Micro Inc.
 Group: System Environment/Daemons
-Source: %{name}-%{ver}.tar.gz
-BuildRoot: %{_tmppath}/%{name}-%{ver}-root
+Source: %{name}-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-%{verion}-root
 Requires: boost
 
 %description

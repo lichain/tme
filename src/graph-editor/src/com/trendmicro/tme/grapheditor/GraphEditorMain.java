@@ -10,7 +10,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jasper.servlet.JspServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerList;
-import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -42,8 +42,6 @@ public class GraphEditorMain {
             ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SECURITY | ServletContextHandler.SESSIONS);
             ServletHolder jerseyHolder = new ServletHolder(new GraphEditorContainer(classMap));
             
-            handler.addServlet(new ServletHolder(new DefaultServlet()), "/static/*");
-            
             handler.addServlet(new ServletHolder(new Proxy()), "/proxy/*");
             
             ServletHolder jspHolder = new ServletHolder(new JspServlet());
@@ -51,18 +49,25 @@ public class GraphEditorMain {
             jspHolder.setInitParameter("trimSpaces", "true");
             jspHolder.setInitParameter("portalhost", prop.getProperty("com.trendmicro.tme.grapheditor.portalhost", ""));
             handler.addServlet(jspHolder, "*.jsp");
-            handler.setResourceBase(prop.getProperty("com.trendmicro.tme.grapheditor.webdir"));
-            logger.info("Web resource base is set to {}", prop.getProperty("com.trendmicro.tme.grapheditor.webdir"));
             
+            String webdir = prop.getProperty("com.trendmicro.tme.grapheditor.webdir");
+            handler.setResourceBase(webdir);
+            logger.info("Web resource base is set to {}", webdir);
+
             jerseyHolder.setInitParameter("com.sun.jersey.config.property.resourceConfigClass", "com.sun.jersey.api.core.PackagesResourceConfig");
             jerseyHolder.setInitParameter("com.sun.jersey.config.property.packages", "com.trendmicro.tme.grapheditor");
             handler.addServlet(jerseyHolder, "/webapp/graph-editor/*");
             
             FilterHolder loggingFilterHolder = new FilterHolder(new LoggingFilter());
             handler.addFilter(loggingFilterHolder, "/*", 1);
-            
             handlers.addHandler(handler);
             
+            ResourceHandler resHandler = new ResourceHandler();
+            resHandler.setResourceBase(webdir);
+            resHandler.setDirectoriesListed(true);
+            resHandler.setWelcomeFiles(new String[]{"index.html"});
+            handlers.addHandler(resHandler);
+
             int port = Integer.valueOf(prop.getProperty("com.trendmicro.tme.grapheditor.port"));
             Server server = new Server(port);
             server.setHandler(handlers);

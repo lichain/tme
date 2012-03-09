@@ -53,6 +53,7 @@ rm -rf $RPM_BUILD_ROOT
 %config /opt/trend/tme/conf/graph-editor/tme-graph-editor.monit
 %config /opt/trend/tme/conf/graph-editor/graph-editor.properties
 %config /opt/trend/tme/conf/graph-editor/logback.xml
+%config /opt/trend/tme/conf/graph-editor/ldaploginmodule.conf
 
 %pre
 

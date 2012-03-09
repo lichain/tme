@@ -126,7 +126,7 @@
 
 </head>
 <body class="ui-widget" style="text-align: center">
-<%@ include file="/static/header.html" %>
+<%@ include file="../header.jsp" %>
 	<h1>Processor: ${it.name}</h1>
 
 	<div id="graph_container" style="text-align: left"></div>

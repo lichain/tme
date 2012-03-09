@@ -8,15 +8,25 @@ import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jasper.servlet.JspServlet;
+import org.eclipse.jetty.http.security.Constraint;
+import org.eclipse.jetty.plus.jaas.JAASLoginService;
+import org.eclipse.jetty.security.ConstraintMapping;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.IdentityService;
+import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.server.session.HashSessionIdManager;
+import org.eclipse.jetty.server.session.HashSessionManager;
+import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.trendmicro.codi.CODIException;
 import com.trendmicro.codi.ZKSessionManager;
 import com.trendmicro.tme.mfr.ExchangeFarm;
 
@@ -60,6 +70,48 @@ public class GraphEditorMain {
             
             FilterHolder loggingFilterHolder = new FilterHolder(new LoggingFilter());
             handler.addFilter(loggingFilterHolder, "/*", 1);
+
+            boolean secure = false;
+            IdentityService identityService = null;
+            try {
+                identityService = new ZKIdentityService("/global/acl/graph_editor_admins", ZKSessionManager.instance());
+                secure = true;
+            }
+            catch(CODIException.NoNode e) {
+                logger.warn("ACL node /global/acl/graph_editor_admins not found! Graph Editor will run in insecure mode.");
+            }
+
+            SessionHandler sessionHandler = new SessionHandler(new HashSessionManager());
+            sessionHandler.getSessionManager().setIdManager(new HashSessionIdManager());
+            handler.setSessionHandler(sessionHandler);
+
+            if(secure) {
+                Constraint constraint = new Constraint();
+                constraint.setName(Constraint.__FORM_AUTH);
+                constraint.setRoles(new String[] {
+                    "user", "admin", "guest"
+                });
+                constraint.setAuthenticate(true);
+
+                ConstraintMapping cm = new ConstraintMapping();
+                cm.setConstraint(constraint);
+                cm.setPathSpec("/webapp/graph-editor/*");
+
+                JAASLoginService jaasLogin = new JAASLoginService("TME Graph Editor");
+                jaasLogin.setLoginModuleName("ldaploginmodule");
+                jaasLogin.setIdentityService(identityService);
+
+                ConstraintSecurityHandler securityHandler = new ConstraintSecurityHandler();
+                securityHandler.setConstraintMappings(new ConstraintMapping[] {
+                    cm
+                });
+                securityHandler.setAuthenticator(new BasicAuthenticator());
+                securityHandler.setLoginService(jaasLogin);
+                securityHandler.setStrict(false);
+
+                handler.setSecurityHandler(securityHandler);
+            }
+
             handlers.addHandler(handler);
             
             ResourceHandler resHandler = new ResourceHandler();
@@ -71,6 +123,7 @@ public class GraphEditorMain {
             int port = Integer.valueOf(prop.getProperty("com.trendmicro.tme.grapheditor.port"));
             Server server = new Server(port);
             server.setHandler(handlers);
+            server.setSessionIdManager(handler.getSessionHandler().getSessionManager().getIdManager());
             
             server.start();
             System.err.println("Graph Editor started listening on port " + port);

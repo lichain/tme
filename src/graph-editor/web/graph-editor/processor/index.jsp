@@ -71,7 +71,7 @@
 
 </head>
 <body class="ui-widget" style="text-align: center">
-	<%@ include file="/static/header.html"%>
+	<%@ include file="../header.jsp"%>
 
 	<div class="ui-widget-content">
 		<br>

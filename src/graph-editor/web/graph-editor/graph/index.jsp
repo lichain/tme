@@ -121,7 +121,7 @@
 
 </head>
 <body class="ui-widget">
-	<%@ include file="/static/header.html"%>
+	<%@ include file="../header.jsp"%>
 
 	<div class="ui-widget-content">
 		<br>

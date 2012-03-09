@@ -276,7 +276,7 @@
 
 </head>
 <body class="ui-widget" style="text-align: center">
-	<%@ include file="/static/header.html"%>
+	<%@ include file="../header.jsp"%>
 	<h1>
 		Graph: ${it.name}
 		<c:choose>

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CLASSPATH="/opt/trend/tme/conf/graph-editor:/opt/trend/tme/lib/*:/opt/trend/tme/lib/jersey/*:/opt/trend/tme/lib/jetty/*"
-JVM_ARGS="-Djava.library.path=/usr/lib64/graphviz/java/ -Djava.security.egd=file:/dev/./urandom"
+JVM_ARGS="-Djava.security.auth.login.config=/opt/trend/tme/conf/graph-editor/ldaploginmodule.conf -Djava.security.egd=file:/dev/./urandom"
 
 rm -rf /var/lib/tme/graph-editor/jsp
 mkdir -p /var/lib/tme/graph-editor/jsp

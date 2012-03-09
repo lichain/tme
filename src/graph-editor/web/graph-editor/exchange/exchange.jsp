@@ -107,7 +107,7 @@
 
 </head>
 <body class="ui-widget" style="text-align: center">
-<%@ include file="/static/header.html" %>
+<%@ include file="../header.jsp" %>
 	<h1>Exchange: ${it.name}</h1>
 	<div>
 		<input type=button value="Make ${it.name} Blocking" onclick="block();"><br>

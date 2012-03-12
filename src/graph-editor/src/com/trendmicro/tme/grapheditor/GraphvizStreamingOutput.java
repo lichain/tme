@@ -62,6 +62,7 @@ public class GraphvizStreamingOutput implements StreamingOutput {
             if(p.waitFor() != 0) {
                 String errorMsg = bos.toString();
                 logger.error("dot render error: {}", errorMsg);
+                logger.error("\n======== input to dot =========\n{}\n===============================", dot);
                 throw new Exception("dot render error: " + errorMsg);
             }
         }

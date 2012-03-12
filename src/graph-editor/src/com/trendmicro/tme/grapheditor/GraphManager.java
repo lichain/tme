@@ -86,7 +86,7 @@ public class GraphManager {
     private String generateGraph(List<GraphModel> graphs) throws JAXBException, CODIException {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("digraph G{\n");
+        sb.append("strict digraph G{\n");
         sb.append("compound=true;\n");
         sb.append("rankdir=LR;\n");
         for(GraphModel graphModel : graphs) {

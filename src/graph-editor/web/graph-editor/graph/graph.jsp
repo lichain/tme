@@ -199,7 +199,7 @@
 		if(parseFloat(jQuery.cookie('graph_editor_scale')) + inc <= 0.4){
 			return;
 		}
-		jQuery.cookie('graph_editor_scale', parseFloat(jQuery.cookie('graph_editor_scale')) + inc);
+		jQuery.cookie('graph_editor_scale', parseFloat(jQuery.cookie('graph_editor_scale')) + inc, {path: '/' });
     	
     	set_graph_scale();
 	}
@@ -324,13 +324,12 @@
 		Add Processor: <select id="processors"></select> <input type="button"
 			value="add" onclick="add_processor(jQuery('#processors').val());"><br>
 		Admin: <c:forEach var="admin" items="${it.admins}"><a href="javascript:remove_admin('${admin}');">${admin}</a> </c:forEach> <input type="button" value="add" onclick="add_admin();"><br>
-		<input type="button" class="little_button" value="+"
-			onclick="change_scale(0.2)" /> <input type="button"
-			class="little_button" value="-" onclick="change_scale(-0.2)" />
-
 	</div>
 
 	<hr />
-	<div id="graph_container" style="text-align: left"></div>
+	<div id="graph_container" style="text-align: left">
+	<input type="button" style="margin-left: 3px; margin-top: 3px;" class="little_button" value="+" onclick="change_scale(0.2)" />
+	<input type="button" style="margin-left: 3px; margin-top: 3px;" class="little_button" value="-" onclick="change_scale(-0.2)" /><br>
+	</div>
 </body>
 </html>

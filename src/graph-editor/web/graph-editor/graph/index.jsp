@@ -24,6 +24,10 @@
 <script type="text/javascript" src="/static/canviz/path/path.js"></script>
 
 <script type="text/javascript">
+	if(jQuery.cookie('graph_editor_scale') == null){
+		jQuery.cookie('graph_editor_scale', '1.0', {path: '/' });
+	}
+
 	function add_graph(){
 		name = prompt('Enter graph name: ');
 	    if(name == null || name == ""){
@@ -82,7 +86,7 @@
 				canviz.setScale(parseFloat(jQuery.cookie('graph_editor_scale')));
    			 	canviz.parse(data);
    			 	
-				//location.reload();
+				$('graph_container').show();
 			},
 			error: function(xhr,text,err){
 				alert(err);					
@@ -112,11 +116,25 @@
 	
 	jQuery(document).ready(function() {		
 		canviz = new Canviz('graph_container');
+		$('graph_container').hide();
 		
 		jQuery("#filter").keyup(function() {
 			jQuery.uiTableFilter(jQuery("#graphList"), this.value);
 		});
 	});
+
+	function set_graph_scale() {
+		canviz.setScale(parseFloat(jQuery.cookie('graph_editor_scale')));
+		canviz.draw();
+	}
+
+	function change_scale(inc) {
+		if(parseFloat(jQuery.cookie('graph_editor_scale')) + inc <= 0.4){
+			return;
+		}
+		jQuery.cookie('graph_editor_scale', parseFloat(jQuery.cookie('graph_editor_scale')) + inc, {path: '/' });
+		set_graph_scale();
+	}
 </script>
 
 </head>
@@ -157,6 +175,9 @@
 
 		<hr />		
 	</div>
-	<div id="graph_container" style="text-align: left"></div>
+	<div id="graph_container" style="text-align: left">
+	<input type="button" style="margin-left: 3px; margin-top: 3px;" class="little_button" value="+" onclick="change_scale(0.2)" />
+	<input type="button" style="margin-left: 3px; margin-top: 3px;" class="little_button" value="-" onclick="change_scale(-0.2)" /><br>
+	</div>
 </body>
 </html>

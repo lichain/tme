@@ -20,6 +20,7 @@ public class GraphModel {
     private Set<String> processors = new HashSet<String>();
     private Set<String> rules = new HashSet<String>();
     private boolean enabled = false;
+    private Set<String> admins = new HashSet<String>();
 
     public GraphModel() {
     }
@@ -42,6 +43,18 @@ public class GraphModel {
 
     public void removeProcessor(String processor) {
         processors.remove(processor);
+    }
+
+    public Set<String> getAdmins() {
+        return admins;
+    }
+
+    public void addAdmin(String admin) {
+        admins.add(admin);
+    }
+
+    public void removeAdmin(String admin) {
+        admins.remove(admin);
     }
 
     public void addRule(String rule) {

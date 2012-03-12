@@ -95,7 +95,7 @@ public class GraphEditorMain {
                 Constraint constraint = new Constraint();
                 constraint.setName(Constraint.__FORM_AUTH);
                 constraint.setRoles(new String[] {
-                    "admin", "guest"
+                    "super", "admin", "guest"
                 });
                 constraint.setAuthenticate(true);
 

@@ -105,6 +105,37 @@
 		location.reload();
 	}
 	
+	function add_admin(){
+		admin=prompt("Please enter admin name: ");
+		jQuery.ajax({
+			type: "PUT",
+			async: false,
+			url: "${it.name}/admin/" + admin,
+			success: function(){
+			},
+			error: function(xhr,text,err){
+				alert(err);
+			}
+		});
+		location.reload();
+	}
+
+	function remove_admin(admin){
+		if(confirm('Are you sure to remove admin ' + admin + ' ?')){
+		jQuery.ajax({
+			type: "DELETE",
+			async: false,
+			url: "${it.name}/admin/" + admin,
+			success: function(){
+			},
+			error: function(xhr,text,err){
+				alert(err);
+			}
+		});
+		location.reload();
+		}
+	}
+
 	function render_processors(){
 		jQuery.ajax({
 			type: "GET",
@@ -291,8 +322,9 @@
 	</h1>
 	<div>
 		Add Processor: <select id="processors"></select> <input type="button"
-			value="add" onclick="add_processor(jQuery('#processors').val());">
-		<br> <input type="button" class="little_button" value="+"
+			value="add" onclick="add_processor(jQuery('#processors').val());"><br>
+		Admin: <c:forEach var="admin" items="${it.admins}"><a href="javascript:remove_admin('${admin}');">${admin}</a> </c:forEach> <input type="button" value="add" onclick="add_admin();"><br>
+		<input type="button" class="little_button" value="+"
 			onclick="change_scale(0.2)" /> <input type="button"
 			class="little_button" value="-" onclick="change_scale(-0.2)" />
 

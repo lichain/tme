@@ -32,6 +32,14 @@ import com.trendmicro.codi.ZNode;
 public class GraphManager {
     @InjectParam GraphEditorMain graphEditor;
 
+    private void checkPermission(SecurityContext sc, GraphModel graph) {
+        if(graphEditor.isSecurityEnabled() && !sc.isUserInRole("super") && !graph.getAdmins().isEmpty()) {
+            if(!graph.getAdmins().contains(sc.getUserPrincipal().getName())) {
+                throw new WebApplicationException(new Exception("You are not allowed to modify this graph"), Status.FORBIDDEN.getStatusCode());
+            }
+        }
+    }
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> getGraphList() throws CODIException {
@@ -72,18 +80,20 @@ public class GraphManager {
     @Path("/{name}")
     @PUT
     public void createGraph(@PathParam("name") String name, @Context SecurityContext sc) throws CODIException, JAXBException {
-        if(graphEditor.isSecurityEnabled() && !sc.isUserInRole("admin")){
+        if(graphEditor.isSecurityEnabled() && !(sc.isUserInRole("admin") || sc.isUserInRole("super"))) {
             throw new WebApplicationException(new Exception("You are not in the role 'admin'!"), Status.FORBIDDEN.getStatusCode());
         }
 
         ZNode node = new ZNode("/global/graph/route/" + name);
         GraphModel graph = new GraphModel(name);
+        graph.addAdmin(sc.getUserPrincipal().getName());
         node.create(false, new Gson().toJson(graph));
     }
 
     @Path("/{name}")
     @DELETE
-    public void removeGraph(@PathParam("name") String name) throws CODIException, JAXBException {
+    public void removeGraph(@PathParam("name") String name, @Context SecurityContext sc) throws CODIException, JAXBException {
+        checkPermission(sc, getGraph(name));
         ZNode node = new ZNode("/global/graph/route/" + name);
         node.delete();
     }
@@ -134,49 +144,73 @@ public class GraphManager {
 
     @Path("/{name}/rule/{rule}")
     @DELETE
-    public void removeRule(@PathParam("name") String name, @PathParam("rule") String rule) throws JAXBException, CODIException {
+    public void removeRule(@PathParam("name") String name, @PathParam("rule") String rule, @Context SecurityContext sc) throws JAXBException, CODIException {
         GraphModel graph = getGraph(name);
+        checkPermission(sc, graph);
         graph.removeRule(rule);
         setGraph(graph);
     }
 
     @Path("/{name}/rule/{rule}")
     @PUT
-    public void addRule(@PathParam("name") String name, @PathParam("rule") String rule) throws JAXBException, CODIException {
+    public void addRule(@PathParam("name") String name, @PathParam("rule") String rule, @Context SecurityContext sc) throws JAXBException, CODIException {
         GraphModel graph = getGraph(name);
+        checkPermission(sc, graph);
         graph.addRule(rule);
         setGraph(graph);
     }
 
     @Path("/{name}/processor/{processor}")
     @PUT
-    public void addProcessor(@PathParam("name") String name, @PathParam("processor") String processor) throws JAXBException, CODIException {
+    public void addProcessor(@PathParam("name") String name, @PathParam("processor") String processor, @Context SecurityContext sc) throws JAXBException, CODIException {
         GraphModel graph = getGraph(name);
+        checkPermission(sc, graph);
         graph.addProcessor(processor);
         setGraph(graph);
     }
 
     @Path("/{name}/processor/{processor}")
     @DELETE
-    public void removeProcessor(@PathParam("name") String name, @PathParam("processor") String processor) throws JAXBException, CODIException {
+    public void removeProcessor(@PathParam("name") String name, @PathParam("processor") String processor, @Context SecurityContext sc) throws JAXBException, CODIException {
         GraphModel graph = getGraph(name);
+        checkPermission(sc, graph);
         graph.removeProcessor(processor);
         setGraph(graph);
     }
 
     @Path("/{name}/enable")
     @PUT
-    public void enable(@PathParam("name") String name) throws JAXBException, CODIException {
+    public void enable(@PathParam("name") String name, @Context SecurityContext sc) throws JAXBException, CODIException {
         GraphModel graph = getGraph(name);
+        checkPermission(sc, graph);
         graph.setEnabled(true);
         setGraph(graph);
     }
 
     @Path("/{name}/enable")
     @DELETE
-    public void disable(@PathParam("name") String name) throws JAXBException, CODIException {
+    public void disable(@PathParam("name") String name, @Context SecurityContext sc) throws JAXBException, CODIException {
         GraphModel graph = getGraph(name);
+        checkPermission(sc, graph);
         graph.setEnabled(false);
+        setGraph(graph);
+    }
+
+    @Path("/{name}/admin/{admin}")
+    @PUT
+    public void addAdmin(@PathParam("name") String name, @PathParam("admin") String admin, @Context SecurityContext sc) throws JAXBException, CODIException {
+        GraphModel graph = getGraph(name);
+        checkPermission(sc, graph);
+        graph.addAdmin(admin);
+        setGraph(graph);
+    }
+
+    @Path("/{name}/admin/{admin}")
+    @DELETE
+    public void removeAdmin(@PathParam("name") String name, @PathParam("admin") String admin, @Context SecurityContext sc) throws JAXBException, CODIException {
+        GraphModel graph = getGraph(name);
+        checkPermission(sc, graph);
+        graph.removeAdmin(admin);
         setGraph(graph);
     }
 }

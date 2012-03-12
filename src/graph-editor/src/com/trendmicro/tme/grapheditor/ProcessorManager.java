@@ -57,7 +57,7 @@ public class ProcessorManager {
     @Path("/{name}")
     @PUT
     public void createProcessor(@PathParam("name") String name, @Context SecurityContext sc) throws CODIException, JAXBException {
-        if(graphEditor.isSecurityEnabled() && !sc.isUserInRole("admin")){
+        if(graphEditor.isSecurityEnabled() && !(sc.isUserInRole("admin") || sc.isUserInRole("super"))){
             throw new WebApplicationException(new Exception("You are not in the role 'admin'!"), Status.FORBIDDEN.getStatusCode());
         }
 

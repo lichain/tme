@@ -9,14 +9,18 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.StreamingOutput;
 import javax.xml.bind.JAXBException;
 
 import com.google.gson.Gson;
+import com.sun.jersey.api.core.InjectParam;
 import com.sun.jersey.api.view.Viewable;
 import com.trendmicro.codi.CODIException;
 import com.trendmicro.codi.ZNode;
@@ -24,6 +28,8 @@ import com.trendmicro.tme.grapheditor.ProcessorModel.RenderView;
 
 @Path("/processor")
 public class ProcessorManager {
+    @InjectParam GraphEditorMain graphEditor;
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> getProcessorList() throws CODIException {
@@ -50,7 +56,11 @@ public class ProcessorManager {
     
     @Path("/{name}")
     @PUT
-    public void createProcessor(@PathParam("name") String name) throws CODIException, JAXBException {
+    public void createProcessor(@PathParam("name") String name, @Context SecurityContext sc) throws CODIException, JAXBException {
+        if(graphEditor.isSecurityEnabled() && !sc.isUserInRole("admin")){
+            throw new WebApplicationException(new Exception("You are not in the role 'admin'!"), Status.FORBIDDEN.getStatusCode());
+        }
+
         ZNode node = new ZNode("/global/graph/processor/" + name);
         ProcessorModel processor = new ProcessorModel(name);
         processor.addInput(name + ".in");

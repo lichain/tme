@@ -34,7 +34,13 @@ public class GraphEditorMain {
     private static final String CONFIG_PATH = System.getProperty("com.trendmicro.tme.grapheditor.conf", "/opt/trend/tme/conf/graph-editor/graph-editor.properties");
     private static final Logger logger = LoggerFactory.getLogger(GraphEditorMain.class);
     
-    public static void main(String[] args) throws Exception {
+    private boolean secure = false;
+
+    public boolean isSecurityEnabled() {
+        return secure;
+    }
+
+    public void run() throws Exception {
         try {
             Properties prop = new Properties();
             prop.load(new FileInputStream(CONFIG_PATH));
@@ -49,6 +55,7 @@ public class GraphEditorMain {
             
             Map<Class<?>, Object> classMap = new HashMap<Class<?>, Object>();
             classMap.put(ExchangeFarm.class, new ExchangeFarm());
+            classMap.put(GraphEditorMain.class, this);
             ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.SECURITY | ServletContextHandler.SESSIONS);
             ServletHolder jerseyHolder = new ServletHolder(new GraphEditorContainer(classMap));
             
@@ -71,7 +78,6 @@ public class GraphEditorMain {
             FilterHolder loggingFilterHolder = new FilterHolder(new LoggingFilter());
             handler.addFilter(loggingFilterHolder, "/*", 1);
 
-            boolean secure = false;
             IdentityService identityService = null;
             try {
                 identityService = new ZKIdentityService("/global/acl/graph_editor_admins", ZKSessionManager.instance());
@@ -89,7 +95,7 @@ public class GraphEditorMain {
                 Constraint constraint = new Constraint();
                 constraint.setName(Constraint.__FORM_AUTH);
                 constraint.setRoles(new String[] {
-                    "user", "admin", "guest"
+                    "admin", "guest"
                 });
                 constraint.setAuthenticate(true);
 
@@ -142,5 +148,9 @@ public class GraphEditorMain {
             logger.error("Graph Editor startup error: ", e);
             System.exit(-1);
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+        new GraphEditorMain().run();
     }
 }

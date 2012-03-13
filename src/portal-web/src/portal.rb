@@ -74,6 +74,23 @@ module Portal
             end
         end
 
+	post "/merge" do
+	    range = request.cookies["range"]
+	    range ||= "10.minutes"
+	    @imgs = []
+
+            settings.canvas.pictures.each do |label, pic|
+                img = pic.merge(label, settings.rrddir, @params[:selected], range)
+		@imgs.push(img)
+            end
+
+	    respond_to do |format|
+		format.js {
+		    js :"merge"
+		}
+	    end
+	end
+
         get "/daily" do
             "daily"
         end

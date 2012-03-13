@@ -59,6 +59,32 @@ function setRange(name, range){
 	$.cookie('range', range);
     $.getScript("/exchanges/"+name, function() {});
 }
+
+function setMergeRange(name, range){
+	$.cookie('range', range);
+	$.ajax({
+	        type: "POST",
+	        async: false,
+	        headers: {accept: 'text/javascript'},
+	        url: "/merge",
+	        data: "selected=" + selected,
+	        success: function(res){
+	                eval(res);
+	        },
+	        error: function(xhr,text,err){
+	                alert(err);
+	        }
+	});
+}
+
+function invert_selection(){
+    filter=$('#filter')[0].value;
+    $(".selectedExchange").each(function(){
+	if(filter.length == 0 || this.name.match(filter) != null){
+		this.checked = !this.checked;
+	}
+    });
+}
 </script>
 
 <div id="rrdmodal" class="modal hide fade">
@@ -79,6 +105,7 @@ function setRange(name, range){
     <table id="exchanges" class="zebra-striped">
         <thead>
             <tr>
+                <th><input type=checkbox onclick="invert_selection()"></th>
                 <th>name</th>
                 <th>type</th>
                 <th>broker</th>
@@ -90,6 +117,7 @@ function setRange(name, range){
         <tbody>
             <% @json.each_with_index do |data, index| %>
                 <tr>
+		    <td><input type=checkbox class="selectedExchange" name="<%= "#{File.basename data[:rrd].sub(/\.rrd$/, '')}" %>"></td>
                     <td>
                         <a  rel="popover" 
                             class="rrdmodal-trigger popover-with-html"

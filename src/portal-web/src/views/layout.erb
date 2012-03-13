@@ -21,6 +21,41 @@
                     e.preventDefault()
                 })
             })
+
+	    function merge(){
+		selected="";
+		$(".selectedExchange:checked").each(function(){selected = selected + this.name + ","});
+		if(selected.length == 0){
+		    alert('No exchange selected!');
+		    return;
+		}
+
+		$.ajax({
+			type: "POST",
+			async: false,
+			headers: {accept: 'text/javascript'},
+			url: "/merge",
+			data: "selected=" + selected,
+			success: function(res){
+				eval(res);
+				$("#rrdmodal").modal({
+					keyboard: true,
+					backdrop: true,
+					show: true,
+				})
+			},
+			error: function(xhr,text,err){
+				alert(err);
+			}
+		});
+	    }
+
+	    function clear_selected(){
+		$("#filter")[0].value = "";
+		$.cookie('filter', '');
+		$.uiTableFilter($('table#exchanges'), "");
+		$(".selectedExchange").each(function(){this.checked = false});
+	    }
         </script>
     </head>
 
@@ -33,6 +68,9 @@
                     <form id="filter-form" class="pull-left" action="">
                         <input id="filter" type="text" placeholder="Filter" />
                     </form>
+
+		    <input type="button" style="margin-left: 20px; margin-top: 5px;" value="Merge" onclick="merge();">
+		    <input type="button" style="margin-left: 10px; margin-top: 5px;" value="Clear" onclick="clear_selected();">
 
                     <!--
                     <ul>

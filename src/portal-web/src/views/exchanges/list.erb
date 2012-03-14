@@ -2,6 +2,21 @@
 <%= javascript_tag "jquery.tablesorter.min.js" %>
 <%= javascript_tag "jquery.cookie.js" %>
 <script type="text/javascript">
+    function renew_list(){
+	setTimeout('renew_list()', 60000);
+	if($('#rrdmodal:visible').size()==0){
+	    location.reload();
+	}
+    }
+
+    function renew_exchange(name){
+	setTimeout('$.getScript("/exchanges/' + name + '", function() {if($("#rrdmodal:visible").size()==1){renew_exchange("' + name + '")}})', 30000);
+    }
+
+    function renew_merge(){
+	setTimeout('getMerge(); if($("#rrdmodal:visible").size()==1){renew_merge()}', 30000);
+    }
+
     $(function(){
         var exchanges = $('table#exchanges')
 
@@ -27,6 +42,7 @@
                     show: true,
                 })
 
+		renew_exchange(name);
             });
         })
 
@@ -53,6 +69,8 @@
             $("#exchanges").tablesorter({sortList: list});
 		});
 
+	    setTimeout('renew_list()', 60000);
+
     });
 
 function setRange(name, range){
@@ -60,8 +78,7 @@ function setRange(name, range){
     $.getScript("/exchanges/"+name, function() {});
 }
 
-function setMergeRange(name, range){
-	$.cookie('range', range);
+function getMerge(){
 	$.ajax({
 	        type: "POST",
 	        async: false,
@@ -75,6 +92,11 @@ function setMergeRange(name, range){
 	                alert(err);
 	        }
 	});
+}
+
+function setMergeRange(name, range){
+	$.cookie('range', range);
+	getMerge();
 }
 
 function invert_selection(){

@@ -2,6 +2,8 @@
 <%= javascript_tag "jquery.tablesorter.min.js" %>
 <%= javascript_tag "jquery.cookie.js" %>
 <script type="text/javascript">
+    renew = null;
+
     function renew_list(){
 	setTimeout('renew_list()', 60000);
 	if($('#rrdmodal:visible').size()==0){
@@ -10,11 +12,11 @@
     }
 
     function renew_exchange(name){
-	setTimeout('$.getScript("/exchanges/' + name + '", function() {if($("#rrdmodal:visible").size()==1){renew_exchange("' + name + '")}})', 30000);
+	setTimeout('if(renew == "exchange"){ $.getScript("/exchanges/' + name + '", function() {if($("#rrdmodal:visible").size()==1){renew_exchange("' + name + '")}}) }', 30000);
     }
 
     function renew_merge(){
-	setTimeout('getMerge(); if($("#rrdmodal:visible").size()==1){renew_merge()}', 30000);
+	setTimeout('if(renew == "merge"){ getMerge(); if($("#rrdmodal:visible").size()==1){renew_merge()} }', 30000);
     }
 
     $(function(){
@@ -42,6 +44,7 @@
                     show: true,
                 })
 
+		renew = "exchange";
 		renew_exchange(name);
             });
         })

@@ -23,6 +23,7 @@
 #include <GateTalk.pb.h>
 #include <iostream>
 #include <arpa/inet.h>
+#include <errno.h>
 
 int read_all(int blocking_fd, char* buf, size_t size) {
     size_t size_read = 0;
@@ -34,6 +35,19 @@ int read_all(int blocking_fd, char* buf, size_t size) {
     }
 
     return size_read;
+}
+
+bool write_all(int blocking_fd, const char* buf, ssize_t size) {
+    ssize_t size_write = 0;
+    while (size_write < size) {
+	ssize_t n = write(blocking_fd, buf + size_write, size - size_write);
+	if (n == -1){
+	    std::cerr << "Write error: " << strerror(errno) << std::endl;
+	    return false;
+	}
+	size_write += n;
+    }
+    return true;
 }
 
 int connectTo(int port){
@@ -99,8 +113,7 @@ class Processor : 	public source_policy<source_block_policy>,
 			if(payload.len <= 0){
 				return false;
 			}
-			Write(payload.buf, payload.len);
-			return true;
+			return Write(payload.buf, payload.len);
 		}
 
 		void run(){
@@ -109,7 +122,9 @@ class Processor : 	public source_policy<source_block_policy>,
 				if(payload.len <= 0){
 					break;
 				}
-				Write(payload.buf, payload.len);
+				if(!Write(payload.buf, payload.len)){
+				    break;
+				}
 			}
 		}
 };
@@ -160,7 +175,7 @@ template < class block_policy >
 class Write_Socket_Policy : public block_policy, public Socket_Policy_Base
 {
 	protected:
-		void Write(const char* buf, const size_t count){
+		bool Write(const char* buf, const size_t count){
 			return block_policy::Write(_sock, buf, count);
 		}
 };
@@ -169,8 +184,8 @@ template < class block_policy >
 class Write_Stdout_Policy : public block_policy
 {
 	protected:
-		void Write(const char* buf, const size_t count){
-			block_policy::Write(1, buf, count);
+		bool Write(const char* buf, const size_t count){
+			return block_policy::Write(1, buf, count);
 		}
 };
 
@@ -195,9 +210,8 @@ class Block_Policy_Line : public Block_Base
 			return message_payload(_buf, size);
 		}
 
-		void Write(const int fd, const char* buf, const size_t count){
-			write(fd, buf, count);
-			write(fd, "\n", 1);
+		bool Write(const int fd, const char* buf, const size_t count){
+			return write_all(fd, buf, count) && write_all(fd, "\n", 1);
 		}
 	private:
 		char _linebuf[1024];
@@ -229,10 +243,9 @@ class Block_Policy_Length : public Block_Base
 			return message_payload(_buf, len);
 		}
 
-		void Write(const int fd, const char* buf, const size_t count){
+		bool Write(const int fd, const char* buf, const size_t count){
 			uint32_t len = htonl(count);
-			write(fd, &len, 4);
-			write(fd, buf, count);
+			return write_all(fd, (char*)&len, 4) && write_all(fd, buf, count);
 		}
 };
 
@@ -273,15 +286,14 @@ class Block_Policy_MessageBlock : public Block_Policy_Length
 			}
 		}
 
-		void Write(const int fd, const char* buf, const size_t count){
+		bool Write(const int fd, const char* buf, const size_t count){
 			_msg.set_id(_id);
 			if(_ttl > 0){
 			    _msg.set_ttl(_ttl * 1000);	// change from second to millisecond
 			}
 			_msg.set_message(buf, count);
 			uint32_t len = htonl(_msg.ByteSize());
-			write(fd, &len, 4);
-			_msg.SerializeToFileDescriptor(fd);
+			return write_all(fd, (char*)&len, 4) && _msg.SerializeToFileDescriptor(fd);
 		}
 
 	private:

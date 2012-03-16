@@ -6,11 +6,16 @@
         <%= stylesheet_tag "layout.css" %>
 
         <%= javascript_tag "jquery-1.7.min.js" %>
+        <%= javascript_tag "jquery.uitablefilter.js" %>
+		<%= javascript_tag "jquery.tablesorter.min.js" %>
+		<%= javascript_tag "jquery.cookie.js" %>
+        
         <%= javascript_tag "bootstrap-modal.js" %>
         <%= javascript_tag "bootstrap-dropdown.js" %>
         <%= javascript_tag "bootstrap-twipsy.js" %>
         <%= javascript_tag "bootstrap-popover.js" %>
         <%= javascript_tag "bootstrap-tabs.js" %>
+        <%= javascript_tag "portal.js" %>
         <script type="text/javascript">
             $(function () {
                 $("a[rel=popover]")
@@ -22,37 +27,7 @@
                 })
             })
 
-	    function merge(){
-		selected="";
-		$(".selectedExchange:checked").each(function(){selected = selected + this.name + ","});
-		if(selected.length == 0){
-		    alert('No exchange selected!');
-		    return;
-		}
-
-		$.ajax({
-			type: "POST",
-			async: false,
-			headers: {accept: 'text/javascript'},
-			url: "/merge",
-			data: "selected=" + selected,
-			success: function(res){
-				eval(res);
-				$("#rrdmodal").modal({
-					keyboard: true,
-					backdrop: true,
-					show: true,
-				})
-
-				renew = "merge";
-				renew_merge();
-			},
-			error: function(xhr,text,err){
-				alert(err);
-			}
-		});
-	    }
-
+	    
 	    function clear_selected(){
 		$("#filter")[0].value = "";
 		$.cookie('filter', '');

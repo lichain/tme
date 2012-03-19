@@ -16,25 +16,6 @@
         <%= javascript_tag "bootstrap-popover.js" %>
         <%= javascript_tag "bootstrap-tabs.js" %>
         <%= javascript_tag "portal.js" %>
-        <script type="text/javascript">
-            $(function () {
-                $("a[rel=popover]")
-                .popover({
-                    offset: 10
-                })
-                .click(function(e) {
-                    e.preventDefault()
-                })
-            })
-
-	    
-	    function clear_selected(){
-		$("#filter")[0].value = "";
-		$.cookie('filter', '');
-		$.uiTableFilter($('table#exchanges'), "");
-		$(".selectedExchange").each(function(){this.checked = false});
-	    }
-        </script>
     </head>
 
     <body>
@@ -48,7 +29,7 @@
                     </form>
 
 		    <input type="button" style="margin-left: 20px; margin-top: 5px;" value="Merge" onclick="merge();">
-		    <input type="button" style="margin-left: 10px; margin-top: 5px;" value="Clear" onclick="clear_selected();">
+		    <input type="button" style="margin-left: 10px; margin-top: 5px;" value="Clear" onclick="clearSelected();">
 
                     <!--
                     <ul>

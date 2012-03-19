@@ -1,21 +1,4 @@
 <script type="text/javascript">
-    renew = null;
-
-    function renew_list(){
-	setTimeout('renew_list()', 60000);
-	if($('#rrdmodal:visible').size()==0){
-	    location.reload();
-	}
-    }
-
-    function renew_exchange(name){
-	setTimeout('if(renew == "exchange"){ $.getScript("/exchanges/' + name + '", function() {if($("#rrdmodal:visible").size()==1){renew_exchange("' + name + '")}}) }', 30000);
-    }
-
-    function renew_merge(){
-	setTimeout('if(renew == "merge"){ getMerge(); if($("#rrdmodal:visible").size()==1){renew_merge()} }', 30000);
-    }
-
     $(function(){
         var exchanges = $('table#exchanges')
 
@@ -29,22 +12,6 @@
                 return false;
             }
         });
-
-        $(".rrdmodal-trigger").click(function() {
-            name = $(this).attr("rrd");
-
-            $.getScript("/exchanges/"+name, function() {
-
-                $("#rrdmodal").modal({
-                    keyboard: true,
-                    backdrop: true,
-                    show: true,
-                })
-
-		renew = "exchange";
-		renew_exchange(name);
-            });
-        })
 
 		$(document).ready(function() {
 			$('.popover-with-html').each(function(){$(this).data('popover').options.html = true})
@@ -68,45 +35,9 @@
 			}
             $("#exchanges").tablesorter({sortList: list});
 		});
-
-	    setTimeout('renew_list()', 60000);
-
     });
 
-function setRange(name, range){
-	$.cookie('range', range);
-    $.getScript("/exchanges/"+name, function() {});
-}
 
-/*function getMerge(){
-	$.ajax({
-	        type: "POST",
-	        async: false,
-	        headers: {accept: 'text/javascript'},
-	        url: "/merge",
-	        data: "selected=" + selected,
-	        success: function(res){
-	                eval(res);
-	        },
-	        error: function(xhr,text,err){
-	                alert(err);
-	        }
-	});
-}*/
-
-/*function setMergeRange(name, range){
-	$.cookie('range', range);
-	getMerge();
-}*/
-
-function invert_selection(){
-    filter=$('#filter')[0].value;
-    $(".selectedExchange").each(function(){
-	if(filter.length == 0 || this.name.match(filter) != null){
-		this.checked = !this.checked;
-	}
-    });
-}
 </script>
 
 <div id="rrdmodal" class="modal hide fade">
@@ -127,7 +58,7 @@ function invert_selection(){
     <table id="exchanges" class="zebra-striped">
         <thead>
             <tr>
-                <th><input type=checkbox onclick="invert_selection()"></th>
+                <th><input type=checkbox onclick="invertSelected();"></th>
                 <th>name</th>
                 <th>type</th>
                 <th>broker</th>

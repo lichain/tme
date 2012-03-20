@@ -33,6 +33,7 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
         private long msgOut = 0;
         private long msgInSize = 0;
         private long msgOutSize = 0;
+        private long msgDrop = 0;
         private long timestamp = 0;
 
         public long getMsgIn() {
@@ -49,6 +50,14 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
 
         public void setMsgOut(long msgOut) {
             this.msgOut = msgOut;
+        }
+
+        public long getMsgDrop() {
+            return msgDrop;
+        }
+
+        public void setMsgDrop(long msgDrop) {
+            this.msgDrop = msgDrop;
         }
 
         public long getMsgInSize() {
@@ -251,11 +260,18 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
                 metric.addMetric("Pending Size", res.getValues().get("TotalMsgBytes").toString());
             }
         }
-        lastRecords.put(exchangeName, currentRecord);
+
         long numMsgsDropped = numMsgsIn - numMsgsOut - numMsgs;
-        q.getResults().get(0).addValue("NumMsgDropped", String.valueOf(numMsgsDropped));
         metric.addMetric("Dropped", String.valueOf(numMsgsDropped));
-        
+        if(lastRecord == null || lastRecord.getMsgDrop() > numMsgsDropped) {
+            q.getResults().get(0).addValue("NumMsgDropped", "0");
+        }
+        else{
+            q.getResults().get(0).addValue("NumMsgDropped", String.valueOf((long) ((float) (numMsgsDropped - lastRecord.getMsgDrop()) / (timestamp - lastRecord.getTimestamp()) * 1000)));
+        }
+        currentRecord.setMsgDrop(numMsgsDropped);
+        lastRecords.put(exchangeName, currentRecord);
+
         writer.validateSetup(q);
         writer.doWrite(q);
         

@@ -41,7 +41,7 @@ module Portal
 		info.push("--daemon")
 		info.push(ENV['rrdcached_sock'])
 	    end
-	    if RRD::Wrapper.graph("#{ENV['ROOT']}/public/images/#{File.basename(rrdfile)}.#{label}.png", "--start", (Time.now.to_i - eval(range)).to_s, *info) == false then
+	    if RRD::Wrapper.graph("#{ENV['ROOT']}/public/images/#{File.basename(rrdfile)}.#{label}.#{range}.png", "--start", (Time.now.to_i - eval(range)).to_s, *info) == false then
 		puts RRD::Wrapper.error
 	    end
         end
@@ -78,7 +78,7 @@ module Portal
                 result.push "LINE#{line[:width]}:#{line[:label]}#{line[:color]}:#{line[:label]}"
             end
 
-            img_name=Digest::MD5.hexdigest("#{selected}") + ".#{label}.png"
+            img_name=Digest::MD5.hexdigest("#{selected}") + ".#{label}.#{range}.png"
 	    if ENV['rrdcached_sock'] != nil && File.exist?(ENV['rrdcached_sock']) then
 		result.push("--daemon")
 		result.push(ENV['rrdcached_sock'])

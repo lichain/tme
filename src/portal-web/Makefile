@@ -97,3 +97,4 @@ clean:
 	rm -rf src/lib/ruby
 	rm -rf src/.bundle
 	rm -rf build
+	rm -rf src/public/images/*

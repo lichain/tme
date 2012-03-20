@@ -86,7 +86,12 @@ public class ExchangeMetricCollector {
                     server.setHost(broker.getHost());
                     server.setUsername("admin");
                     server.setPassword("admin");
-                    server.setUrl(getJMXUrl(broker.getHost()));
+                    String jmxurl = getJMXUrl(broker.getHost());
+                    if(jmxurl == null) {
+                        logger.error("cannot obtain JMX URL from broker {}", broker.getHost());
+                        continue;
+                    }
+                    server.setUrl(jmxurl);
 
                     try {
                         server.addQuery(createQuery());

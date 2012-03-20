@@ -37,7 +37,13 @@ module Portal
 
         def graph(label, rrdfile, range)
             info = generate(rrdfile)
-            RRD::Wrapper.graph("#{ENV['ROOT']}/public/images/#{File.basename(rrdfile)}.#{label}.png", "--start", (Time.now.to_i - eval(range)).to_s, *info)
+	    if ENV['rrdcached_sock'] != nil && File.exist?(ENV['rrdcached_sock']) then
+		info.push("--daemon")
+		info.push(ENV['rrdcached_sock'])
+	    end
+	    if RRD::Wrapper.graph("#{ENV['ROOT']}/public/images/#{File.basename(rrdfile)}.#{label}.png", "--start", (Time.now.to_i - eval(range)).to_s, *info) == false then
+		puts RRD::Wrapper.error
+	    end
         end
 
         def merge(label, rrddir, selected, range)
@@ -73,10 +79,13 @@ module Portal
             end
 
             img_name=Digest::MD5.hexdigest("#{selected}") + ".#{label}.png"
-            if RRD::Wrapper.graph("#{ENV['ROOT']}/public/images/#{img_name}", "--start", (Time.now.to_i - eval(range)).to_s, *result) == false then
-                puts RRD::Wrapper.error
+	    if ENV['rrdcached_sock'] != nil && File.exist?(ENV['rrdcached_sock']) then
+		result.push("--daemon")
+		result.push(ENV['rrdcached_sock'])
 	    end
-
+	    if RRD::Wrapper.graph("#{ENV['ROOT']}/public/images/#{img_name}", "--start", (Time.now.to_i - eval(range)).to_s, *result) == false then
+		puts RRD::Wrapper.error
+	    end
             img_name
         end
 

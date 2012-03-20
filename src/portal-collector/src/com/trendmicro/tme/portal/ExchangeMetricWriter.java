@@ -28,6 +28,54 @@ import com.sun.messaging.AdminConnectionConfiguration;
 import com.sun.messaging.AdminConnectionFactory;
 
 public class ExchangeMetricWriter extends BaseOutputWriter {
+    static class Record {
+        private long msgIn = 0;
+        private long msgOut = 0;
+        private long msgInSize = 0;
+        private long msgOutSize = 0;
+        private long timestamp = 0;
+
+        public long getMsgIn() {
+            return msgIn;
+        }
+
+        public void setMsgIn(long msgIn) {
+            this.msgIn = msgIn;
+        }
+
+        public long getMsgOut() {
+            return msgOut;
+        }
+
+        public void setMsgOut(long msgOut) {
+            this.msgOut = msgOut;
+        }
+
+        public long getMsgInSize() {
+            return msgInSize;
+        }
+
+        public void setMsgInSize(long msgInSize) {
+            this.msgInSize = msgInSize;
+        }
+
+        public long getMsgOutSize() {
+            return msgOutSize;
+        }
+
+        public void setMsgOutSize(long msgOutSize) {
+            this.msgOutSize = msgOutSize;
+        }
+
+        public long getTimestamp() {
+            return timestamp;
+        }
+
+        public void setTimestamp(long timestamp) {
+            this.timestamp = timestamp;
+        }
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(ExchangeMetricWriter.class);
     private static final String[] MBEAN_INVOKE_SIG = new String[] {
         String.class.getName()
@@ -40,6 +88,7 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
     private Pattern namePattern = Pattern.compile(".*,name=\"([^\"]*)\",.*");
     private Pattern typePattern = Pattern.compile(".*desttype=(.),.*");
     private ObjectMapper mapper = new ObjectMapper();
+    private HashMap<String, Record> lastRecords= new HashMap<String, Record>();
     
     private Map<String, RRDToolWriter> writerMap = new HashMap<String, RRDToolWriter>();
     
@@ -133,9 +182,13 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
         
         queryClients(q.getServer().getHost(), q.getResults().get(0).getTypeName(), metric);
         
+        Record lastRecord = lastRecords.get(exchangeName);
+        long timestamp = System.currentTimeMillis();
         long numMsgs = 0;
         long numMsgsIn = 0;
         long numMsgsOut = 0;
+        Record currentRecord = new Record();
+        currentRecord.setTimestamp(timestamp);
         for(Result res : q.getResults()) {
             if(res.getAttributeName().equals("NumMsgs")) {
                 numMsgs = Long.valueOf((String) res.getValues().get("NumMsgs"));
@@ -144,10 +197,24 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
             else if(res.getAttributeName().equals("NumMsgsIn")) {
                 numMsgsIn = Long.valueOf((String) res.getValues().get("NumMsgsIn"));
                 metric.addMetric("Enqueue", res.getValues().get("NumMsgsIn").toString());
+                if(lastRecord == null || lastRecord.getMsgIn() > numMsgsIn) {
+                    res.addValue("NumMsgsIn", "0");
+                }
+                else {
+                    res.addValue("NumMsgsIn", String.valueOf((long) ((float) (numMsgsIn - lastRecord.getMsgIn()) / (timestamp - lastRecord.getTimestamp()) * 1000)));
+                }
+                currentRecord.setMsgIn(numMsgsIn);
             }
             else if(res.getAttributeName().equals("NumMsgsOut")) {
                 numMsgsOut = Long.valueOf((String) res.getValues().get("NumMsgsOut"));
                 metric.addMetric("Dequeue", res.getValues().get("NumMsgsOut").toString());
+                if(lastRecord == null || lastRecord.getMsgOut() > numMsgsOut) {
+                    res.addValue("NumMsgsOut", "0");
+                }
+                else {
+                    res.addValue("NumMsgsOut", String.valueOf((long) ((float) (numMsgsOut - lastRecord.getMsgOut()) / (timestamp - lastRecord.getTimestamp()) * 1000)));
+                }
+                currentRecord.setMsgOut(numMsgsOut);
             }
             else if(res.getAttributeName().equals("NumMsgsPendingAcks")) {
                 metric.addMetric("Pending ACK", res.getValues().get("NumMsgsPendingAcks").toString());
@@ -159,15 +226,32 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
                 metric.addMetric("Producers", res.getValues().get("NumProducers").toString());
             }
             else if(res.getAttributeName().equals("MsgBytesIn")) {
+                long numMsgsInSize = Long.valueOf((String) res.getValues().get("MsgBytesIn"));
                 metric.addMetric("Enqueue Size", res.getValues().get("MsgBytesIn").toString());
+                if(lastRecord == null || lastRecord.getMsgInSize() > numMsgsInSize) {
+                    res.addValue("MsgBytesIn", "0");
+                }
+                else {
+                    res.addValue("MsgBytesIn", String.valueOf((long) ((float) (numMsgsInSize - lastRecord.getMsgInSize()) / (timestamp - lastRecord.getTimestamp()) * 1000)));
+                }
+                currentRecord.setMsgInSize(numMsgsInSize);
             }
             else if(res.getAttributeName().equals("MsgBytesOut")) {
+                long numMsgsOutSize = Long.valueOf((String) res.getValues().get("MsgBytesOut"));
                 metric.addMetric("Dequeue Size", res.getValues().get("MsgBytesOut").toString());
+                if(lastRecord == null || lastRecord.getMsgOutSize() > numMsgsOutSize) {
+                    res.addValue("MsgBytesOut", "0");
+                }
+                else {
+                    res.addValue("MsgBytesOut", String.valueOf((long) ((float) (numMsgsOutSize - lastRecord.getMsgOutSize()) / (timestamp - lastRecord.getTimestamp()) * 1000)));
+                }
+                currentRecord.setMsgOutSize(numMsgsOutSize);
             }
             else if(res.getAttributeName().equals("TotalMsgBytes")) {
                 metric.addMetric("Pending Size", res.getValues().get("TotalMsgBytes").toString());
             }
         }
+        lastRecords.put(exchangeName, currentRecord);
         long numMsgsDropped = numMsgsIn - numMsgsOut - numMsgs;
         q.getResults().get(0).addValue("NumMsgDropped", String.valueOf(numMsgsDropped));
         metric.addMetric("Dropped", String.valueOf(numMsgsDropped));

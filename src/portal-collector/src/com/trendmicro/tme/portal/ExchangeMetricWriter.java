@@ -139,11 +139,18 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
             String[] consumerIDs = (String[]) connection.invoke(exchangeManagerName, "getConsumerIDs", null, null);
             if(consumerIDs != null) {
                 for(String consumerID : consumerIDs) {
-                    CompositeData info = (CompositeData) connection.invoke(consumerManagerName, "getConsumerInfoByID", new Object[] {
-                        consumerID
-                    }, MBEAN_INVOKE_SIG);
-                    if(info != null) {
-                        metric.addConsumer(info.get("Host").toString());
+                    if(consumerID != null) {
+                        try {
+                            CompositeData info = (CompositeData) connection.invoke(consumerManagerName, "getConsumerInfoByID", new Object[] {
+                                consumerID
+                            }, MBEAN_INVOKE_SIG);
+                            if(info != null) {
+                                metric.addConsumer(info.get("Host").toString());
+                            }
+                        }
+                        catch(Exception e) {
+                            logger.warn("cannot get info of consumer ID {}", consumerID);
+                        }
                     }
                 }
             }
@@ -151,11 +158,18 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
             String[] producerIDs = (String[]) connection.invoke(exchangeManagerName, "getProducerIDs", null, null);
             if(producerIDs != null) {
                 for(String producerID : producerIDs) {
-                    CompositeData info = (CompositeData) connection.invoke(producerManagerName, "getProducerInfoByID", new Object[] {
-                        producerID
-                    }, MBEAN_INVOKE_SIG);
-                    if(info != null) {
-                        metric.addProducer(info.get("Host").toString());
+                    if(producerID != null) {
+                        try {
+                            CompositeData info = (CompositeData) connection.invoke(producerManagerName, "getProducerInfoByID", new Object[] {
+                                producerID
+                            }, MBEAN_INVOKE_SIG);
+                            if(info != null) {
+                                metric.addProducer(info.get("Host").toString());
+                            }
+                        }
+                        catch(Exception e) {
+                            logger.warn("cannot get info of producer ID {}", producerID);
+                        }
                     }
                 }
             }
@@ -198,6 +212,7 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
         }
         catch(Exception e) {
             logger.error("Cannot obtain consumer and producer information for exchange {} on broker {}", q.getServer().getHost(), exchangeName);
+            logger.error(e.getMessage(), e);
         }
 
         Record lastRecord = lastRecords.get(exchangeName);

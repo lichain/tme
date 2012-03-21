@@ -41,11 +41,11 @@ module Portal
             @name = "#{settings.rrddir}/#{params[:name]}"
             @file = @name + ".rrd"
 
-			range = request.cookies["range"]
-			range ||= "10.minutes"
+			@range = request.cookies["range"]
+			@range ||= "10.minutes"
 
             settings.canvas.pictures.each do |label, pic|
-                pic.graph(label, @file, range)
+                pic.graph(label, @file, @range)
             end
 
             respond_to do |format|
@@ -75,12 +75,12 @@ module Portal
         end
 
 	post "/merge" do
-	    range = request.cookies["range"]
-	    range ||= "10.minutes"
+	    @range = request.cookies["range"]
+	    @range ||= "10.minutes"
 	    @imgs = []
 
             settings.canvas.pictures.each do |label, pic|
-                img = pic.merge(label, settings.rrddir, @params[:selected], range)
+                img = pic.merge(label, settings.rrddir, @params[:selected], @range)
 		@imgs.push(img)
             end
 

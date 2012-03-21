@@ -142,7 +142,9 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
                     CompositeData info = (CompositeData) connection.invoke(consumerManagerName, "getConsumerInfoByID", new Object[] {
                         consumerID
                     }, MBEAN_INVOKE_SIG);
-                    metric.addConsumer(info.get("Host").toString());
+                    if(info != null) {
+                        metric.addConsumer(info.get("Host").toString());
+                    }
                 }
             }
             
@@ -152,7 +154,9 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
                     CompositeData info = (CompositeData) connection.invoke(producerManagerName, "getProducerInfoByID", new Object[] {
                         producerID
                     }, MBEAN_INVOKE_SIG);
-                    metric.addProducer(info.get("Host").toString());
+                    if(info != null) {
+                        metric.addProducer(info.get("Host").toString());
+                    }
                 }
             }
         }
@@ -188,9 +192,14 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
         
         RRDToolWriter writer = getWriter(q.getServer().getHost(), exchangeName, isQueue);
         ExchangeMetric metric = new ExchangeMetric(q.getServer().getHost(), isQueue ? "queue": "topic", exchangeName, String.format("%s/%s-%s.rrd", outputPath, isQueue ? "queue": "topic", exchangeName));
-        
-        queryClients(q.getServer().getHost(), q.getResults().get(0).getTypeName(), metric);
-        
+
+        try {
+            queryClients(q.getServer().getHost(), q.getResults().get(0).getTypeName(), metric);
+        }
+        catch(Exception e) {
+            logger.error("Cannot obtain consumer and producer information for exchange {} on broker {}", q.getServer().getHost(), exchangeName);
+        }
+
         Record lastRecord = lastRecords.get(exchangeName);
         long timestamp = System.currentTimeMillis();
         long numMsgs = 0;

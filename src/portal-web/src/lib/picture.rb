@@ -26,6 +26,10 @@ module Portal
             result = []
             @lines.each_with_index do |line, i|
                 result.push "LINE#{line[:width]}:#{line[:label]}#{line[:color]}:#{line[:label]}"
+		if line[:label]['Dequeue'] != nil || line[:label]['Enqueue'] != nil then
+		    result.push "VDEF:#{line[:label]}total=#{line[:label]},TOTAL"
+		    result.push "GPRINT:#{line[:label]}total:Total#{line[:label]}\\:%lg%s"
+		end
             end
             result
         end
@@ -76,6 +80,10 @@ module Portal
 
             @lines.each do |line|
                 result.push "LINE#{line[:width]}:#{line[:label]}#{line[:color]}:#{line[:label]}"
+		if line[:label]['Dequeue'] != nil || line[:label]['Enqueue'] != nil then
+		    result.push "VDEF:#{line[:label]}total=#{line[:label]},TOTAL"
+		    result.push "GPRINT:#{line[:label]}total:Total#{line[:label]}\\:%lg%s"
+		end
             end
 
             img_name=Digest::MD5.hexdigest("#{selected}") + ".#{label}.#{range}.png"

@@ -1,5 +1,5 @@
 <div class="page-header">
-    <h3><%= @params[:name] %></h3>
+    <h3><%= @params[:name] %> <%= @lastupdate %></h3>
     <input class="range-button" type=button value="10.minutes" onclick="setRange(this.value);location.reload();">&nbsp;
     <input class="range-button" type=button value="1.hour" onclick="setRange(this.value);location.reload();">&nbsp;
     <input class="range-button" type=button value="6.hours" onclick="setRange(this.value);location.reload();">&nbsp;

@@ -43,6 +43,8 @@ module Portal
 
 			@range = request.cookies["range"]
 			@range ||= "10.minutes"
+	    json = JSON.parse( File.read(@name+".json"), :symbolize_names => true )
+	    @lastupdate = Time.at(json[:timestamp]/1000)
 
             settings.canvas.pictures.each do |label, pic|
                 pic.graph(label, @file, @range)
@@ -50,7 +52,6 @@ module Portal
 
             respond_to do |format|
                 format.html { 
-                    json = JSON.parse( File.read(@name+".json"), :symbolize_names => true )
                     @metrics = json[:metrics]
                     @consumers = json[:consumers]
                     @producers = json[:producers]
@@ -61,11 +62,10 @@ module Portal
                         status 404
                         "Requested exchange #{params[:name]} not found!"
                     else
-                        JSON.parse( File.read(@name+".json"), :symbolize_names => true )[:metrics].to_json
+                        json[:metrics].to_json
                     end
                 }
                 format.js {
-                    json = JSON.parse( File.read(@name+".json"), :symbolize_names => true )
                     @metrics = json[:metrics]
                     @consumers = json[:consumers]
                     @producers = json[:producers]

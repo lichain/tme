@@ -1,5 +1,11 @@
 <div class="page-header">
-    <h1>Exchanges Graphics</h1>
+    <h3><%= @params[:name] %></h3>
+    <input class="range-button" type=button value="10.minutes" onclick="setRange(this.value);location.reload();">&nbsp;
+    <input class="range-button" type=button value="1.hour" onclick="setRange(this.value);location.reload();">&nbsp;
+    <input class="range-button" type=button value="6.hours" onclick="setRange(this.value);location.reload();">&nbsp;
+    <input class="range-button" type=button value="1.day" onclick="setRange(this.value);location.reload();">&nbsp;
+    <input class="range-button" type=button value="1.week" onclick="setRange(this.value);location.reload();">&nbsp;
+    <input class="range-button" type=button value="1.month" onclick="setRange(this.value);location.reload();">&nbsp;
 </div>
 <div class="span14">
 	<ul id=\"metric_list\">
@@ -7,11 +13,12 @@
 		<li>Consumer Hosts: <%= escape_html @consumers %></li>
 		<li>Producer Hosts: <%= escape_html @producers %></li>
 	</ul>
-    <img class=rrd src="/images/<%= File.basename(@file) %>.raw.png">
-    <img class=rrd src="/images/<%= File.basename(@file) %>.size.png">
-    <img class=rrd src="/images/<%= File.basename(@file) %>.source.png">
+    <img class=rrd src="/images/<%= File.basename(@file) %>.raw.<%= @range %>.png">
+    <img class=rrd src="/images/<%= File.basename(@file) %>.size.<%= @range %>.png">
+    <img class=rrd src="/images/<%= File.basename(@file) %>.source.<%= @range %>.png">
 </div>
 
 <script>
 setTimeout('location.reload()', 30000);
+setRange($.cookie('range'));
 </script>

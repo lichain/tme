@@ -59,7 +59,7 @@ function openModal(title, initContent, updateMethod){
 	$('#rrdmodal > .modal-header > h5').empty().append('<span>' + title + '</span><br>')
 		.append('<input class="range-button" type=button value="10.minutes" onclick="setRange(this.value);' + updateMethod + '">&nbsp;')
 		.append('<input class="range-button" type=button value="1.hour" onclick="setRange(this.value);' + updateMethod + '">&nbsp;')
-		.append('<input class="range-button" type=button value="6.hour" onclick="setRange(this.value);' + updateMethod + '">&nbsp;')
+		.append('<input class="range-button" type=button value="6.hours" onclick="setRange(this.value);' + updateMethod + '">&nbsp;')
 		.append('<input class="range-button" type=button value="1.day" onclick="setRange(this.value);' + updateMethod + '">&nbsp;')
 		.append('<input class="range-button" type=button value="1.week" onclick="setRange(this.value);' + updateMethod + '">&nbsp;')
 		.append('<input class="range-button" type=button value="1.month" onclick="setRange(this.value);' + updateMethod + '">&nbsp;');

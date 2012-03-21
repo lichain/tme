@@ -52,6 +52,11 @@ module Portal
 
             respond_to do |format|
                 format.html { 
+		    if File.exist?(@name + ".archive") then
+			@archive = JSON.parse('[' + File.read(@name + ".archive")[0..-3] + ']', :symbolize_names => true)
+		    else
+			@archive = []
+		    end
                     @metrics = json[:metrics]
                     @consumers = json[:consumers]
                     @producers = json[:producers]

@@ -16,6 +16,30 @@
     <img class=rrd src="/images/<%= File.basename(@file) %>.raw.<%= @range %>.png">
     <img class=rrd src="/images/<%= File.basename(@file) %>.size.<%= @range %>.png">
     <img class=rrd src="/images/<%= File.basename(@file) %>.source.<%= @range %>.png">
+    <table>
+	<thead>
+	    <tr>
+		<th>Time</th>
+		<th>Enqueue</th>
+		<th>Dequeue</th>
+		<th>Pending</th>
+		<th>Consumer</th>
+		<th>Producer</th>
+	    </tr>
+	</thead>
+	<tbody>
+	    <% @archive.each do |row| %>
+	    <tr>
+		<td><%= Time.at(row[:timestamp]/1000) %></td>
+		<td><%= row[:metrics][:Enqueue] %></td>
+		<td><%= row[:metrics][:Dequeue] %></td>
+		<td><%= row[:metrics][:Pending] %></td>
+		<td><%= row[:metrics][:Consumers] %></td>
+		<td><%= row[:metrics][:Producers] %></td>
+	    </tr>
+	    <% end %>
+	</tbody>
+    </table>
 </div>
 
 <script>

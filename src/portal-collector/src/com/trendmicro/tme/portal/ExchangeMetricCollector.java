@@ -76,7 +76,29 @@ public class ExchangeMetricCollector {
         }
     }
 
+    private void archiveMetrics() {
+        ProcessBuilder processBuilder = new ProcessBuilder(new String[] {
+            "/opt/trend/tme/bin/archive_metrics.sh", (String) writer.getSettings().get("outputPath")
+        });
+        processBuilder.redirectErrorStream(true);
+        try {
+            Process process = processBuilder.start();
+            String output = IOUtils.toString(process.getInputStream());
+            if(process.waitFor() != 0) {
+                logger.error("error executing archive script: {}", output);
+            }
+            process.destroy();
+        }
+        catch(IOException e) {
+            logger.error(e.getMessage(), e);
+        }
+        catch(InterruptedException e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
     public void run() {
+        long lastArchiveTimestamp = System.currentTimeMillis();
         logger.info("Exchange Metric Collector started");
         while(true) {
             JmxProcess jmxProcess = new JmxProcess();
@@ -109,6 +131,12 @@ public class ExchangeMetricCollector {
             }
             catch(Exception e) {
                 logger.error("Error to collect metrics: ", e);
+            }
+
+            long currentTimestamp = System.currentTimeMillis();
+            if(currentTimestamp - lastArchiveTimestamp > 300000) {
+                lastArchiveTimestamp = currentTimestamp;
+                archiveMetrics();
             }
         }
     }

@@ -52,6 +52,7 @@ install: default
 	cp -f $(BINPATH)/portal-collector.sh $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
 	cp -f $(BINPATH)/install_tme-portal-collector.sh $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
 	cp -f $(BINPATH)/remove_tme-portal-collector.sh $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(BINPATH)/archive_metrics.sh $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
 	cp -f $(BUILDPATH)/*.jar $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
 	cp -rf $(LIBPATH)/* $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
 	cp -rf $(CONFPATH)/* $(BUILD_PREFIX)/$(INSTALLPATH)/$(CONFPATH)

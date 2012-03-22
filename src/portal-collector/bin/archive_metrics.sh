@@ -1,8 +1,8 @@
 #!/bin/sh
 
-if [ "$1" == "" ]
+if [ $# != 2 ]
 then
-    echo "Usage: $0 [rrddir]"
+    echo "Usage: $0 [rrd dir] [max record count]"
     exit 1
 fi
 
@@ -12,7 +12,7 @@ do
     archive=`echo $json | sed -e 's/\.json$/\.archive/g'`
     cat $json >> $archive
     echo "," >> $archive
-    tail -n 10 $archive > $archive.tmp
+    tail -n $2 $archive > $archive.tmp
     mv -f $archive.tmp $archive
 done
 

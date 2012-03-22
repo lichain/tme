@@ -6,12 +6,12 @@ function refresh(){
 }
 
 if($.cookie('range') == null){
-	$.cookie('range', '10.minutes');
+	$.cookie('range', '10.minutes', { path: '/' });
 }
 
 function clearSelected(){
 	$('#filter')[0].value = '';
-	$.cookie('filter', '');
+	$.cookie('filter', '', { path: '/' });
 	$.uiTableFilter($('table#exchanges'), '');
 	$('.selectedExchange').each(function(){this.checked = false});
 }
@@ -34,7 +34,7 @@ function getSelected(){
 }
 
 function setRange(range){
-	$.cookie('range', range);
+	$.cookie('range', range, { path: '/' });
 	$('.range-button').css('background-color', 'white');
 	$('.range-button').each(function(){
 		if(this.value == range){

@@ -1,4 +1,6 @@
-$('#rrdmodal > .modal-header > h5 > span').append(' <%= @lastupdate %>');
+$('#rrdmodal > .modal-header > h5 > span').empty()
+    .append('<%= @params[:name] %> <%= @lastupdate %> ')
+    .append('<a href="/exchanges/<%= @params[:name] %>" target=_blank>Detail</a>');
 $("#rrdmodal > .modal-body")
     .empty()
     .append("<ul id=\"metric_list\"><% @metrics.each do |k,v| %><li><%= escape_html k %>: <%= escape_html v %></li><% end %></ul>")

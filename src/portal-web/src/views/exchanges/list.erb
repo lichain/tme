@@ -4,7 +4,7 @@
 
         $("#filter")
         .keyup(function() {
-            $.cookie('filter', this.value);
+            $.cookie('filter', this.value, { path: '/' });
             $.uiTableFilter( exchanges, this.value );
         })
         .keypress(function(e){

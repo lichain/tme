@@ -1,6 +1,5 @@
 package com.trendmicro.mist.cmd;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -50,6 +49,8 @@ import com.trendmicro.codi.lock.Lock.LockType;
 import com.trendmicro.codi.lock.ZLock;
 import com.trendmicro.mist.BrokerSpy;
 import com.trendmicro.mist.Daemon;
+import com.trendmicro.mist.client.MistClient;
+import com.trendmicro.mist.client.MistClient.Role;
 import com.trendmicro.mist.console.CommandExecutable;
 import com.trendmicro.mist.console.Console;
 import com.trendmicro.mist.mfr.ExchangeFarm;
@@ -58,7 +59,6 @@ import com.trendmicro.mist.proto.MistMessage.KeyValuePair;
 import com.trendmicro.mist.proto.ZooKeeperInfo;
 import com.trendmicro.mist.proto.ZooKeeperInfo.DropConfig;
 import com.trendmicro.mist.util.Exchange;
-import com.trendmicro.mist.util.Packet;
 import com.trendmicro.spn.common.util.Utils;
 import com.trendmicro.tme.mfr.BrokerFarm;
 
@@ -94,42 +94,21 @@ public class TmeConsole {
             }
 
             public void run() {
-                MistSession sess = new MistSession();
-                BufferedReader in = new BufferedReader(new InputStreamReader(sess.getInputStream()));
-                sess.invoke("");
-                int sess_id = -1;
+                MistClient sinkClient = null;
                 try {
-                    sess_id = Integer.parseInt(in.readLine().trim());
-                    sess.getThread().join();
-                    in.close();
-                    sess.getInputStream().close();
+                    sinkClient = new MistClient(Role.PRODUCER, 1);
+                    sinkClient.mount(true, fwdExchange.toString());
+                    sinkClient.attach();
                 }
                 catch(Exception e) {
                     e.printStackTrace();
                     return;
                 }
 
-                MistSink mistSink = new MistSink();
-                mistSink.invoke(String.format("%d --mount %s", sess_id, fwdExchange.toString()));
-                try {
-                    mistSink.getThread().join();
-                }
-                catch(InterruptedException e) {
-                }
-
-                BufferedOutputStream out = new BufferedOutputStream(mistSink.getOutputStream());
-                mistSink.invoke(sess_id + " --attach");
-
                 if(fwdExchange.getBroker() == null) {
                     ready = true;
                     try {
-                        out.close();
-                        mistSink.getOutputStream().close();
-                        mistSink.getThread().join();
-
-                        sess = new MistSession();
-                        sess.invoke(String.format("-d %d", sess_id));
-                        sess.getThread().join();
+                        sinkClient.close();
                     }
                     catch(Exception e) {
                         e.printStackTrace();
@@ -170,7 +149,6 @@ public class TmeConsole {
                         break;
                 }
 
-                Packet pack = new Packet();
                 while(!done) {
                     try {
                         javax.jms.Message msg = fromConsumer.receive(50);
@@ -204,8 +182,8 @@ public class TmeConsole {
                                 else
                                     msgBuilder.addProperties(KeyValuePair.newBuilder().setKey(key).setValue(value).build());
                             }
-                            pack.setPayload(msgBuilder.build().toByteArray());
-                            pack.write(out);
+                            sinkClient.writeMessage(msgBuilder.build());
+                            totalForwardedCount++;
                         }
                     }
                     catch(Exception e) {
@@ -218,14 +196,7 @@ public class TmeConsole {
                     fromSess.close();
                     fromConn.close();
 
-                    out.close();
-                    totalForwardedCount = mistSink.getMessageCount();
-                    mistSink.getOutputStream().close();
-                    mistSink.getThread().join();
-
-                    sess = new MistSession();
-                    sess.invoke(String.format("-d %d", sess_id));
-                    sess.getThread().join();
+                    sinkClient.close();
                 }
                 catch(Exception e) {
                     e.printStackTrace();

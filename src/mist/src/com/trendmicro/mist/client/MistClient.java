@@ -60,7 +60,7 @@ import com.trendmicro.mist.util.Packet;
  * <br>
  * 
  */
-@Deprecated
+
 public class MistClient {
     private static final int MISTD_PORT = 9498;
     private boolean isConsumer;

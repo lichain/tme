@@ -1,7 +1,7 @@
 <rrd_def>
      <path>${database}</path>
      <step>30</step>
-	 <datasource><name>NumMsgs82ff1e7ab6ff</name><type>GAUGE</type><heartbeat>400</heartbeat><min>0</min><max>U</max></datasource>
+	 <datasource><name>NumMsgs82ff1e7ab6ff</name><type>GAUGE</type><heartbeat>400</heartbeat><min>U</min><max>U</max></datasource>
 	 <datasource><name>NumMsgsInd604c03a7d</name><type>GAUGE</type><heartbeat>400</heartbeat><min>U</min><max>U</max></datasource>
 	 <datasource><name>NumMsgsOut352e0a04c</name><type>GAUGE</type><heartbeat>400</heartbeat><min>U</min><max>U</max></datasource>
 	 <datasource><name>NumMsgs4c353d7d1b5b</name><type>GAUGE</type><heartbeat>400</heartbeat><min>U</min><max>U</max></datasource>

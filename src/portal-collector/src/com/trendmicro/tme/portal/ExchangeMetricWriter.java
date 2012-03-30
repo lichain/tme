@@ -224,11 +224,11 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
         currentRecord.setTimestamp(timestamp);
         for(Result res : q.getResults()) {
             if(res.getAttributeName().equals("NumMsgs")) {
-                numMsgs = Long.valueOf((String) res.getValues().get("NumMsgs"));
+                numMsgs = (Long) res.getValues().get("NumMsgs");
                 metric.addMetric("Pending", res.getValues().get("NumMsgs").toString());
             }
             else if(res.getAttributeName().equals("NumMsgsIn")) {
-                numMsgsIn = Long.valueOf((String) res.getValues().get("NumMsgsIn"));
+                numMsgsIn = (Long) res.getValues().get("NumMsgsIn");
                 metric.addMetric("Enqueue", res.getValues().get("NumMsgsIn").toString());
                 if(lastRecord == null || lastRecord.getMsgIn() > numMsgsIn) {
                     res.addValue("NumMsgsIn", "0");
@@ -239,7 +239,7 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
                 currentRecord.setMsgIn(numMsgsIn);
             }
             else if(res.getAttributeName().equals("NumMsgsOut")) {
-                numMsgsOut = Long.valueOf((String) res.getValues().get("NumMsgsOut"));
+                numMsgsOut = (Long) res.getValues().get("NumMsgsOut");
                 metric.addMetric("Dequeue", res.getValues().get("NumMsgsOut").toString());
                 if(lastRecord == null || lastRecord.getMsgOut() > numMsgsOut) {
                     res.addValue("NumMsgsOut", "0");
@@ -259,7 +259,7 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
                 metric.addMetric("Producers", res.getValues().get("NumProducers").toString());
             }
             else if(res.getAttributeName().equals("MsgBytesIn")) {
-                long numMsgsInSize = Long.valueOf((String) res.getValues().get("MsgBytesIn"));
+                long numMsgsInSize = (Long) res.getValues().get("MsgBytesIn");
                 metric.addMetric("Enqueue Size", res.getValues().get("MsgBytesIn").toString());
                 if(lastRecord == null || lastRecord.getMsgInSize() > numMsgsInSize) {
                     res.addValue("MsgBytesIn", "0");
@@ -270,7 +270,7 @@ public class ExchangeMetricWriter extends BaseOutputWriter {
                 currentRecord.setMsgInSize(numMsgsInSize);
             }
             else if(res.getAttributeName().equals("MsgBytesOut")) {
-                long numMsgsOutSize = Long.valueOf((String) res.getValues().get("MsgBytesOut"));
+                long numMsgsOutSize = (Long) res.getValues().get("MsgBytesOut");
                 metric.addMetric("Dequeue Size", res.getValues().get("MsgBytesOut").toString());
                 if(lastRecord == null || lastRecord.getMsgOutSize() > numMsgsOutSize) {
                     res.addValue("MsgBytesOut", "0");

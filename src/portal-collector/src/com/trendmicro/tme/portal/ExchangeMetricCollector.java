@@ -22,11 +22,11 @@ import com.trendmicro.mist.proto.ZooKeeperInfo.Broker;
 public class ExchangeMetricCollector {
     private static final String CONFIG_PATH = System.getProperty("com.trendmicro.tme.portal.collector.conf", "/opt/trend/tme/conf/portal-collector/portal-collector.properties");
     private static final Logger logger = LoggerFactory.getLogger(ExchangeMetricCollector.class);
-    
+
     private BrokerFarm brokerFarm;
     private ExchangeMetricWriter writer;
     private ExchangeMetricArchiver archiver;
-    
+
     private Query createQuery() {
         Query query = new Query();
         query.setObj("com.sun.messaging.jms.server:type=Destination,subtype=Monitor,desttype=*,name=*");
@@ -42,13 +42,13 @@ public class ExchangeMetricCollector {
         query.addOutputWriter(writer);
         return query;
     }
-    
+
     public ExchangeMetricCollector(BrokerFarm brokerFarm, ExchangeMetricWriter writer, ExchangeMetricArchiver archiver) {
         this.brokerFarm = brokerFarm;
         this.writer = writer;
         this.archiver = archiver;
     }
-    
+
     private String getJMXUrl(String broker) {
         Socket sock = new Socket();
         try {
@@ -107,23 +107,23 @@ public class ExchangeMetricCollector {
             JmxTransformer transformer = new JmxTransformer();
             try {
                 transformer.executeStandalone(jmxProcess);
+                transformer.setRunEndlessly(false);
                 Thread.sleep(10000);
             }
             catch(Exception e) {
                 logger.error("Error to collect metrics: ", e);
             }
-
             archiver.execute();
         }
     }
-    
+
     public static void main(String[] args) {
         try {
             Properties prop = new Properties();
             prop.load(new FileInputStream(CONFIG_PATH));
             // Let the system properties override the ones in the config file
             prop.putAll(System.getProperties());
-            
+
             String zkQuorum = prop.getProperty("com.trendmicro.tme.portal.collector.zookeeper.quorum");
             int zkTimeout = Integer.valueOf(prop.getProperty("com.trendmicro.tme.portal.collector.zookeeper.timeout"));
 
@@ -131,13 +131,11 @@ public class ExchangeMetricCollector {
             if(!ZKSessionManager.instance().waitConnected(zkTimeout)) {
                 throw new Exception("Cannot connect to ZooKeeper Quorom " + zkQuorum);
             }
-            
+
             ExchangeMetricWriter writer = new ExchangeMetricWriter();
             writer.addSetting("templateFile", prop.getProperty("com.trendmicro.tme.portal.collector.template"));
             writer.addSetting("outputPath", prop.getProperty("com.trendmicro.tme.portal.collector.outputdir"));
-            ExchangeMetricArchiver archiver = new ExchangeMetricArchiver((String) prop.getProperty("com.trendmicro.tme.portal.collector.outputdir"),
-                (String) prop.getProperty("com.trendmicro.tme.portal.collector.archiver.maxrecords"),
-                Integer.valueOf((String)prop.getProperty("com.trendmicro.tme.portal.collector.archiver.interval")));
+            ExchangeMetricArchiver archiver = new ExchangeMetricArchiver((String) prop.getProperty("com.trendmicro.tme.portal.collector.outputdir"), (String) prop.getProperty("com.trendmicro.tme.portal.collector.archiver.maxrecords"), Integer.valueOf((String) prop.getProperty("com.trendmicro.tme.portal.collector.archiver.interval")));
             ExchangeMetricCollector collector = new ExchangeMetricCollector(new BrokerFarm(), writer, archiver);
             collector.run();
         }

@@ -60,6 +60,8 @@ fi
 
 %files
 
+%config /opt/trend/tme/conf/common/common-env.sh
+
 %dir 
 /opt/trend/tme
 

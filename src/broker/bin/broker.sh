@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source /opt/trend/tme/conf/common/common-env.sh
+
 MEMORY=`sed -e '/imq\.system\.max_size/!d ; s/.*=//g' /opt/trend/tme/conf/broker/config.properties`
 
 CLASSPATH="/opt/trend/tme/conf/broker:/opt/trend/tme/lib/*"
@@ -7,9 +9,9 @@ JVM_ARGS="-server -Xmx$MEMORY -Xms$MEMORY -Dcom.sun.management.jmxremote.port=55
 
 if [ "$1" == "daemon" ]
 then
-    java -cp $CLASSPATH $JVM_ARGS com.trendmicro.tme.broker.EmbeddedOpenMQ > /var/log/tme/broker.err 2>&1 &
+    $JAVA_CMD -cp $CLASSPATH $JVM_ARGS com.trendmicro.tme.broker.EmbeddedOpenMQ > /var/log/tme/broker.err 2>&1 &
     echo $! > /var/run/tme/tme-broker.pid
 else
-    java -cp $CLASSPATH $JVM_ARGS com.trendmicro.tme.broker.EmbeddedOpenMQ
+    $JAVA_CMD -cp $CLASSPATH $JVM_ARGS com.trendmicro.tme.broker.EmbeddedOpenMQ
 fi
 

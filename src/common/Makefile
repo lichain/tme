@@ -47,8 +47,10 @@ install: default
 	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)
 	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
 	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
+	mkdir -p $(BUILD_PREFIX)/$(INSTALLPATH)/$(CONFPATH)/common
 	cp -f $(BINPATH)/daemon.sh $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
 	cp -f $(BINPATH)/create_zookeeper_nodes.sh $(BUILD_PREFIX)/$(INSTALLPATH)/$(BINPATH)
+	cp -f $(CONFPATH)/common/common-env.sh $(BUILD_PREFIX)/$(INSTALLPATH)/$(CONFPATH)/common
 	cp -rf $(LIBPATH)/* $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
 	cp -f $(BUILDPATH)/*.jar $(BUILD_PREFIX)/$(INSTALLPATH)/$(LIBPATH)
 

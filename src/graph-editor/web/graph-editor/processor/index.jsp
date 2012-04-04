@@ -3,24 +3,24 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<c:set var="prefix"><%= getServletConfig().getInitParameter("pathprefix") %></c:set>
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 <title>Processors</title>
-<link rel="stylesheet" type="text/css" href="/static/canviz/canviz.css" />
-<link rel="stylesheet" type="text/css" href="/static/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.8.16.custom.css" />
-<link rel="stylesheet" type="text/css" href="/static/graph-editor.css" />
+<link rel="stylesheet" type="text/css" href="${prefix}/static/canviz/canviz.css" />
+<link rel="stylesheet" type="text/css" href="${prefix}/static/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.8.16.custom.css" />
+<link rel="stylesheet" type="text/css" href="${prefix}/static/graph-editor.css" />
 
-<script type="text/javascript" src="/static/jquery/jquery.js"></script>
-<script type="text/javascript" src="/static/jquery/jquery.uitablefilter.js"></script>
-<script type="text/javascript" src="/static/jquery/jquery.tablesorter.js"></script>
+<script type="text/javascript" src="${prefix}/static/jquery/jquery.js"></script>
+<script type="text/javascript" src="${prefix}/static/jquery/jquery.uitablefilter.js"></script>
 <script type="text/javascript">
   jQuery.noConflict();
 </script>
-<script type="text/javascript" src="/static/jquery/jquery-ui/js/jquery-ui-1.8.16.custom.min.js"></script>
-<script type="text/javascript" src="/static/canviz/prototype/prototype.js"></script>
-<script type="text/javascript" src="/static/canviz/canviz.js"></script>
-<script type="text/javascript" src="/static/canviz/path/path.js"></script>
+<script type="text/javascript" src="${prefix}/static/jquery/jquery-ui/js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" src="${prefix}/static/canviz/prototype/prototype.js"></script>
+<script type="text/javascript" src="${prefix}/static/canviz/canviz.js"></script>
+<script type="text/javascript" src="${prefix}/static/canviz/path/path.js"></script>
 
 <script type="text/javascript">
 	function add_processor(){
@@ -31,9 +31,9 @@
 		jQuery.ajax({
 			type: "PUT",
 			async: false,
-			url: '/webapp/graph-editor/processor/' + name,
+			url: '${prefix}/webapp/graph-editor/processor/' + name,
 			success: function(){
-				location.href = '/webapp/graph-editor/processor/' + name;
+				location.href = '${prefix}/webapp/graph-editor/processor/' + name;
 			},
 			error: function(xhr,text,err){
 				alert(err);					
@@ -53,7 +53,7 @@
 			jQuery.ajax({
 				type: "DELETE",
 				async: false,
-				url: "/webapp/graph-editor/processor/" + processor,
+				url: "${prefix}/webapp/graph-editor/processor/" + processor,
 				error: function(xhr,text,err){
 					alert(err);					
 				}
@@ -91,7 +91,7 @@
 						<td><input type=checkbox class="processorSelected"
 							value="${processor}">
 						</td>
-						<td><a href="/webapp/graph-editor/processor/${processor}">${processor}</a>
+						<td><a href="${prefix}/webapp/graph-editor/processor/${processor}">${processor}</a>
 						</td>
 					</tr>
 				</c:forEach>

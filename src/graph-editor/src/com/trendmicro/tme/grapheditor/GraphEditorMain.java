@@ -10,6 +10,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jasper.servlet.JspServlet;
 import org.eclipse.jetty.http.security.Constraint;
 import org.eclipse.jetty.plus.jaas.JAASLoginService;
+import org.eclipse.jetty.rewrite.handler.RedirectPatternRule;
+import org.eclipse.jetty.rewrite.handler.RewriteHandler;
+import org.eclipse.jetty.rewrite.handler.RewriteRegexRule;
 import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.IdentityService;
@@ -35,11 +38,11 @@ public class GraphEditorMain {
     private static final Logger logger = LoggerFactory.getLogger(GraphEditorMain.class);
     
     private boolean secure = false;
-
+    
     public boolean isSecurityEnabled() {
         return secure;
     }
-
+    
     public void run() throws Exception {
         try {
             Properties prop = new Properties();
@@ -61,23 +64,25 @@ public class GraphEditorMain {
             
             handler.addServlet(new ServletHolder(new Proxy()), "/proxy/*");
             
+            String pathPrefix = prop.getProperty("com.trendmicro.tme.grapheditor.pathprefix", "");
             ServletHolder jspHolder = new ServletHolder(new JspServlet());
             jspHolder.setInitParameter("scratchdir", prop.getProperty("jasper.scratchdir", "/var/lib/tme/graph-editor/jsp"));
             jspHolder.setInitParameter("trimSpaces", "true");
             jspHolder.setInitParameter("portalhost", prop.getProperty("com.trendmicro.tme.grapheditor.portalhost", ""));
+            jspHolder.setInitParameter("pathprefix", pathPrefix);
             handler.addServlet(jspHolder, "*.jsp");
             
             String webdir = prop.getProperty("com.trendmicro.tme.grapheditor.webdir");
             handler.setResourceBase(webdir);
             logger.info("Web resource base is set to {}", webdir);
-
+            
             jerseyHolder.setInitParameter("com.sun.jersey.config.property.resourceConfigClass", "com.sun.jersey.api.core.PackagesResourceConfig");
             jerseyHolder.setInitParameter("com.sun.jersey.config.property.packages", "com.trendmicro.tme.grapheditor");
             handler.addServlet(jerseyHolder, "/webapp/graph-editor/*");
             
             FilterHolder loggingFilterHolder = new FilterHolder(new LoggingFilter());
             handler.addFilter(loggingFilterHolder, "/*", 1);
-
+            
             IdentityService identityService = null;
             try {
                 identityService = new ZKIdentityService("/global/acl/graph_editor_admins", ZKSessionManager.instance());
@@ -86,11 +91,11 @@ public class GraphEditorMain {
             catch(CODIException.NoNode e) {
                 logger.warn("ACL node /global/acl/graph_editor_admins not found! Graph Editor will run in insecure mode.");
             }
-
+            
             SessionHandler sessionHandler = new SessionHandler(new HashSessionManager());
             sessionHandler.getSessionManager().setIdManager(new HashSessionIdManager());
             handler.setSessionHandler(sessionHandler);
-
+            
             if(secure) {
                 Constraint constraint = new Constraint();
                 constraint.setName(Constraint.__FORM_AUTH);
@@ -98,15 +103,15 @@ public class GraphEditorMain {
                     "super", "admin", "guest"
                 });
                 constraint.setAuthenticate(true);
-
+                
                 ConstraintMapping cm = new ConstraintMapping();
                 cm.setConstraint(constraint);
                 cm.setPathSpec("/webapp/graph-editor/*");
-
+                
                 JAASLoginService jaasLogin = new JAASLoginService("TME Graph Editor");
                 jaasLogin.setLoginModuleName("ldaploginmodule");
                 jaasLogin.setIdentityService(identityService);
-
+                
                 ConstraintSecurityHandler securityHandler = new ConstraintSecurityHandler();
                 securityHandler.setConstraintMappings(new ConstraintMapping[] {
                     cm
@@ -114,21 +119,41 @@ public class GraphEditorMain {
                 securityHandler.setAuthenticator(new BasicAuthenticator());
                 securityHandler.setLoginService(jaasLogin);
                 securityHandler.setStrict(false);
-
+                
                 handler.setSecurityHandler(securityHandler);
             }
-
+            
+            RewriteHandler rewrite = new RewriteHandler();
+            rewrite.setRewriteRequestURI(true);
+            
+            RewriteRegexRule redirectRoot = new RewriteRegexRule();
+            redirectRoot.setRegex("^/$");
+            redirectRoot.setReplacement("/webapp/graph-editor/graph");
+            rewrite.addRule(redirectRoot);
+            
+            if(!pathPrefix.isEmpty()) {
+                RedirectPatternRule redirect = new RedirectPatternRule();
+                redirect.setPattern(pathPrefix + "/");
+                redirect.setLocation(pathPrefix + "/webapp/graph-editor/graph");
+                rewrite.addRule(redirect);
+                
+                RewriteRegexRule reverse = new RewriteRegexRule();
+                reverse.setRegex(pathPrefix + "/(.*)");
+                reverse.setReplacement("/$1");
+                rewrite.addRule(reverse);
+            }
+            rewrite.setHandler(handlers);
+            
             handlers.addHandler(handler);
             
             ResourceHandler resHandler = new ResourceHandler();
             resHandler.setResourceBase(webdir);
             resHandler.setDirectoriesListed(true);
-            resHandler.setWelcomeFiles(new String[]{"index.html"});
             handlers.addHandler(resHandler);
-
+            
             int port = Integer.valueOf(prop.getProperty("com.trendmicro.tme.grapheditor.port"));
             Server server = new Server(port);
-            server.setHandler(handlers);
+            server.setHandler(rewrite);
             server.setSessionIdManager(handler.getSessionHandler().getSessionManager().getIdManager());
             
             server.start();
@@ -149,7 +174,7 @@ public class GraphEditorMain {
             System.exit(-1);
         }
     }
-
+    
     public static void main(String[] args) throws Exception {
         new GraphEditorMain().run();
     }

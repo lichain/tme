@@ -3,25 +3,25 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<c:set var="prefix"><%= getServletConfig().getInitParameter("pathprefix") %></c:set>
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 <title>Graphs</title>
-<link rel="stylesheet" type="text/css" href="/static/canviz/canviz.css" />
-<link rel="stylesheet" type="text/css" href="/static/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.8.16.custom.css" />
-<link rel="stylesheet" type="text/css" href="/static/graph-editor.css" />
+<link rel="stylesheet" type="text/css" href="${prefix}/static/canviz/canviz.css" />
+<link rel="stylesheet" type="text/css" href="${prefix}/static/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.8.16.custom.css" />
+<link rel="stylesheet" type="text/css" href="${prefix}/static/graph-editor.css" />
 
-<script type="text/javascript" src="/static/jquery/jquery.js"></script>
+<script type="text/javascript" src="${prefix}/static/jquery/jquery.js"></script>
 <script type="text/javascript">
   jQuery.noConflict();
 </script>
-<script type="text/javascript" src="/static/jquery/jquery.cookie.js"></script>
-<script type="text/javascript" src="/static/jquery/jquery.uitablefilter.js"></script>
-<script type="text/javascript" src="/static/jquery/jquery.tablesorter.js"></script>
-<script type="text/javascript" src="/static/jquery/jquery-ui/js/jquery-ui-1.8.16.custom.min.js"></script>
-<script type="text/javascript" src="/static/canviz/prototype/prototype.js"></script>
-<script type="text/javascript" src="/static/canviz/canviz.js"></script>
-<script type="text/javascript" src="/static/canviz/path/path.js"></script>
+<script type="text/javascript" src="${prefix}/static/jquery/jquery.cookie.js"></script>
+<script type="text/javascript" src="${prefix}/static/jquery/jquery.uitablefilter.js"></script>
+<script type="text/javascript" src="${prefix}/static/jquery/jquery-ui/js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" src="${prefix}/static/canviz/prototype/prototype.js"></script>
+<script type="text/javascript" src="${prefix}/static/canviz/canviz.js"></script>
+<script type="text/javascript" src="${prefix}/static/canviz/path/path.js"></script>
 
 <script type="text/javascript">
 	if(jQuery.cookie('graph_editor_scale') == null){
@@ -36,9 +36,9 @@
 		jQuery.ajax({
 			type: "PUT",
 			async: false,
-			url: '/webapp/graph-editor/graph/' + name,
+			url: '${prefix}/webapp/graph-editor/graph/' + name,
 			success: function(){
-				location.href = '/webapp/graph-editor/graph/' + name;
+				location.href = '${prefix}/webapp/graph-editor/graph/' + name;
 			},
 			error: function(xhr,text,err){
 				alert(err);					
@@ -58,7 +58,7 @@
 			jQuery.ajax({
 				type: "DELETE",
 				async: false,
-				url: "/webapp/graph-editor/graph/" + graph,
+				url: "${prefix}/webapp/graph-editor/graph/" + graph,
 				error: function(xhr,text,err){
 					alert(err);					
 				}
@@ -159,7 +159,7 @@
 					<tr>
 						<td><input type=checkbox class="graphSelected"
 							value="${graph}"></td>
-						<td><a href="/webapp/graph-editor/graph/${graph}">${graph}</a>
+						<td><a href="${prefix}/webapp/graph-editor/graph/${graph}">${graph}</a>
 						</td>
 					</tr>
 

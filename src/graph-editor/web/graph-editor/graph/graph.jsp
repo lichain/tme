@@ -3,24 +3,25 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<c:set var="prefix"><%= getServletConfig().getInitParameter("pathprefix") %></c:set>
 <html>
 <head>
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 <title>Graph: ${it.name}</title>
-<link rel="stylesheet" type="text/css" href="/static/canviz/canviz.css" />
-<link rel="stylesheet" type="text/css" href="/static/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.8.16.custom.css" />
-<link rel="stylesheet" type="text/css" href="/static/graph-editor.css" />
+<link rel="stylesheet" type="text/css" href="${prefix}/static/canviz/canviz.css" />
+<link rel="stylesheet" type="text/css" href="${prefix}/static/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.8.16.custom.css" />
+<link rel="stylesheet" type="text/css" href="${prefix}/static/graph-editor.css" />
 
-<script type="text/javascript" src="/static/jquery/jquery.js"></script>
+<script type="text/javascript" src="${prefix}/static/jquery/jquery.js"></script>
 <script type="text/javascript">
   jQuery.noConflict();
 </script>
-<script type="text/javascript" src="/static/jquery/jquery.cookie.js"></script>
-<script type="text/javascript" src="/static/jquery/jquery-ui/js/jquery-ui-1.8.16.custom.min.js"></script>
-<script type="text/javascript" src="/static/jquery/jquery-ui/js/jquery.mouse.ui.js"></script>
-<script type="text/javascript" src="/static/canviz/prototype/prototype.js"></script>
-<script type="text/javascript" src="/static/canviz/canviz.js"></script>
-<script type="text/javascript" src="/static/canviz/path/path.js"></script>
+<script type="text/javascript" src="${prefix}/static/jquery/jquery.cookie.js"></script>
+<script type="text/javascript" src="${prefix}/static/jquery/jquery-ui/js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" src="${prefix}/static/jquery/jquery-ui/js/jquery.mouse.ui.js"></script>
+<script type="text/javascript" src="${prefix}/static/canviz/prototype/prototype.js"></script>
+<script type="text/javascript" src="${prefix}/static/canviz/canviz.js"></script>
+<script type="text/javascript" src="${prefix}/static/canviz/path/path.js"></script>
 
 <script type="text/javascript">
 	if(jQuery.cookie('graph_editor_scale') == null){
@@ -140,7 +141,7 @@
 		jQuery.ajax({
 			type: "GET",
 			async: true,
-			url: "/webapp/graph-editor/processor",
+			url: "${prefix}/webapp/graph-editor/processor",
 			headers: { 
         		Accept : "application/json",
 	        },			
@@ -222,7 +223,7 @@
 			jQuery.ajax({
 				type: "PUT",
 				async: false,
-				url: "/webapp/graph-editor/graph/${it.name}/enable",
+				url: "${prefix}/webapp/graph-editor/graph/${it.name}/enable",
 				error: function(xhr,text,err){
 					alert(err);					
 				}
@@ -236,7 +237,7 @@
 			jQuery.ajax({
 				type: "DELETE",
 				async: false,
-				url: "/webapp/graph-editor/graph/${it.name}/enable",
+				url: "${prefix}/webapp/graph-editor/graph/${it.name}/enable",
 				error: function(xhr,text,err){
 					alert(err);					
 				}
@@ -253,7 +254,7 @@
         jQuery.ajax({
             type: "GET",
             async: true,
-            url: "/proxy/<%= getServletConfig().getInitParameter("portalhost") %>/exchanges/" + exchange.innerHTML.replace(":","-"),
+            url: "${prefix}/proxy/<%= getServletConfig().getInitParameter("portalhost") %>/exchanges/" + exchange.innerHTML.replace(":","-"),
                 headers: {
                 Accept : "application/json",
             },

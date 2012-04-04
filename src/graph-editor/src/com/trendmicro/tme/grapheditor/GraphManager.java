@@ -86,7 +86,9 @@ public class GraphManager {
 
         ZNode node = new ZNode("/global/graph/route/" + name);
         GraphModel graph = new GraphModel(name);
-        graph.addAdmin(sc.getUserPrincipal().getName());
+        if(graphEditor.isSecurityEnabled()) {
+            graph.addAdmin(sc.getUserPrincipal().getName());
+        }
         node.create(false, new Gson().toJson(graph));
     }
 

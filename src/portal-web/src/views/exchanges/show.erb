@@ -13,9 +13,9 @@
 		<li>Consumer Hosts: <%= escape_html @consumers %></li>
 		<li>Producer Hosts: <%= escape_html @producers %></li>
 	</ul>
-    <img class=rrd src="/images/<%= File.basename(@file) %>.raw.<%= @range %>.png">
-    <img class=rrd src="/images/<%= File.basename(@file) %>.size.<%= @range %>.png">
-    <img class=rrd src="/images/<%= File.basename(@file) %>.source.<%= @range %>.png">
+    <img class=rrd src="<%= settings.prefix %>/images/<%= File.basename(@file) %>.raw.<%= @range %>.png">
+    <img class=rrd src="<%= settings.prefix %>/images/<%= File.basename(@file) %>.size.<%= @range %>.png">
+    <img class=rrd src="<%= settings.prefix %>/images/<%= File.basename(@file) %>.source.<%= @range %>.png">
     <table>
 	<thead>
 	    <tr>

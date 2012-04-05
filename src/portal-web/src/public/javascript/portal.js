@@ -46,7 +46,7 @@ function setRange(range){
 function postMerge(){
 	$.ajax({
 		type: 'POST',
-		url: '/merge',
+		url: 'merge',
 		data: 'selected=' + getSelected(),
 		dataType: 'script',
 		success: function(){
@@ -89,7 +89,7 @@ function merge(){
 }
 
 function getExchangeRequest(name){
-	$.getScript('/exchanges/' + name, function(){
+	$.getScript('exchanges/' + name, function(){
 		refreshScript = "getExchangeRequest('" + name + "')";
 	});
 }

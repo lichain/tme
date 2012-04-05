@@ -8,6 +8,7 @@ module Portal
 
         set :rrddir, (ENV["rrddir"] || "/tmp/rrd/rrd")
         set :canvas, Portal::Declare.new
+	set :prefix, (ENV["prefix"] || "")
 
         helpers do
             def link_to(name, url)
@@ -19,8 +20,12 @@ module Portal
             end
         end
 
+	before do
+	    request.path_info = request.path_info.sub("#{settings.prefix}", "")
+        end
+
         get "/" do
-            redirect "/exchanges"
+            redirect "#{settings.prefix}/exchanges"
         end
 
         get "/exchanges" do
@@ -108,5 +113,15 @@ module Portal
             settings.canvas.inspect
         end
 
+	get "/*" do
+	    filename = "public/#{params[:splat][0]}"
+	    if not File.exist?(filename)
+	        status 404
+		"Requested file #{filename} not found!"
+	    else
+		response['Content-Type'] = nil
+		send_file(filename)
+	    end
+        end
     end
 end

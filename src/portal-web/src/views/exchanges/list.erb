@@ -74,7 +74,7 @@
                     <td>
                         <a  rel="popover" 
                             class="rrdmodal-trigger popover-with-html"
-                            href=<%= url("/exchanges/#{File.basename data[:rrd].sub(/\.rrd$/, '')}") %>
+                            href=<%= url("#{settings.prefix}/exchanges/#{File.basename data[:rrd].sub(/\.rrd$/, '')}") %>
                             rrd="<%= File.basename data[:rrd].sub(/\.rrd$/, "") %>"
                             data-content="<ul><% data[:metrics].each do |k,v| %><li><%= escape_html k %>: <%= escape_html v %></li><% end %>
 							        <li>Consumer Hosts: <%= escape_html data[:consumers] %></li>

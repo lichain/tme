@@ -1,12 +1,12 @@
 $('#rrdmodal > .modal-header > h5 > span').empty()
     .append('<%= @params[:name] %> <%= @lastupdate %> ')
-    .append('<a href="/exchanges/<%= @params[:name] %>" target=_blank>Detail</a>');
+    .append('<a href="<%= settings.prefix %>/exchanges/<%= @params[:name] %>" target=_blank>Detail</a>');
 $("#rrdmodal > .modal-body")
     .empty()
     .append("<ul id=\"metric_list\"><% @metrics.each do |k,v| %><li><%= escape_html k %>: <%= escape_html v %></li><% end %></ul>")
-    .append("<img class=rrd src='/images/<%= File.basename(@file) %>.raw.<%= @range %>.png?<%= Time.now.to_i %>'>")
-    .append("<img class=rrd src='/images/<%= File.basename(@file) %>.size.<%= @range %>.png?<%= Time.now.to_i %>'>")
-    .append("<img class=rrd src='/images/<%= File.basename(@file) %>.source.<%= @range %>.png?<%= Time.now.to_i %>'>")
+    .append("<img class=rrd src='<%= settings.prefix %>/images/<%= File.basename(@file) %>.raw.<%= @range %>.png?<%= Time.now.to_i %>'>")
+    .append("<img class=rrd src='<%= settings.prefix %>/images/<%= File.basename(@file) %>.size.<%= @range %>.png?<%= Time.now.to_i %>'>")
+    .append("<img class=rrd src='<%= settings.prefix %>/images/<%= File.basename(@file) %>.source.<%= @range %>.png?<%= Time.now.to_i %>'>")
 $("#metric_list")
     .append("<li>Consumer Hosts: <%= escape_html @consumers %></li>")
     .append("<li>Producer Hosts: <%= escape_html @producers %></li>")

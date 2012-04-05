@@ -6,5 +6,5 @@ rrddir=/var/lib/tme/portal-collector
 # rrdcached_sock=/var/rrdtool/rrdcached/rrdcached.sock
 
 # Uncomment and set the path prefix if it is behind a reverse proxy
-# prefix=/some/path
+# export prefix=/some/path
 

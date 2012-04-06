@@ -249,20 +249,31 @@
 	function refresh_metric(exchange){
 		idx = exchange.innerHTML.indexOf('<');
 		if(idx > 0){
-			exchange.innerHTML = exchange.innerHTML.substr(0, idx);
+			exname = exchange.innerHTML.substr(0, idx).replace(":","-");
+		}
+		else {
+			exname = exchange.innerHTML.replace(":","-");
 		}
         jQuery.ajax({
             type: "GET",
             async: true,
-            url: "${prefix}/proxy/<%= getServletConfig().getInitParameter("portalhost") %>/exchanges/" + exchange.innerHTML.replace(":","-"),
+            url: "${prefix}/proxy/<%= getServletConfig().getInitParameter("portalhost") %>/exchanges/" + exname,
                 headers: {
                 Accept : "application/json",
             },
             success: function(metric){
+         	   idx = exchange.innerHTML.indexOf('<');
+				if(idx > 0){
+					exchange.innerHTML = exchange.innerHTML.substr(0, idx);
+				}
                 exchange.innerHTML = exchange.innerHTML + '<br>' + metric.Pending;
                 setTimeout("refresh_metric(document.getElementById('" + exchange.id + "'));", 5000);                    
             },
             error: function(xhr,text,err){
+            	idx = exchange.innerHTML.indexOf('<');
+				if(idx > 0){
+					exchange.innerHTML = exchange.innerHTML.substr(0, idx);
+				}
                 //alert(err);
             }
         });

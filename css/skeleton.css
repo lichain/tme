@@ -80,3 +80,5 @@ html .noBorder {border:none;}
 .clearfix{display: inline-block;}
 * html .clearfix {height: 1%;}
 .clearfix {display: block;}
+
+span.highlight {color: #F62817; font-weight: bold}

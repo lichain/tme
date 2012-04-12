@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [[ -e portal.rb && -e portal-web-conf.sh ]];
 then

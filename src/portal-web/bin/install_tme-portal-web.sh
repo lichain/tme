@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 /etc/init.d/tme-portal-web start
 

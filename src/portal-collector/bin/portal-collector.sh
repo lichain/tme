@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 source /opt/trend/tme/conf/common/common-env.sh
 

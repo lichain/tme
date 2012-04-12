@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 rm -f /etc/monit.d/tme-broker.monit
 

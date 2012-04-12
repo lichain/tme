@@ -1,3 +1,5 @@
+mkdir -p /var/run/tme
+chown TME:TME /var/run/tme
 
 if [ -e /etc/redhat-release ]
 then

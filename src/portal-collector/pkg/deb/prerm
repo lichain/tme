@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 /opt/trend/tme/bin/remove_tme-portal-collector.sh
 

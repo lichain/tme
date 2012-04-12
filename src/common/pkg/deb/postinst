@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ "`getent passwd TME`" == "" ]; then
     echo "Error: must create user TME first!"

@@ -106,8 +106,8 @@ public class ExchangeMetricCollector {
             }
             JmxTransformer transformer = new JmxTransformer();
             try {
-                transformer.executeStandalone(jmxProcess);
                 transformer.setRunEndlessly(false);
+                transformer.executeStandalone(jmxProcess);
                 Thread.sleep(10000);
             }
             catch(Exception e) {
